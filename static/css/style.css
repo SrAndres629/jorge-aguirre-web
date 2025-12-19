@@ -11,22 +11,30 @@
     position: relative;
     overflow: hidden;
     cursor: ew-resize;
-    touch-action: none;
+    touch-action: pan-y pinch-zoom;
     -webkit-user-select: none;
     user-select: none;
     border-radius: 12px;
     border: 1px solid rgba(197, 160, 89, 0.3);
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    /* Aspect ratio consistente */
+    aspect-ratio: 1 / 1;
+    background: #0a0a0a;
 }
 
-.ba-slider img {
-    display: block;
+/* Imagen base (DESPUÉS) - ocupa todo el contenedor */
+.ba-slider>img {
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
-    height: auto;
+    height: 100%;
+    object-fit: cover;
     pointer-events: none;
     -webkit-user-drag: none;
 }
 
+/* Contenedor de la imagen ANTES (overlay) */
 .ba-slider .resize {
     position: absolute;
     top: 0;
@@ -39,22 +47,23 @@
     backface-visibility: hidden;
 }
 
+/* Imagen ANTES - debe coincidir exactamente con la imagen base */
 .ba-slider .resize img {
     position: absolute;
     top: 0;
     left: 0;
+    width: 100vw;
+    max-width: none;
     height: 100%;
-    width: auto;
-    min-width: 100%;
     object-fit: cover;
 }
 
 /* El Divider - "Hilo de Oro" */
 .ba-slider .divider {
     position: absolute;
-    width: 2px;
+    width: 3px;
     height: 100%;
-    background: linear-gradient(to bottom, rgba(197, 160, 89, 0.9), rgba(197, 160, 89, 0.5));
+    background: linear-gradient(to bottom, rgba(197, 160, 89, 1), rgba(197, 160, 89, 0.6));
     left: 50%;
     top: 0;
     transform: translateX(-50%) translateZ(0);
@@ -97,17 +106,17 @@
 /* Etiquetas Minimalistas Flotantes */
 .ba-label {
     position: absolute;
-    top: 16px;
+    top: 12px;
     font-family: 'Montserrat', sans-serif;
-    font-size: 0.65rem;
-    letter-spacing: 0.15em;
+    font-size: 0.6rem;
+    letter-spacing: 0.12em;
     font-weight: 600;
     color: white;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
     pointer-events: none;
-    z-index: 5;
-    background: rgba(0, 0, 0, 0.4);
-    padding: 5px 12px;
+    z-index: 15;
+    background: rgba(0, 0, 0, 0.5);
+    padding: 4px 10px;
     border-radius: 20px;
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
@@ -115,11 +124,11 @@
 }
 
 .ba-label.before {
-    left: 16px;
+    left: 12px;
 }
 
 .ba-label.after {
-    right: 16px;
+    right: 12px;
 }
 
 /* =================================================================
@@ -150,9 +159,18 @@ details[open] summary~* {
 }
 
 /* =================================================================
-   RESPONSIVE ADJUSTMENTS
+   RESPONSIVE - MÓVIL PRIMERO
    ================================================================= */
 @media (max-width: 768px) {
+    .ba-slider {
+        aspect-ratio: 4 / 5;
+        border-radius: 8px;
+    }
+
+    .ba-slider .resize img {
+        width: 200vw;
+    }
+
     .ba-slider .divider::before {
         width: 36px;
         height: 36px;
@@ -160,10 +178,36 @@ details[open] summary~* {
 
     .ba-slider .divider::after {
         font-size: 9px;
+        letter-spacing: 1px;
     }
 
     .ba-label {
-        padding: 4px 10px;
-        font-size: 9px;
+        padding: 3px 8px;
+        font-size: 0.5rem;
+        top: 8px;
+    }
+
+    .ba-label.before {
+        left: 8px;
+    }
+
+    .ba-label.after {
+        right: 8px;
+    }
+}
+
+/* Pantallas muy pequeñas */
+@media (max-width: 480px) {
+    .ba-slider {
+        aspect-ratio: 3 / 4;
+    }
+
+    .ba-slider .divider::before {
+        width: 32px;
+        height: 32px;
+    }
+
+    .ba-slider .divider::after {
+        font-size: 8px;
     }
 }
