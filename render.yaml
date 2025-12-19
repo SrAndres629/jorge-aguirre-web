@@ -1,0 +1,17 @@
+# =================================================================
+# RENDER.YAML - Configuración para deploy en Render.com
+# =================================================================
+# Render ofrece un plan gratuito para proyectos pequeños
+# Sube tu código a GitHub y conecta el repo en render.com
+
+services:
+  - type: web
+    name: jorge-aguirre-web
+    env: python
+    region: oregon
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
