@@ -1,10 +1,10 @@
 /* =================================================================
    TRACKING.JS - Meta Pixel, CAPI, GTM, ViewContent
-   Archivo separado para tracking y conversiones
+   OPTIMIZADO PARA MÁXIMO EMQ (Event Match Quality)
    ================================================================= */
 
 // =================================================================
-// 1. META PIXEL INITIALIZATION
+// 1. META PIXEL INITIALIZATION (Con external_id)
 // =================================================================
 (function () {
     !function (f, b, e, v, n, t, s) {
@@ -17,14 +17,20 @@
     }(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
 
     if (window.META_PIXEL_ID) {
-        fbq('init', window.META_PIXEL_ID);
+        // Inicializar Pixel con external_id para mejor matching
+        const initData = {};
+        if (window.EXTERNAL_ID) {
+            initData.external_id = window.EXTERNAL_ID;
+        }
+
+        fbq('init', window.META_PIXEL_ID, initData);
         fbq('track', 'PageView', {}, { eventID: window.META_EVENT_ID });
-        console.log('📊 Meta Pixel initialized');
+        console.log('📊 Meta Pixel initialized with external_id');
     }
 })();
 
 // =================================================================
-// 2. VIEWCONTENT TRACKING POR SERVICIO (Retargeting Segmentado)
+// 2. CONFIGURACIÓN DE TRACKING
 // =================================================================
 const TrackingConfig = {
     services: {
@@ -33,10 +39,18 @@ const TrackingConfig = {
         'labios': { name: 'Labios Full Color', category: 'labios', price: 400 }
     },
     phone: "59176375924",
-    viewedSections: new Set()
+    viewedSections: new Set(),
+
+    // Capturar fbclid de la URL para tracking
+    getFbclid: function () {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get('fbclid') || '';
+    }
 };
 
-// Observer para detectar cuando una sección es visible
+// =================================================================
+// 3. VIEWCONTENT TRACKING (Retargeting Segmentado)
+// =================================================================
 (function () {
     const observerOptions = {
         root: null,
@@ -53,7 +67,10 @@ const TrackingConfig = {
                     TrackingConfig.viewedSections.add(sectionId);
                     const service = TrackingConfig.services[sectionId];
 
-                    // Enviar ViewContent a Meta Pixel
+                    // Generar event_id único para deduplicación
+                    const eventId = 'vc_' + Date.now() + '_' + sectionId;
+
+                    // Enviar ViewContent a Meta Pixel (navegador)
                     if (typeof fbq === 'function') {
                         fbq('track', 'ViewContent', {
                             content_name: service.name,
@@ -61,15 +78,20 @@ const TrackingConfig = {
                             content_type: 'service',
                             value: service.price,
                             currency: 'USD'
-                        });
+                        }, { eventID: eventId });
                         console.log(`📊 ViewContent: ${service.name}`);
                     }
 
-                    // Notificar al servidor (CAPI)
+                    // Enviar a servidor (CAPI) con event_id para deduplicación
                     fetch('/track-viewcontent', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ service: service.name, category: service.category })
+                        body: JSON.stringify({
+                            service: service.name,
+                            category: service.category,
+                            price: service.price,
+                            event_id: eventId
+                        })
                     }).catch(e => console.log('ViewContent CAPI:', e));
                 }
             }
@@ -84,7 +106,7 @@ const TrackingConfig = {
 })();
 
 // =================================================================
-// 3. CONVERSION HANDLER (WhatsApp + Tracking)
+// 4. CONVERSION HANDLER (WhatsApp + Tracking Dual)
 // =================================================================
 const serviceMap = {
     'Hero CTA': 'maquillaje permanente',
@@ -98,38 +120,55 @@ const serviceMap = {
 };
 
 async function handleConversion(source) {
+    // Event ID único para deduplicación Pixel ↔ CAPI
     const eventId = 'lead_' + Date.now();
     const serviceName = serviceMap[source] || source;
 
-    // Meta Pixel (Navegador)
+    // 1. Meta Pixel (Navegador) - Con event_id
     if (typeof fbq === 'function') {
         fbq('track', 'Lead', {
             content_name: source,
-            content_category: serviceName
+            content_category: serviceName,
+            lead_source: 'whatsapp'
         }, { eventID: eventId });
+        console.log('📊 Lead event sent to Pixel');
     }
 
-    // Google Tag Manager (dataLayer)
+    // 2. Google Tag Manager (dataLayer)
     if (typeof dataLayer !== 'undefined') {
         dataLayer.push({
             'event': 'lead_whatsapp',
             'lead_source': source,
-            'lead_service': serviceName
+            'lead_service': serviceName,
+            'event_id': eventId
         });
     }
 
-    // Servidor (Python - Meta CAPI)
-    fetch('/track-lead', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ event_id: eventId, source: source })
-    }).catch(e => console.log('CAPI:', e));
+    // 3. Servidor (Python - Meta CAPI) - MISMO event_id para deduplicación
+    try {
+        await fetch('/track-lead', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                event_id: eventId,
+                source: source,
+                service: serviceName
+            })
+        });
+        console.log('📊 Lead event sent to CAPI');
+    } catch (e) {
+        console.log('CAPI error:', e);
+    }
 
-    // WhatsApp con mensaje persuasivo
+    // 4. Redirigir a WhatsApp con mensaje persuasivo
     const text = `Hola Jorge 👋 Vi sus resultados de ${serviceName} y me encantaron. ¿Podría agendar una valoración gratuita para ver si soy candidata?`;
     const url = `https://wa.me/${TrackingConfig.phone}?text=${encodeURIComponent(text)}`;
 
     setTimeout(() => window.open(url, '_blank'), 300);
 }
 
-console.log('✅ Tracking.js loaded');
+// =================================================================
+// 5. INICIALIZACIÓN
+// =================================================================
+console.log('✅ Tracking.js loaded (v3.0 - Optimized for EMQ)');
+console.log('📊 fbclid detected:', TrackingConfig.getFbclid() ? 'YES' : 'NO');
