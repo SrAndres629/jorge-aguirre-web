@@ -1,6 +1,6 @@
 /* =================================================================
-   UI.JS - Interactividad Cinematic Luxury
-   Sliders, Sticky Header, FAQ Accordion, Particles, AOS
+   UI.JS - Interactividad Spaceship / High-End Desire
+   Sliders, Sticky Header, Particles, AOS, Vanilla-Tilt
    ================================================================= */
 
 // =================================================================
@@ -60,13 +60,10 @@ document.querySelectorAll('[data-slider]').forEach(slider => {
         });
     };
 
-    // Mouse events
     slider.addEventListener('mousedown', (e) => { isDown = true; updateSlider(e.clientX); });
     slider.addEventListener('mousemove', (e) => { if (isDown) updateSlider(e.clientX); });
     slider.addEventListener('mouseup', () => isDown = false);
     slider.addEventListener('mouseleave', () => isDown = false);
-
-    // Touch events (mobile)
     slider.addEventListener('touchstart', (e) => { isDown = true; updateSlider(e.touches[0].clientX); }, { passive: true });
     slider.addEventListener('touchmove', (e) => { if (isDown) updateSlider(e.touches[0].clientX); }, { passive: true });
     slider.addEventListener('touchend', () => isDown = false);
@@ -88,7 +85,7 @@ document.querySelectorAll('details').forEach((detail) => {
 });
 
 // =================================================================
-// 4. WHATSAPP BUTTON ATTENTION ANIMATION (cada 10 segundos)
+// 4. WHATSAPP BUTTON ATTENTION ANIMATION
 // =================================================================
 (function () {
     const whatsappBtn = document.getElementById('whatsappFloat');
@@ -107,27 +104,27 @@ document.querySelectorAll('details').forEach((detail) => {
 })();
 
 // =================================================================
-// 5. PARTICLES.JS - Gold Dust Effect (Atmósfera Premium)
+// 5. PARTICLES.JS - Gold Dust (Atmósfera Premium)
 // =================================================================
 (function () {
     if (typeof particlesJS !== 'undefined' && document.getElementById('particles-js')) {
         particlesJS("particles-js", {
             "particles": {
                 "number": {
-                    "value": 50,
+                    "value": 40,
                     "density": { "enable": true, "value_area": 800 }
                 },
                 "color": { "value": "#C5A059" },
                 "shape": { "type": "circle" },
                 "opacity": {
-                    "value": 0.25,
+                    "value": 0.3,
                     "random": true,
-                    "anim": { "enable": true, "speed": 0.5, "opacity_min": 0.1 }
+                    "anim": { "enable": true, "speed": 0.3, "opacity_min": 0.1 }
                 },
                 "size": {
-                    "value": 2.5,
+                    "value": 3,
                     "random": true,
-                    "anim": { "enable": true, "speed": 1, "size_min": 0.5 }
+                    "anim": { "enable": true, "speed": 0.5, "size_min": 0.5 }
                 },
                 "line_linked": { "enable": false },
                 "move": {
@@ -142,30 +139,28 @@ document.querySelectorAll('details').forEach((detail) => {
             "interactivity": {
                 "detect_on": "window",
                 "events": {
-                    "onhover": { "enable": true, "mode": "bubble" },
+                    "onhover": { "enable": true, "mode": "repulse" },
                     "onclick": { "enable": false }
                 },
                 "modes": {
-                    "bubble": {
-                        "distance": 200,
-                        "size": 4,
-                        "duration": 2,
-                        "opacity": 0.5
+                    "repulse": {
+                        "distance": 100,
+                        "duration": 0.4
                     }
                 }
             },
             "retina_detect": true
         });
-        console.log('✨ Particles.js initialized (Gold Dust)');
+        console.log('✨ Particles.js initialized (Gold Dust + Repulse)');
     }
 })();
 
 // =================================================================
-// 6. AOS (Animate On Scroll) Initialization
+// 6. AOS (Animate On Scroll)
 // =================================================================
 if (typeof AOS !== 'undefined') {
     AOS.init({
-        duration: 1000,
+        duration: 800,
         easing: 'ease-out-quart',
         once: true,
         offset: 50
@@ -173,4 +168,12 @@ if (typeof AOS !== 'undefined') {
     console.log('✅ AOS initialized');
 }
 
-console.log('✅ UI.js loaded (Cinematic Luxury v2.0)');
+// =================================================================
+// 7. VANILLA-TILT (Física 3D) - Auto-init via data-tilt
+// =================================================================
+// Vanilla-Tilt se inicializa automáticamente con data-tilt attributes
+if (typeof VanillaTilt !== 'undefined') {
+    console.log('🎯 Vanilla-Tilt.js ready (3D Physics)');
+}
+
+console.log('✅ UI.js loaded (Spaceship v3.0)');

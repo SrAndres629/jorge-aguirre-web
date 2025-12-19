@@ -208,10 +208,10 @@
                     Especialista en Micropigmentación Avanzada y Microblading. Realzamos tu mirada con resultados
                     naturales y permanentes.
                 </p>
-                <div class="flex flex-col sm:flex-row gap-4 pt-4">
+                <div class="flex flex-col sm:flex-row gap-4 pt-4" data-aos="fade-up" data-aos-delay="300">
                     <button onclick="handleConversion('Hero CTA')"
-                        class="group relative px-8 py-5 bg-luxury-gold text-black font-bold uppercase tracking-widest hover:bg-white transition-all duration-500 animate-pulse-gold">
-                        <span class="flex items-center gap-2 justify-center">
+                        class="btn-gold-liquid group relative px-8 py-5 font-bold uppercase tracking-widest rounded-lg">
+                        <span class="flex items-center gap-2 justify-center relative z-10">
                             <i class="fab fa-whatsapp text-xl"></i> Valoración Gratuita
                         </span>
                     </button>
@@ -376,7 +376,8 @@
         </div>
         <div class="container mx-auto px-6 grid md:grid-cols-3 gap-6">
             <!-- Cejas -->
-            <div data-service-category="cejas" data-aos="fade-up" class="glass-card group p-8 rounded-lg">
+            <div data-service-category="cejas" data-aos="fade-up" data-tilt data-tilt-max="8" data-tilt-speed="400"
+                data-tilt-glare="true" data-tilt-max-glare="0.15" class="glass-card group p-8 rounded-lg">
                 <i class="fas fa-feather-alt text-5xl text-luxury-gold mb-6"></i>
                 <h3 class="text-2xl font-serif text-white mb-3">Microblading de Cejas</h3>
                 <p class="text-gray-500 text-sm mb-6">Técnica pelo a pelo para recuperar densidad y definir tu mirada.
@@ -392,7 +393,8 @@
                 </button>
             </div>
             <!-- Ojos -->
-            <div data-service-category="ojos" data-aos="fade-up" data-aos-delay="100"
+            <div data-service-category="ojos" data-aos="fade-up" data-aos-delay="100" data-tilt data-tilt-max="8"
+                data-tilt-speed="400" data-tilt-glare="true" data-tilt-max-glare="0.15"
                 class="glass-card group p-8 rounded-lg">
                 <div
                     class="absolute top-0 right-0 bg-luxury-gold text-black text-[10px] font-bold px-3 py-1 uppercase z-10">
@@ -411,7 +413,8 @@
                 </button>
             </div>
             <!-- Labios -->
-            <div data-service-category="labios" data-aos="fade-up" data-aos-delay="200"
+            <div data-service-category="labios" data-aos="fade-up" data-aos-delay="200" data-tilt data-tilt-max="8"
+                data-tilt-speed="400" data-tilt-glare="true" data-tilt-max-glare="0.15"
                 class="glass-card group p-8 rounded-lg">
                 <i class="fas fa-heart text-5xl text-luxury-gold mb-6"></i>
                 <h3 class="text-2xl font-serif text-white mb-3">Labios Full Color</h3>
@@ -536,6 +539,9 @@
 
     <!-- AOS (Animate On Scroll) -->
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+
+    <!-- Vanilla-Tilt.js (Física 3D) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.0/vanilla-tilt.min.js"></script>
 
     <!-- JavaScript Modular -->
     <script src="/static/js/tracking.js"></script>

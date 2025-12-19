@@ -1,6 +1,6 @@
 /* =================================================================
-   CUSTOM.CSS - Estilos Cinematic Luxury
-   Glassmorphism, Animaciones Premium, Hover Effects
+   CUSTOM.CSS - Efecto Spaceship / High-End Desire
+   Glassmorphism Premium, Gold Liquid, Física Visual
    ================================================================= */
 
 /* =================================================================
@@ -9,13 +9,13 @@
 :root {
     --luxury-gold: #C5A059;
     --luxury-gold-light: #E5C585;
+    --luxury-gold-dark: #B08D45;
     --luxury-black: #0a0a0a;
     --luxury-dark: #121212;
     --luxury-text: #e5e7eb;
-    --transition-fast: 0.3s ease;
-    --transition-medium: 0.5s ease;
     --glass-bg: rgba(255, 255, 255, 0.03);
-    --glass-border: rgba(197, 160, 89, 0.1);
+    --glass-border: rgba(197, 160, 89, 0.15);
+    --transition-smooth: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 /* =================================================================
@@ -59,11 +59,27 @@
 
 @keyframes shimmer {
     0% {
-        background-position: -200% 0;
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
     }
 
     100% {
-        background-position: 200% 0;
+        background-position: 0% 50%;
+    }
+}
+
+@keyframes glow-pulse {
+
+    0%,
+    100% {
+        box-shadow: 0 0 15px rgba(197, 160, 89, 0.4);
+    }
+
+    50% {
+        box-shadow: 0 0 30px rgba(197, 160, 89, 0.7), 0 0 60px rgba(197, 160, 89, 0.3);
     }
 }
 
@@ -83,32 +99,47 @@
 }
 
 /* =================================================================
+   FONDO ATMOSFÉRICO (Particles Container)
+   ================================================================= */
+#particles-js {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    z-index: 1;
+    pointer-events: none;
+}
+
+/* =================================================================
    GLASSMORPHISM - TARJETAS DE CRISTAL (Spaceship Style)
    ================================================================= */
 .glass-card {
     background: var(--glass-bg);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
     border: 1px solid var(--glass-border);
     box-shadow:
-        0 4px 30px rgba(0, 0, 0, 0.2),
+        0 8px 32px rgba(0, 0, 0, 0.4),
         inset 0 1px 0 rgba(255, 255, 255, 0.05);
-    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 16px;
+    transition: all var(--transition-smooth);
+    transform-style: preserve-3d;
+    transform: perspective(1000px);
     position: relative;
     overflow: hidden;
 }
 
-/* Efecto Hover: Levitación + Brillo Interno */
+/* Hover: Elevación + Brillo */
 .glass-card:hover {
-    transform: translateY(-12px) scale(1.02);
-    border-color: rgba(197, 160, 89, 0.5);
+    border-color: rgba(197, 160, 89, 0.4);
     box-shadow:
-        0 25px 50px rgba(0, 0, 0, 0.4),
-        0 0 40px rgba(197, 160, 89, 0.1),
+        0 20px 60px rgba(0, 0, 0, 0.5),
+        0 0 40px rgba(197, 160, 89, 0.15),
         inset 0 0 30px rgba(197, 160, 89, 0.03);
 }
 
-/* Glow effect on hover */
+/* Efecto de luz que cruza */
 .glass-card::before {
     content: '';
     position: absolute;
@@ -118,9 +149,10 @@
     height: 100%;
     background: linear-gradient(90deg,
             transparent,
-            rgba(197, 160, 89, 0.08),
+            rgba(197, 160, 89, 0.1),
             transparent);
-    transition: left 0.6s ease;
+    transition: left 0.7s ease;
+    z-index: 1;
 }
 
 .glass-card:hover::before {
@@ -128,39 +160,65 @@
 }
 
 /* =================================================================
-   BOTONES PREMIUM
+   BOTÓN ORO LÍQUIDO (Gold Liquid - No Plano)
+   ================================================================= */
+.btn-gold-liquid {
+    background: linear-gradient(135deg,
+            var(--luxury-gold) 0%,
+            var(--luxury-gold-light) 50%,
+            var(--luxury-gold-dark) 100%);
+    background-size: 200% 200%;
+    color: #000;
+    font-weight: 700;
+    border: none;
+    box-shadow: 0 0 20px rgba(197, 160, 89, 0.5);
+    animation: shimmer 3s ease infinite, glow-pulse 2s ease-in-out infinite;
+    transition: transform var(--transition-smooth);
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-gold-liquid:hover {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 10px 40px rgba(197, 160, 89, 0.6);
+}
+
+.btn-gold-liquid:active {
+    transform: scale(0.97);
+}
+
+/* Reflejo interno */
+.btn-gold-liquid::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(90deg,
+            transparent,
+            rgba(255, 255, 255, 0.3),
+            transparent);
+    transition: left 0.5s ease;
+}
+
+.btn-gold-liquid:hover::after {
+    left: 150%;
+}
+
+/* =================================================================
+   BOTONES SECUNDARIOS PREMIUM
    ================================================================= */
 .btn-luxury {
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all var(--transition-smooth);
     position: relative;
     z-index: 1;
     overflow: hidden;
 }
 
 .btn-luxury:hover {
-    transform: translateY(-3px);
-    box-shadow:
-        0 15px 30px -5px rgba(197, 160, 89, 0.4),
-        0 0 20px rgba(197, 160, 89, 0.2);
-}
-
-.btn-luxury::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg,
-            transparent,
-            rgba(255, 255, 255, 0.2),
-            transparent);
-    transition: left 0.5s ease;
-    z-index: -1;
-}
-
-.btn-luxury:hover::after {
-    left: 100%;
+    transform: translateY(-2px);
+    text-shadow: 0 0 10px rgba(197, 160, 89, 0.5);
 }
 
 /* =================================================================
@@ -188,7 +246,7 @@ img {
 }
 
 ::-webkit-scrollbar-thumb {
-    background: var(--luxury-gold);
+    background: linear-gradient(180deg, var(--luxury-gold), var(--luxury-gold-dark));
     border-radius: 4px;
 }
 
@@ -214,14 +272,10 @@ button:focus-visible {
 }
 
 /* =================================================================
-   PARTICLES CONTAINER
+   TILT.JS ENHANCEMENTS
    ================================================================= */
-#particles-js {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    top: 0;
-    left: 0;
+.js-tilt-glare {
+    border-radius: inherit;
 }
 
 /* =================================================================
