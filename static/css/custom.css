@@ -231,6 +231,52 @@
 }
 
 /* =================================================================
+   PROCESS STEPS - TIMELINE INTERACTIVO
+   ================================================================= */
+.process-step {
+    position: relative;
+    padding: 2rem;
+    border: 1px solid rgba(197, 160, 89, 0.1);
+    background: linear-gradient(145deg, rgba(20, 20, 20, 0.6), rgba(10, 10, 10, 0.8));
+    border-radius: 16px;
+    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* Efecto Hover: Elevación y Brillo */
+.process-step:hover {
+    transform: translateY(-10px);
+    border-color: rgba(197, 160, 89, 0.5);
+    box-shadow: 0 15px 40px rgba(197, 160, 89, 0.15);
+}
+
+/* El Número (01, 02...) con gradiente dorado */
+.step-number {
+    font-size: 3.5rem;
+    font-family: 'Playfair Display', serif;
+    background: linear-gradient(to bottom, #C5A059, #8E6E34);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    opacity: 0.8;
+    transition: all 0.3s ease;
+    display: block;
+}
+
+.process-step:hover .step-number {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+/* Línea de progreso expandible */
+.progress-bar {
+    transition: width 0.5s ease;
+}
+
+.process-step:hover .progress-bar {
+    width: 6rem !important;
+}
+
+/* =================================================================
    BOTÓN ORO LÍQUIDO (Gold Liquid - No Plano)
    ================================================================= */
 .btn-gold-liquid {
