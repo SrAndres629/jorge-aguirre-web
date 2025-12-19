@@ -326,7 +326,118 @@ async def track_viewcontent(request: Request, background_tasks: BackgroundTasks)
     return {"status": "success", "category": data.get("category")}
 
 # =================================================================
+# PANEL DE ADMINISTRACIÓN (Confirmación de Ventas)
+# =================================================================
+ADMIN_KEY = os.getenv("ADMIN_KEY", "Andromeda2025")
+
+def get_all_visitors(limit: int = 50):
+    """Obtiene los últimos N visitantes de la DB"""
+    conn = get_db_connection()
+    if not conn:
+        return []
+    
+    try:
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT id, external_id, fbclid, ip_address, user_agent, source, timestamp::text 
+            FROM visitors ORDER BY timestamp DESC LIMIT %s
+        """, (limit,))
+        rows = cur.fetchall()
+        cur.close()
+        conn.close()
+        
+        return [
+            {
+                "id": r[0],
+                "external_id": r[1],
+                "fbclid": r[2],
+                "ip_address": r[3],
+                "user_agent": r[4],
+                "source": r[5],
+                "timestamp": r[6]
+            }
+            for r in rows
+        ]
+    except Exception as e:
+        print(f"❌ Error get_all_visitors: {e}")
+        return []
+
+def get_visitor_by_id(visitor_id: int):
+    """Obtiene un visitante por ID"""
+    conn = get_db_connection()
+    if not conn:
+        return None
+    
+    try:
+        cur = conn.cursor()
+        cur.execute("SELECT id, external_id, fbclid FROM visitors WHERE id = %s", (visitor_id,))
+        row = cur.fetchone()
+        cur.close()
+        conn.close()
+        return {"id": row[0], "external_id": row[1], "fbclid": row[2]} if row else None
+    except Exception as e:
+        print(f"❌ Error get_visitor_by_id: {e}")
+        return None
+
+@app.get("/admin/dashboard", response_class=HTMLResponse)
+async def admin_dashboard(request: Request, key: str = ""):
+    """Panel de administración protegido por clave"""
+    if key != ADMIN_KEY:
+        return HTMLResponse("<h1>🔒 Acceso Denegado</h1><p>Clave incorrecta.</p>", status_code=403)
+    
+    visitors = get_all_visitors(50)
+    return templates.TemplateResponse("admin.html", {
+        "request": request,
+        "visitors": visitors,
+        "admin_key": key
+    })
+
+@app.post("/admin/confirm/{visitor_id}")
+async def confirm_sale(visitor_id: int, key: str = "", background_tasks: BackgroundTasks = None):
+    """Confirma una venta y envía evento Purchase a Meta CAPI"""
+    if key != ADMIN_KEY:
+        return JSONResponse({"status": "error", "error": "Clave incorrecta"}, status_code=403)
+    
+    visitor = get_visitor_by_id(visitor_id)
+    if not visitor:
+        return JSONResponse({"status": "error", "error": "Visitante no encontrado"}, status_code=404)
+    
+    # Generar event_id único para el Purchase
+    event_id = f"purchase_{visitor_id}_{int(time.time())}"
+    
+    # Datos del Purchase
+    custom_data = {
+        "value": 350.00,
+        "currency": "USD",
+        "content_name": "Servicio de Maquillaje Permanente",
+        "content_category": "beauty_service",
+        "content_type": "service"
+    }
+    
+    # Enviar Purchase a Meta CAPI
+    send_to_meta_capi(
+        event_name="Purchase",
+        event_source_url="https://jorgeaguirreflores.com/admin",
+        client_ip="127.0.0.1",
+        user_agent="Admin Dashboard",
+        event_id=event_id,
+        fbclid=visitor.get("fbclid"),
+        external_id=visitor.get("external_id"),
+        custom_data=custom_data
+    )
+    
+    print(f"[ADMIN] 💰 Venta confirmada para visitor #{visitor_id} - Purchase enviado a Meta")
+    
+    return JSONResponse({
+        "status": "success",
+        "visitor_id": visitor_id,
+        "value": 350,
+        "event_id": event_id
+    })
+
+# =================================================================
 # ARRANQUE DEL SISTEMA
 # =================================================================
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
+
