@@ -1,0 +1,134 @@
+/* =================================================================
+   CUSTOM.CSS - Estilos personalizados fuera de Tailwind
+   Animaciones, componentes custom, y overrides
+   ================================================================= */
+
+/* =================================================================
+   VARIABLES CSS (Design Tokens)
+   ================================================================= */
+:root {
+    --luxury-gold: #C5A059;
+    --luxury-gold-light: #E5C585;
+    --luxury-black: #0a0a0a;
+    --luxury-dark: #121212;
+    --luxury-text: #e5e7eb;
+    --transition-fast: 0.3s ease;
+    --transition-medium: 0.5s ease;
+}
+
+/* =================================================================
+   ANIMACIONES KEYFRAMES
+   ================================================================= */
+@keyframes fade-in-up {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulse-gold {
+
+    0%,
+    100% {
+        box-shadow: 0 0 20px rgba(197, 160, 89, 0.4);
+    }
+
+    50% {
+        box-shadow: 0 0 40px rgba(197, 160, 89, 0.8);
+    }
+}
+
+@keyframes float {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+/* =================================================================
+   CLASES DE ANIMACIÓN
+   ================================================================= */
+.animate-fade-in-up {
+    animation: fade-in-up 0.8s ease-out forwards;
+}
+
+.animate-pulse-gold {
+    animation: pulse-gold 2s ease-in-out infinite;
+}
+
+.animate-float {
+    animation: float 3s ease-in-out infinite;
+}
+
+/* =================================================================
+   OPTIMIZACIONES DE RENDIMIENTO
+   ================================================================= */
+img {
+    content-visibility: auto;
+}
+
+.gpu-accelerated {
+    will-change: transform;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+}
+
+/* =================================================================
+   SCROLLBAR CUSTOM
+   ================================================================= */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--luxury-black);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--luxury-gold);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--luxury-gold-light);
+}
+
+/* =================================================================
+   SELECTION
+   ================================================================= */
+::selection {
+    background-color: var(--luxury-gold);
+    color: var(--luxury-black);
+}
+
+/* =================================================================
+   FOCUS STATES (Accessibility)
+   ================================================================= */
+a:focus-visible,
+button:focus-visible {
+    outline: 2px solid var(--luxury-gold);
+    outline-offset: 2px;
+}
+
+/* =================================================================
+   PRINT STYLES
+   ================================================================= */
+@media print {
+
+    .no-print,
+    #stickyNav,
+    #urgencyBanner,
+    .fixed {
+        display: none !important;
+    }
+}
