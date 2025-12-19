@@ -1,80 +1,95 @@
 """
-CONVERT_IMAGES.PY
-=================
-Script para convertir todas las imágenes JPG/PNG a formato WebP.
-WebP es hasta 90% más liviano que JPG con la misma calidad.
+Utilidad de conversión automática de imágenes a WebP
+Ejecutar después de subir nuevas imágenes al directorio static/images/
 
-USO:
-    python convert_images.py
-
-REQUISITOS:
-    pip install pillow
+Uso: python convert_images.py
 """
 
-from PIL import Image
 import os
 from pathlib import Path
 
-# Carpeta donde están las imágenes
-IMAGES_FOLDER = Path("static/images")
+try:
+    from PIL import Image
+except ImportError:
+    print("❌ Error: Pillow no está instalado. Ejecuta: pip install Pillow")
+    exit(1)
 
-# Calidad de compresión (80-90 es óptimo para web)
+IMAGES_DIR = Path("static/images")
 QUALITY = 85
+EXTENSIONS_TO_CONVERT = {'.png', '.jpg', '.jpeg', '.gif', '.bmp', '.tiff'}
 
-def convert_to_webp():
-    """Convierte todas las imágenes JPG/PNG a WebP"""
-    
-    if not IMAGES_FOLDER.exists():
-        print(f"❌ Error: La carpeta {IMAGES_FOLDER} no existe")
+
+def convert_to_webp(image_path: Path) -> bool:
+    """Convierte una imagen a WebP y elimina el original."""
+    try:
+        webp_path = image_path.with_suffix('.webp')
+        
+        # Si ya existe la versión WebP, solo eliminar original
+        if webp_path.exists():
+            print(f"⚠️  WebP ya existe: {webp_path.name}")
+            os.remove(image_path)
+            print(f"🗑️  Eliminado original: {image_path.name}")
+            return True
+        
+        # Convertir a WebP
+        with Image.open(image_path) as img:
+            # Convertir a RGB si es necesario (para PNG con transparencia)
+            if img.mode in ('RGBA', 'LA', 'P'):
+                rgb_img = Image.new('RGB', img.size, (255, 255, 255))
+                if img.mode == 'P':
+                    img = img.convert('RGBA')
+                rgb_img.paste(img, mask=img.split()[-1] if img.mode == 'RGBA' else None)
+                img = rgb_img
+            elif img.mode != 'RGB':
+                img = img.convert('RGB')
+            
+            img.save(webp_path, 'WEBP', quality=QUALITY)
+        
+        # Obtener tamaños para mostrar ahorro
+        original_size = image_path.stat().st_size
+        webp_size = webp_path.stat().st_size
+        savings = (1 - webp_size / original_size) * 100
+        
+        print(f"✅ Convertido: {image_path.name} → {webp_path.name}")
+        print(f"   📦 {original_size / 1024:.1f}KB → {webp_size / 1024:.1f}KB ({savings:.0f}% ahorro)")
+        
+        # Eliminar original
+        os.remove(image_path)
+        print(f"🗑️  Eliminado original: {image_path.name}")
+        
+        return True
+        
+    except Exception as e:
+        print(f"❌ Error procesando {image_path.name}: {e}")
+        return False
+
+
+def main():
+    """Escanea el directorio de imágenes y convierte las que no sean WebP."""
+    if not IMAGES_DIR.exists():
+        print(f"❌ Directorio no encontrado: {IMAGES_DIR}")
         return
     
-    # Extensiones a convertir
-    extensions = ('.jpg', '.jpeg', '.png')
+    print(f"🔍 Escaneando: {IMAGES_DIR.absolute()}")
+    print("-" * 50)
     
     converted = 0
-    saved_kb = 0
+    skipped = 0
     
-    print("🔄 Buscando imágenes para convertir...")
-    print("-" * 50)
-    
-    for image_path in IMAGES_FOLDER.iterdir():
-        if image_path.suffix.lower() in extensions:
-            # Tamaño original
-            original_size = image_path.stat().st_size / 1024  # KB
+    for file_path in IMAGES_DIR.iterdir():
+        if file_path.is_file():
+            ext = file_path.suffix.lower()
             
-            # Nombre del archivo WebP
-            webp_path = image_path.with_suffix('.webp')
-            
-            try:
-                # Abrir y convertir
-                with Image.open(image_path) as img:
-                    # Convertir a RGB si es necesario (PNG con transparencia)
-                    if img.mode in ('RGBA', 'P'):
-                        img = img.convert('RGB')
-                    
-                    # Guardar como WebP
-                    img.save(webp_path, 'WEBP', quality=QUALITY, optimize=True)
-                
-                # Tamaño nuevo
-                new_size = webp_path.stat().st_size / 1024  # KB
-                savings = original_size - new_size
-                
-                print(f"✅ {image_path.name}")
-                print(f"   {original_size:.1f} KB → {new_size:.1f} KB (ahorro: {savings:.1f} KB)")
-                
-                converted += 1
-                saved_kb += savings
-                
-            except Exception as e:
-                print(f"❌ Error con {image_path.name}: {e}")
+            if ext in EXTENSIONS_TO_CONVERT:
+                if convert_to_webp(file_path):
+                    converted += 1
+            elif ext == '.webp':
+                skipped += 1
     
     print("-" * 50)
-    if converted > 0:
-        print(f"🎉 ¡Listo! Convertidas {converted} imágenes")
-        print(f"💾 Ahorro total: {saved_kb:.1f} KB ({saved_kb/1024:.2f} MB)")
-        print("\n📝 Ahora actualiza tu HTML para usar las versiones .webp")
-    else:
-        print("ℹ️  No se encontraron imágenes JPG/PNG para convertir")
+    print(f"📊 Resumen: {converted} convertidos, {skipped} WebP existentes")
+    print("✨ Proceso completado")
+
 
 if __name__ == "__main__":
-    convert_to_webp()
+    main()
