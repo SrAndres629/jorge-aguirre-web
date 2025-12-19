@@ -7,10 +7,9 @@ import requests
 import time
 import uvicorn
 import hashlib
-import uuid
-import sqlite3
 import os
 from datetime import datetime
+import psycopg2
 
 # =================================================================
 # CONFIGURACIÓN DEL SISTEMA
@@ -27,64 +26,98 @@ META_ACCESS_TOKEN = "EAAmeW8lDnZAQBQJ61ZC4CCfcNFZBZAQuFBJE06SOZB1AvAexCyUVY3ajvW
 # API de Meta (v21.0)
 META_API_VERSION = "v21.0"
 
-# Test Event Code (para pruebas en Administrador de Eventos)
+# Test Event Code (para pruebas)
 TEST_EVENT_CODE = None
 
 # Configuración de archivos
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
-# Base de datos - usar /tmp en Render (persistente durante la ejecución)
-DB_PATH = "/tmp/tracking.db" if os.environ.get("RENDER") else "tracking.db"
+# =================================================================
+# POSTGRESQL (SUPABASE) - Base de Datos Persistente
+# =================================================================
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-# =================================================================
-# SQLITE SHADOW DATABASE - Persistencia de Atribución
-# =================================================================
-def init_db():
-    """Inicializa la base de datos SQLite con tabla de visitantes"""
+def get_db_connection():
+    """Obtiene conexión a PostgreSQL (Supabase)"""
+    if not DATABASE_URL:
+        return None
     try:
-        conn = sqlite3.connect(DB_PATH)
-        c = conn.cursor()
-        c.execute('''CREATE TABLE IF NOT EXISTS visitors
-                     (id INTEGER PRIMARY KEY AUTOINCREMENT,
-                      external_id TEXT NOT NULL,
-                      fbclid TEXT,
-                      ip_address TEXT,
-                      user_agent TEXT,
-                      source TEXT,
-                      timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)''')
-        c.execute('''CREATE INDEX IF NOT EXISTS idx_external_id ON visitors(external_id)''')
-        c.execute('''CREATE INDEX IF NOT EXISTS idx_fbclid ON visitors(fbclid)''')
-        conn.commit()
-        conn.close()
-        print(f"[DB] Shadow database initialized at {DB_PATH}")
+        conn = psycopg2.connect(DATABASE_URL)
+        return conn
     except Exception as e:
-        print(f"[DB ERROR] Could not initialize: {e}")
+        print(f"❌ Error conectando a DB: {e}")
+        return None
+
+def init_db():
+    """Inicializa la tabla visitors en PostgreSQL"""
+    conn = get_db_connection()
+    if not conn:
+        print("⚠️ No hay DATABASE_URL configurada. Saltando inicialización de DB.")
+        return
+    
+    try:
+        cur = conn.cursor()
+        # Sintaxis PostgreSQL con SERIAL
+        cur.execute('''
+            CREATE TABLE IF NOT EXISTS visitors (
+                id SERIAL PRIMARY KEY,
+                external_id TEXT NOT NULL,
+                fbclid TEXT,
+                ip_address TEXT,
+                user_agent TEXT,
+                source TEXT,
+                timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        ''')
+        # Crear índices para búsquedas rápidas
+        cur.execute('CREATE INDEX IF NOT EXISTS idx_visitors_external_id ON visitors(external_id);')
+        cur.execute('CREATE INDEX IF NOT EXISTS idx_visitors_fbclid ON visitors(fbclid);')
+        conn.commit()
+        cur.close()
+        conn.close()
+        print("✅ PostgreSQL (Supabase) conectada e inicializada.")
+    except Exception as e:
+        print(f"❌ Error init_db: {e}")
 
 def save_visitor(external_id: str, fbclid: str, ip_address: str, user_agent: str, source: str = "pageview"):
-    """Guarda un registro de visitante en la shadow database"""
+    """Guarda un registro de visitante en PostgreSQL"""
+    conn = get_db_connection()
+    if not conn:
+        return
+    
     try:
-        with sqlite3.connect(DB_PATH) as conn:
-            conn.execute(
-                "INSERT INTO visitors (external_id, fbclid, ip_address, user_agent, source) VALUES (?, ?, ?, ?, ?)",
-                (external_id, fbclid, ip_address, user_agent[:500], source)  # Limitar user_agent
-            )
-        print(f"[DB] Visitor saved: fbclid={bool(fbclid)}")
+        cur = conn.cursor()
+        # PostgreSQL usa %s para placeholders
+        cur.execute(
+            "INSERT INTO visitors (external_id, fbclid, ip_address, user_agent, source) VALUES (%s, %s, %s, %s, %s)",
+            (external_id, fbclid, ip_address, user_agent[:500] if user_agent else None, source)
+        )
+        conn.commit()
+        cur.close()
+        conn.close()
+        print(f"[DB] Visitor saved: fbclid={bool(fbclid)}, source={source}")
     except Exception as e:
-        print(f"[DB ERROR] Could not save visitor: {e}")
+        print(f"❌ Error save_visitor: {e}")
 
 def get_visitor_by_external_id(external_id: str):
     """Recupera el fbclid de un visitante por su external_id"""
+    conn = get_db_connection()
+    if not conn:
+        return None
+    
     try:
-        with sqlite3.connect(DB_PATH) as conn:
-            cursor = conn.execute(
-                "SELECT fbclid FROM visitors WHERE external_id = ? AND fbclid IS NOT NULL ORDER BY timestamp DESC LIMIT 1",
-                (external_id,)
-            )
-            row = cursor.fetchone()
-            return row[0] if row else None
+        cur = conn.cursor()
+        cur.execute(
+            "SELECT fbclid FROM visitors WHERE external_id = %s AND fbclid IS NOT NULL ORDER BY timestamp DESC LIMIT 1",
+            (external_id,)
+        )
+        row = cur.fetchone()
+        cur.close()
+        conn.close()
+        return row[0] if row else None
     except Exception as e:
-        print(f"[DB ERROR] Could not retrieve visitor: {e}")
+        print(f"❌ Error get_visitor: {e}")
         return None
 
 # Inicializar DB al arrancar
@@ -161,23 +194,21 @@ def send_to_meta_capi(
         print(f"[ERROR CAPI]: {e}")
 
 # =================================================================
-# ENDPOINTS - KEEP ALIVE (Para UptimeRobot)
+# ENDPOINTS - HEALTH CHECK (Para UptimeRobot)
 # =================================================================
 @app.get("/health")
 async def health_check():
-    """
-    HEALTH CHECK - Endpoint para mantener el servidor activo.
-    Configura UptimeRobot (gratis) para hacer ping cada 5 minutos.
-    """
+    """Health check + verificación de DB"""
+    db_status = "connected" if get_db_connection() else "not configured"
     return JSONResponse({
         "status": "healthy",
+        "database": db_status,
         "timestamp": datetime.now().isoformat(),
         "service": "Jorge Aguirre Flores Web"
     })
 
 @app.get("/ping")
 async def ping():
-    """Endpoint simple para keep-alive"""
     return "pong"
 
 # =================================================================
@@ -185,7 +216,7 @@ async def ping():
 # =================================================================
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request, response: Response, background_tasks: BackgroundTasks):
-    """PÁGINA DE INICIO - Con tracking y persistencia"""
+    """PÁGINA DE INICIO - Con tracking y persistencia en Supabase"""
     event_id = str(int(time.time() * 1000))
     
     client_ip = request.client.host
@@ -198,17 +229,17 @@ async def read_root(request: Request, response: Response, background_tasks: Back
     # Generar external_id único
     external_id = generate_external_id(client_ip, user_agent)
     
-    # Si no hay fbclid en URL, buscar en la shadow database
+    # Si no hay fbclid en URL, buscar en la base de datos
     if not fbclid:
         fbclid = get_visitor_by_external_id(external_id)
         if fbclid:
-            print(f"[DB] Recovered fbclid from shadow database")
+            print(f"[DB] Recovered fbclid from PostgreSQL")
     
-    # Guardar en shadow database si hay fbclid valioso
+    # Guardar en base de datos si hay fbclid valioso
     if fbclid:
         fbc_value = generate_fbc(fbclid)
         response.set_cookie(key="_fbc", value=fbc_value, max_age=90*24*60*60, httponly=True, samesite="lax")
-        # Guardar en DB para atribución futura
+        # Guardar en DB (background task)
         background_tasks.add_task(save_visitor, external_id, fbclid, client_ip, user_agent, "pageview")
     
     # Enviar PageView a Meta CAPI
@@ -226,14 +257,14 @@ async def read_root(request: Request, response: Response, background_tasks: Back
 
 @app.post("/track-lead")
 async def track_lead(request: Request, background_tasks: BackgroundTasks):
-    """TRACKING DE LEAD - Con recuperación de fbclid"""
+    """TRACKING DE LEAD - Con recuperación de fbclid de PostgreSQL"""
     data = await request.json()
     
     client_ip = request.client.host
     user_agent = request.headers.get('user-agent', '')
     external_id = generate_external_id(client_ip, user_agent)
     
-    # Recuperar fbclid de cookie o shadow database
+    # Recuperar fbclid de cookie o base de datos
     fbclid = None
     fbc_cookie = request.cookies.get("_fbc")
     if fbc_cookie and fbc_cookie.startswith("fb.1."):
@@ -241,7 +272,6 @@ async def track_lead(request: Request, background_tasks: BackgroundTasks):
         if len(parts) >= 4:
             fbclid = parts[3]
     
-    # Si no hay en cookie, buscar en DB
     if not fbclid:
         fbclid = get_visitor_by_external_id(external_id)
     

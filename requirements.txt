@@ -18,3 +18,6 @@ python-multipart==0.0.6
 
 # Procesamiento de Imágenes (WebP)
 pillow==10.2.0
+
+# PostgreSQL (Supabase) - Persistencia de Atribución
+psycopg2-binary==2.9.9
