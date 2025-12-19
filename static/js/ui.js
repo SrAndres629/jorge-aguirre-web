@@ -87,4 +87,29 @@ document.querySelectorAll('details').forEach((detail) => {
     });
 });
 
+// =================================================================
+// 4. WHATSAPP BUTTON ATTENTION ANIMATION (cada 10 segundos)
+// =================================================================
+(function () {
+    const whatsappBtn = document.getElementById('whatsappFloat');
+
+    if (whatsappBtn) {
+        // Animación de atención cada 10 segundos
+        setInterval(() => {
+            whatsappBtn.classList.add('animate-bounce');
+
+            // Quitar la animación después de 2 segundos
+            setTimeout(() => {
+                whatsappBtn.classList.remove('animate-bounce');
+            }, 2000);
+        }, 10000);
+
+        // Primera animación al cargar (después de 3 segundos)
+        setTimeout(() => {
+            whatsappBtn.classList.add('animate-bounce');
+            setTimeout(() => whatsappBtn.classList.remove('animate-bounce'), 2000);
+        }, 3000);
+    }
+})();
+
 console.log('✅ UI.js loaded');
