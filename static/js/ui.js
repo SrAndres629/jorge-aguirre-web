@@ -1,6 +1,6 @@
 /* =================================================================
-   UI.JS - Interactividad y componentes UI
-   Sliders, Sticky Header, FAQ Accordion
+   UI.JS - Interactividad Cinematic Luxury
+   Sliders, Sticky Header, FAQ Accordion, Particles, AOS
    ================================================================= */
 
 // =================================================================
@@ -94,17 +94,11 @@ document.querySelectorAll('details').forEach((detail) => {
     const whatsappBtn = document.getElementById('whatsappFloat');
 
     if (whatsappBtn) {
-        // Animación de atención cada 10 segundos
         setInterval(() => {
             whatsappBtn.classList.add('animate-bounce');
-
-            // Quitar la animación después de 2 segundos
-            setTimeout(() => {
-                whatsappBtn.classList.remove('animate-bounce');
-            }, 2000);
+            setTimeout(() => whatsappBtn.classList.remove('animate-bounce'), 2000);
         }, 10000);
 
-        // Primera animación al cargar (después de 3 segundos)
         setTimeout(() => {
             whatsappBtn.classList.add('animate-bounce');
             setTimeout(() => whatsappBtn.classList.remove('animate-bounce'), 2000);
@@ -112,4 +106,71 @@ document.querySelectorAll('details').forEach((detail) => {
     }
 })();
 
-console.log('✅ UI.js loaded');
+// =================================================================
+// 5. PARTICLES.JS - Gold Dust Effect (Atmósfera Premium)
+// =================================================================
+(function () {
+    if (typeof particlesJS !== 'undefined' && document.getElementById('particles-js')) {
+        particlesJS("particles-js", {
+            "particles": {
+                "number": {
+                    "value": 50,
+                    "density": { "enable": true, "value_area": 800 }
+                },
+                "color": { "value": "#C5A059" },
+                "shape": { "type": "circle" },
+                "opacity": {
+                    "value": 0.25,
+                    "random": true,
+                    "anim": { "enable": true, "speed": 0.5, "opacity_min": 0.1 }
+                },
+                "size": {
+                    "value": 2.5,
+                    "random": true,
+                    "anim": { "enable": true, "speed": 1, "size_min": 0.5 }
+                },
+                "line_linked": { "enable": false },
+                "move": {
+                    "enable": true,
+                    "speed": 0.5,
+                    "direction": "top",
+                    "random": true,
+                    "straight": false,
+                    "out_mode": "out"
+                }
+            },
+            "interactivity": {
+                "detect_on": "window",
+                "events": {
+                    "onhover": { "enable": true, "mode": "bubble" },
+                    "onclick": { "enable": false }
+                },
+                "modes": {
+                    "bubble": {
+                        "distance": 200,
+                        "size": 4,
+                        "duration": 2,
+                        "opacity": 0.5
+                    }
+                }
+            },
+            "retina_detect": true
+        });
+        console.log('✨ Particles.js initialized (Gold Dust)');
+    }
+})();
+
+// =================================================================
+// 6. AOS (Animate On Scroll) Initialization
+// =================================================================
+if (typeof AOS !== 'undefined') {
+    AOS.init({
+        duration: 1000,
+        easing: 'ease-out-quart',
+        once: true,
+        offset: 50
+    });
+    console.log('✅ AOS initialized');
+}
+
+console.log('✅ UI.js loaded (Cinematic Luxury v2.0)');

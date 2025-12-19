@@ -65,6 +65,9 @@
     <link rel="stylesheet" href="/static/css/custom.css">
     <link rel="stylesheet" href="/static/css/style.css">
 
+    <!-- AOS (Animate On Scroll) -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
     <!-- Meta Pixel - Variables de Jinja2 -->
     <script>
         // Guardamos los IDs de Jinja2 en variables globales antes de cargar el pixel
@@ -178,12 +181,16 @@
 
     <!-- ========== HERO SECTION ========== -->
     <header class="relative min-h-screen flex items-center justify-center pt-10 overflow-hidden">
+        <!-- Fondo con gradiente -->
         <div class="absolute inset-0 z-0">
             <div class="w-full h-full bg-gradient-to-br from-luxury-black via-luxury-dark to-luxury-black"></div>
             <div
                 class="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(197,160,89,0.1)_0%,_transparent_50%)]">
             </div>
         </div>
+
+        <!-- Gold Dust Particles (Atmósfera Premium) -->
+        <div id="particles-js" class="absolute inset-0 z-[1] pointer-events-none"></div>
 
         <div
             class="container mx-auto px-6 relative z-10 text-center md:text-left grid md:grid-cols-2 gap-12 items-center">
@@ -267,7 +274,7 @@
             </div>
             <div class="grid md:grid-cols-3 gap-8">
                 <!-- Slider Cejas -->
-                <div class="space-y-4">
+                <div class="space-y-4" data-aos="fade-up">
                     <div class="ba-slider rounded-lg overflow-hidden shadow-2xl border border-white/10" data-slider>
                         <img src="/static/images/cejas_despues.webp" alt="Cejas después" class="w-full" loading="lazy">
                         <div class="resize"><img src="/static/images/cejas_antes.webp" alt="Cejas antes" loading="lazy">
@@ -279,7 +286,7 @@
                     <h3 class="text-center text-white font-serif text-xl">Microblading de Cejas</h3>
                 </div>
                 <!-- Slider Ojos -->
-                <div class="space-y-4">
+                <div class="space-y-4" data-aos="fade-up" data-aos-delay="100">
                     <div class="ba-slider rounded-lg overflow-hidden shadow-2xl border border-white/10" data-slider>
                         <img src="/static/images/ojos_despues.webp" alt="Ojos después" class="w-full" loading="lazy">
                         <div class="resize"><img src="/static/images/ojos_antes.webp" alt="Ojos antes" loading="lazy">
@@ -291,7 +298,7 @@
                     <h3 class="text-center text-white font-serif text-xl">Delineado Permanente</h3>
                 </div>
                 <!-- Slider Labios -->
-                <div class="space-y-4">
+                <div class="space-y-4" data-aos="fade-up" data-aos-delay="200">
                     <div class="ba-slider rounded-lg overflow-hidden shadow-2xl border border-white/10" data-slider>
                         <img src="/static/images/labios_despues.webp" alt="Labios después" class="w-full"
                             loading="lazy">
@@ -369,8 +376,7 @@
         </div>
         <div class="container mx-auto px-6 grid md:grid-cols-3 gap-6">
             <!-- Cejas -->
-            <div data-service-category="cejas"
-                class="group p-8 bg-luxury-black border border-white/5 hover:border-luxury-gold/50 transition duration-500 rounded-lg relative overflow-hidden">
+            <div data-service-category="cejas" data-aos="fade-up" class="glass-card group p-8 rounded-lg">
                 <i class="fas fa-feather-alt text-5xl text-luxury-gold mb-6"></i>
                 <h3 class="text-2xl font-serif text-white mb-3">Microblading de Cejas</h3>
                 <p class="text-gray-500 text-sm mb-6">Técnica pelo a pelo para recuperar densidad y definir tu mirada.
@@ -386,9 +392,10 @@
                 </button>
             </div>
             <!-- Ojos -->
-            <div data-service-category="ojos"
-                class="group p-8 bg-luxury-black border border-white/5 hover:border-luxury-gold/50 transition duration-500 rounded-lg relative overflow-hidden">
-                <div class="absolute top-0 right-0 bg-luxury-gold text-black text-[10px] font-bold px-3 py-1 uppercase">
+            <div data-service-category="ojos" data-aos="fade-up" data-aos-delay="100"
+                class="glass-card group p-8 rounded-lg">
+                <div
+                    class="absolute top-0 right-0 bg-luxury-gold text-black text-[10px] font-bold px-3 py-1 uppercase z-10">
                     Más Pedido</div>
                 <i class="fas fa-eye text-5xl text-luxury-gold mb-6"></i>
                 <h3 class="text-2xl font-serif text-white mb-3">Delineado Permanente</h3>
@@ -404,8 +411,8 @@
                 </button>
             </div>
             <!-- Labios -->
-            <div data-service-category="labios"
-                class="group p-8 bg-luxury-black border border-white/5 hover:border-luxury-gold/50 transition duration-500 rounded-lg relative overflow-hidden">
+            <div data-service-category="labios" data-aos="fade-up" data-aos-delay="200"
+                class="glass-card group p-8 rounded-lg">
                 <i class="fas fa-heart text-5xl text-luxury-gold mb-6"></i>
                 <h3 class="text-2xl font-serif text-white mb-3">Labios Full Color</h3>
                 <p class="text-gray-500 text-sm mb-6">Revitalización de color natural. Corrige asimetrías.</p>
@@ -523,6 +530,12 @@
         aria-label="Contactar por WhatsApp">
         <i class="fab fa-whatsapp text-white text-3xl"></i>
     </button>
+
+    <!-- Particles.js (Gold Dust Effect) -->
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+
+    <!-- AOS (Animate On Scroll) -->
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
 
     <!-- JavaScript Modular -->
     <script src="/static/js/tracking.js"></script>
