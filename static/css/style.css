@@ -20,6 +20,9 @@
     /* Aspect ratio consistente */
     aspect-ratio: 1 / 1;
     background: #0a0a0a;
+    /* CRÍTICO: Contener el slider dentro del viewport */
+    max-width: 100%;
+    width: 100%;
 }
 
 /* Imagen base (DESPUÉS) - ocupa todo el contenedor */
@@ -52,10 +55,14 @@
     position: absolute;
     top: 0;
     left: 0;
-    width: 100vw;
-    max-width: none;
+    /* CRÍTICO: Heredar el ancho del slider contenedor, NO usar vw */
+    width: 100%;
+    min-width: 100%;
     height: 100%;
     object-fit: cover;
+    object-position: center;
+    /* Para que JS pueda sobrescribir con el ancho exacto */
+    width: var(--slider-width, 100%);
 }
 
 /* El Divider - "Hilo de Oro" */
@@ -163,12 +170,17 @@ details[open] summary~* {
    ================================================================= */
 @media (max-width: 768px) {
     .ba-slider {
-        aspect-ratio: 4 / 5;
+        /* Aspect ratio más cuadrado para móvil */
+        aspect-ratio: 1 / 1;
         border-radius: 8px;
+        /* Asegurar que no desborde */
+        max-width: 100%;
     }
 
+    /* CRÍTICO: NO usar vw - el JS calculará el ancho correcto */
     .ba-slider .resize img {
-        width: 200vw;
+        /* Hereda del JS via --slider-width */
+        width: var(--slider-width, 100%);
     }
 
     .ba-slider .divider::before {
@@ -183,7 +195,7 @@ details[open] summary~* {
 
     .ba-label {
         padding: 3px 8px;
-        font-size: 0.5rem;
+        font-size: 0.55rem;
         top: 8px;
     }
 

@@ -36,13 +36,48 @@
 })();
 
 // =================================================================
-// 2. BEFORE/AFTER SLIDERS (GPU Optimized)
+// 2. BEFORE/AFTER SLIDERS (GPU Optimized + Mobile Fixed)
 // =================================================================
 document.querySelectorAll('[data-slider]').forEach(slider => {
     const resize = slider.querySelector('.resize');
     const divider = slider.querySelector('.divider');
+    const resizeImg = resize?.querySelector('img');
 
     if (!resize || !divider) return;
+
+    // Función para calcular y establecer el ancho correcto del slider
+    const setSliderWidth = () => {
+        requestAnimationFrame(() => {
+            const width = slider.offsetWidth;
+            if (resizeImg && width > 0) {
+                // Aplicar el ancho exacto del contenedor a la imagen overlay
+                resizeImg.style.width = width + 'px';
+                // También establecer como variable CSS de respaldo
+                slider.style.setProperty('--slider-width', width + 'px');
+            }
+        });
+    };
+
+    // Ejecutar después de que las imágenes carguen
+    const initSlider = () => {
+        setSliderWidth();
+        // Doble verificación después de un pequeño delay
+        setTimeout(setSliderWidth, 100);
+        setTimeout(setSliderWidth, 500);
+    };
+
+    // Eventos de inicialización
+    initSlider();
+    window.addEventListener('resize', setSliderWidth);
+    window.addEventListener('orientationchange', () => setTimeout(setSliderWidth, 100));
+
+    // También recalcular cuando las imágenes carguen
+    const images = slider.querySelectorAll('img');
+    images.forEach(img => {
+        if (!img.complete) {
+            img.addEventListener('load', setSliderWidth);
+        }
+    });
 
     let rafId = null;
     let isDown = false;
