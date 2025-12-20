@@ -168,7 +168,8 @@ def track_lead(
     event_id: str,
     source: str,
     fbclid: Optional[str] = None,
-    external_id: Optional[str] = None
+    external_id: Optional[str] = None,
+    service_data: Optional[Dict[str, Any]] = None
 ) -> bool:
     """Shortcut para enviar Lead"""
     custom_data = {
@@ -176,6 +177,15 @@ def track_lead(
         "content_category": "lead",
         "lead_source": source
     }
+    
+    # Merge granular data if available
+    if service_data:
+        custom_data.update({
+            "content_name": service_data.get("name", source),
+            "content_ids": [service_data.get("id")] if service_data.get("id") else [],
+            "content_category": service_data.get("intent", "lead"),
+            "trigger_location": source
+        })
     
     return send_event(
         event_name="Lead",

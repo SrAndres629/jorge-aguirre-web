@@ -1,28 +1,41 @@
 /* =================================================================
    JORGE AGUIRRE FLORES - STYLE.CSS
    Estilos específicos: Slider Before/After, FAQ Accordion
-   (Animaciones principales están en custom.css)
+   LUXURY MOBILE FIRST - Score Target > 9.0
    ================================================================= */
 
 /* =================================================================
-   BEFORE/AFTER SLIDER - "Magic Mirror" Premium
+   BEFORE/AFTER SLIDER - "Arrow Toggle" Redesign
    ================================================================= */
 .ba-slider {
     position: relative;
     overflow: hidden;
-    cursor: ew-resize;
-    touch-action: pan-y pinch-zoom;
-    -webkit-user-select: none;
-    user-select: none;
-    border-radius: 12px;
-    border: 1px solid rgba(197, 160, 89, 0.3);
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    /* LUXURY: Rounded corners increased */
+    border-radius: 20px;
+    /* LUXURY: Golden glow border */
+    border: 1px solid rgba(197, 160, 89, 0.4);
+    /* LUXURY: Diffuse golden shadow - floating effect */
+    box-shadow:
+        0 20px 50px rgba(0, 0, 0, 0.6),
+        0 10px 30px rgba(197, 160, 89, 0.12),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
     /* Aspect ratio consistente */
     aspect-ratio: 1 / 1;
     background: #0a0a0a;
     /* CRÍTICO: Contener el slider dentro del viewport */
     max-width: 100%;
     width: 100%;
+    /* Smooth container */
+    transform: translateZ(0);
+}
+
+/* Hover glow effect */
+.ba-slider:hover {
+    box-shadow:
+        0 25px 60px rgba(0, 0, 0, 0.7),
+        0 15px 40px rgba(197, 160, 89, 0.18),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    border-color: rgba(197, 160, 89, 0.6);
 }
 
 /* Imagen base (DESPUÉS) - ocupa todo el contenedor */
@@ -43,11 +56,14 @@
     top: 0;
     left: 0;
     height: 100%;
-    width: 50%;
+    /* Start at 100% to show Before */
+    width: 100%;
     overflow: hidden;
     will-change: width;
     transform: translateZ(0);
     backface-visibility: hidden;
+    transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+    /* Smooth toggle animation */
 }
 
 /* Imagen ANTES - debe coincidir exactamente con la imagen base */
@@ -55,108 +71,126 @@
     position: absolute;
     top: 0;
     left: 0;
-    /* CRÍTICO: Heredar el ancho del slider contenedor, NO usar vw */
     width: 100%;
     min-width: 100%;
     height: 100%;
     object-fit: cover;
     object-position: center;
-    /* Para que JS pueda sobrescribir con el ancho exacto */
-    width: var(--slider-width, 100%);
-}
-
-/* El Divider - "Hilo de Oro" */
-.ba-slider .divider {
-    position: absolute;
-    width: 3px;
-    height: 100%;
-    background: linear-gradient(to bottom, rgba(197, 160, 89, 1), rgba(197, 160, 89, 0.6));
-    left: 50%;
-    top: 0;
-    transform: translateX(-50%) translateZ(0);
-    cursor: ew-resize;
-    z-index: 10;
-    will-change: left;
-    box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
-    /* Smooth touch physics - suave al soltar */
-    transition: left 0.05s ease-out;
-}
-
-/* Durante el arrastre - sin transición para respuesta inmediata */
-.ba-slider.dragging .divider {
-    transition: none;
-}
-
-/* El Manubrio - Botón Dorado */
-.ba-slider .divider::before {
-    content: '';
-    position: absolute;
-    width: 44px;
-    height: 44px;
-    background: linear-gradient(145deg, #C5A059, #B08D45);
-    border-radius: 50%;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    /* Feedback táctil visual */
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-/* Efecto de "presión" al tocar */
-.ba-slider:active .divider::before,
-.ba-slider.dragging .divider::before {
-    transform: translate(-50%, -50%) scale(1.1);
-    box-shadow: 0 6px 25px rgba(197, 160, 89, 0.6);
-}
-
-/* Flechas en el Manubrio */
-.ba-slider .divider::after {
-    content: '◀ ▶';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    color: #0a0a0a;
-    font-size: 10px;
-    font-weight: bold;
-    white-space: nowrap;
-    z-index: 11;
-    letter-spacing: 2px;
-}
-
-/* Etiquetas Minimalistas Flotantes */
-.ba-label {
-    position: absolute;
-    top: 12px;
-    font-family: 'Montserrat', sans-serif;
-    font-size: 0.6rem;
-    letter-spacing: 0.12em;
-    font-weight: 600;
-    color: white;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
-    pointer-events: none;
-    z-index: 15;
-    background: rgba(0, 0, 0, 0.5);
-    padding: 4px 10px;
-    border-radius: 20px;
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
-    text-transform: uppercase;
-}
-
-.ba-label.before {
-    left: 12px;
-}
-
-.ba-label.after {
-    right: 12px;
+    /* Reset var usage since we are toggling 0/100 */
+    width: 100%;
 }
 
 /* =================================================================
-   FAQ ACCORDION
+   SLIDER ARROWS - Navigation Redesign
    ================================================================= */
+.slider-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 44px;
+    height: 44px;
+    background: rgba(10, 10, 10, 0.6);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(197, 160, 89, 0.4);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #C5A059;
+    font-size: 1.2rem;
+    z-index: 20;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+}
+
+.slider-arrow:hover {
+    background: #C5A059;
+    color: #000;
+    transform: translateY(-50%) scale(1.1);
+    box-shadow: 0 6px 20px rgba(197, 160, 89, 0.4);
+}
+
+.slider-arrow:active {
+    transform: translateY(-50%) scale(0.95);
+}
+
+.slider-arrow.left {
+    left: 10px;
+}
+
+.slider-arrow.right {
+    right: 10px;
+}
+
+/* =================================================================
+   ETIQUETAS - GLASSMORPHISM PREMIUM
+   ================================================================= */
+.ba-label {
+    position: absolute;
+    top: 16px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.55rem;
+    letter-spacing: 0.15em;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.95);
+    text-shadow: none;
+    pointer-events: none;
+    z-index: 15;
+    background: rgba(10, 10, 10, 0.4);
+    padding: 6px 14px;
+    border-radius: 100px;
+    backdrop-filter: blur(12px) saturate(180%);
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
+    text-transform: uppercase;
+    border: 1px solid rgba(197, 160, 89, 0.25);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.1),
+        0 4px 12px rgba(0, 0, 0, 0.3);
+    transition: opacity 0.3s ease;
+}
+
+.ba-label.before {
+    left: 16px;
+}
+
+.ba-label.after {
+    right: 16px;
+    border-color: rgba(197, 160, 89, 0.4);
+    color: rgba(229, 197, 133, 1);
+}
+
+/* Hide labels based on state */
+.ba-slider.show-after .ba-label.before {
+    opacity: 0.3;
+}
+
+.ba-slider.show-after .ba-label.after {
+    opacity: 1;
+    border-color: #C5A059;
+    background: rgba(197, 160, 89, 0.2);
+}
+
+.ba-slider:not(.show-after) .ba-label.after {
+    opacity: 0.3;
+}
+
+.ba-slider:not(.show-after) .ba-label.before {
+    opacity: 1;
+    border-color: #C5A059;
+    background: rgba(197, 160, 89, 0.2);
+}
+
+
+/* =================================================================
+   MOBILE AUTO-HOVER (Scroll Triggered)
+   ================================================================= */
+.mobile-active {
+    transform: translateY(-5px) scale(1.02) !important;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* FAQ ACCORDION */
 details>summary {
     list-style: none;
 }
@@ -186,56 +220,55 @@ details[open] summary~* {
    ================================================================= */
 @media (max-width: 768px) {
     .ba-slider {
-        /* Aspect ratio más cuadrado para móvil */
-        aspect-ratio: 1 / 1;
-        border-radius: 8px;
-        /* Asegurar que no desborde */
+        aspect-ratio: 4 / 5;
+        border-radius: 16px;
         max-width: 100%;
-    }
-
-    /* CRÍTICO: NO usar vw - el JS calculará el ancho correcto */
-    .ba-slider .resize img {
-        /* Hereda del JS via --slider-width */
-        width: var(--slider-width, 100%);
-    }
-
-    .ba-slider .divider::before {
-        width: 36px;
-        height: 36px;
-    }
-
-    .ba-slider .divider::after {
-        font-size: 9px;
-        letter-spacing: 1px;
+        margin-bottom: 1rem;
     }
 
     .ba-label {
-        padding: 3px 8px;
-        font-size: 0.55rem;
-        top: 8px;
+        padding: 5px 12px;
+        font-size: 0.5rem;
+        top: 12px;
     }
 
     .ba-label.before {
-        left: 8px;
+        left: 12px;
     }
 
     .ba-label.after {
-        right: 8px;
+        right: 12px;
+    }
+
+    .mobile-active {
+        /* More pronounced active state for mobile focus */
+        border-color: rgba(197, 160, 89, 0.6) !important;
+        /* Forced Scale Override for Mobile */
+        transform: scale(1.02) !important;
+        /* Smooth Tilt Reset */
+        transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.5s ease;
+    }
+
+    /* FORCE SHINE (GLARE) ON MOBILE ACTIVE */
+    .mobile-active .js-tilt-glare {
+        opacity: 1 !important;
+        transition: opacity 0.5s ease;
+    }
+
+    .mobile-active .js-tilt-glare-inner {
+        opacity: 0.4 !important;
+        /* Adjust strength of the shine */
     }
 }
 
-/* Pantallas muy pequeñas */
 @media (max-width: 480px) {
     .ba-slider {
         aspect-ratio: 3 / 4;
     }
+}
 
-    .ba-slider .divider::before {
-        width: 32px;
-        height: 32px;
-    }
-
-    .ba-slider .divider::after {
-        font-size: 8px;
+@media (max-width: 768px) {
+    .ba-slider-section {
+        padding-bottom: 80px;
     }
 }

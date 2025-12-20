@@ -40,10 +40,11 @@
 // =================================================================
 document.querySelectorAll('[data-slider]').forEach(slider => {
     const resize = slider.querySelector('.resize');
-    const divider = slider.querySelector('.divider');
+
+    // Divider removed as we moved to arrow-only navigation for mobile stability
     const resizeImg = resize?.querySelector('img');
 
-    if (!resize || !divider) return;
+    if (!resize) return;
 
     // Función para calcular y establecer el ancho correcto del slider
     const setSliderWidth = () => {
@@ -79,46 +80,34 @@ document.querySelectorAll('[data-slider]').forEach(slider => {
         }
     });
 
-    let rafId = null;
-    let isDown = false;
+    // =================================================================
+    // NEW: ARROW TOGGLE LOGIC (Mobile Friendly)
+    // =================================================================
+    const leftArrow = slider.querySelector('.slider-arrow.left');
+    const rightArrow = slider.querySelector('.slider-arrow.right');
 
-    const updateSlider = (x) => {
-        const rect = slider.getBoundingClientRect();
-        const position = ((x - rect.left) / rect.width) * 100;
-        const clamped = Math.max(0, Math.min(position, 100));
-
-        if (rafId) cancelAnimationFrame(rafId);
-
-        rafId = requestAnimationFrame(() => {
-            resize.style.width = clamped + '%';
-            divider.style.left = clamped + '%';
+    if (leftArrow && rightArrow) {
+        // Click Right -> Show After (Overlay Width 0%)
+        rightArrow.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            resize.style.width = '0%';
+            slider.classList.add('show-after');
         });
-    };
 
-    // Start dragging
-    const startDrag = (x) => {
-        isDown = true;
-        slider.classList.add('dragging');
-        updateSlider(x);
-    };
+        // Click Left -> Show Before (Overlay Width 100%)
+        leftArrow.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            resize.style.width = '100%';
+            slider.classList.remove('show-after');
+        });
+    }
 
-    // Stop dragging
-    const stopDrag = () => {
-        isDown = false;
-        slider.classList.remove('dragging');
-    };
-
-    // Mouse events
-    slider.addEventListener('mousedown', (e) => startDrag(e.clientX));
-    slider.addEventListener('mousemove', (e) => { if (isDown) updateSlider(e.clientX); });
-    slider.addEventListener('mouseup', stopDrag);
-    slider.addEventListener('mouseleave', stopDrag);
-
-    // Touch events - optimized for mobile
-    slider.addEventListener('touchstart', (e) => startDrag(e.touches[0].clientX), { passive: true });
-    slider.addEventListener('touchmove', (e) => { if (isDown) updateSlider(e.touches[0].clientX); }, { passive: true });
-    slider.addEventListener('touchend', stopDrag);
-    slider.addEventListener('touchcancel', stopDrag);
+    // Initialize state
+    // Default is width: 100% (Before) via CSS
+    // Optional: Ensure class sync
+    // slider.classList.remove('show-after');
 });
 
 // =================================================================
@@ -229,3 +218,57 @@ if (typeof VanillaTilt !== 'undefined') {
 }
 
 console.log('✅ UI.js loaded (Spaceship v3.0)');
+
+// =================================================================
+// 8. SMART STICKY BAR (Mobile) - Hide when collision with other CTAs
+// =================================================================
+document.addEventListener('DOMContentLoaded', () => {
+    // 1. Identify key elements
+    const stickyBar = document.querySelector('.fixed.bottom-0.md\\:hidden');
+    // Select buttons that are conceptually "Main CTAs"
+    const triggers = [
+        document.querySelector("button[onclick*='Hero CTA']"),
+        document.querySelector("button[onclick*='CTA Final']")
+    ].filter(el => el);
+
+    if (!stickyBar || triggers.length === 0) return;
+
+    // 2. Observer options
+    const observer = new IntersectionObserver((entries) => {
+        // Check if ANY of the triggers are currently visible
+        // We need to know if *any* trigger is intersecting, not just the one that changed
+        // So we might need to track state more robustly, but for simple toggle:
+        // If *this* entry is intersecting, hide.
+        // But what if two are visible? (Unlikely for Hero/Final, they are far apart)
+        // Simple logic: If entry.isIntersecting -> Hide. If !isIntersecting -> Show?
+        // Wait, if I scroll past Hero, it triggers !isIntersecting -> Show. Correct.
+
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                // If a Main CTA is visible, HIDE the sticky bar
+                stickyBar.classList.add('translate-y-full', 'opacity-0', 'pointer-events-none');
+            } else {
+                // If a Main CTA is NOT visible, SHOW the sticky bar...
+                // BUT only if NO OTHER trigger is visible?
+                // Given Hero and Final are far apart, this simple toggle is likely fine.
+                // However, if I rely on 'forEach', one entry might say "hidden" and another "visible" in the same tick if they were close.
+                // Better: Check active triggers.
+
+                // Let's stick to the entry logic. If 'isIntersecting' is false, it means *that specific button* left view.
+                // We should check if any others are visible?
+                // For simplicity/robustness:
+                const isAnyVisible = triggers.some(t => {
+                    const rect = t.getBoundingClientRect();
+                    return (rect.top < window.innerHeight && rect.bottom > 0);
+                });
+
+                if (!isAnyVisible) {
+                    stickyBar.classList.remove('translate-y-full', 'opacity-0', 'pointer-events-none');
+                }
+            }
+        });
+    }, { root: null, threshold: 0.1 });
+
+    // 3. Start observing
+    triggers.forEach(trigger => observer.observe(trigger));
+});

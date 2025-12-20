@@ -9,14 +9,16 @@ from typing import Optional
 class LeadTrackRequest(BaseModel):
     """Schema para POST /track-lead"""
     event_id: str = Field(..., description="ID único del evento para deduplicación")
-    source: str = Field(..., description="Fuente del lead (ej: 'Hero CTA', 'Floating Button')")
+    source: str = Field(..., description="Fuente del lead (ej: 'Hero CTA')")
+    service_data: Optional[dict] = Field(default=None, description="Datos granulares: nombre, id, intención")
 
 
 class ViewContentRequest(BaseModel):
     """Schema para POST /track-viewcontent"""
     service: str = Field(..., description="Nombre del servicio visto")
-    category: str = Field(..., description="Categoría del servicio (cejas, ojos, labios)")
+    category: str = Field(..., description="Categoría del servicio")
     price: Optional[float] = Field(default=0, description="Precio del servicio en USD")
+    event_id: Optional[str] = Field(default=None, description="ID generado en frontend para deduplicación")
 
 
 class VisitorResponse(BaseModel):

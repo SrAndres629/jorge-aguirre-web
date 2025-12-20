@@ -41,10 +41,37 @@ app = FastAPI(
 )
 
 # Middleware GZip para compresión (5x más rápido en móviles)
-app.add_middleware(GZipMiddleware, minimum_size=1000)
+app.add_middleware(GZipMiddleware, minimum_size=500)
 
-# Archivos estáticos (CSS, JS, imágenes)
-app.mount("/static", StaticFiles(directory="static"), name="static")
+# =================================================================
+# ARCHIVOS ESTÁTICOS CON CACHE AGRESIVO
+# =================================================================
+
+from starlette.staticfiles import StaticFiles as StarletteStaticFiles
+from starlette.responses import Response
+import os
+
+class CachedStaticFiles(StarletteStaticFiles):
+    """StaticFiles con headers de caché agresivos para WPO"""
+    
+    async def get_response(self, path: str, scope) -> Response:
+        response = await super().get_response(path, scope)
+        
+        # Agregar Cache-Control a todos los recursos
+        ext = os.path.splitext(path)[1].lower()
+        
+        # Imágenes, CSS, JS: caché de 1 año (inmutable)
+        if ext in ['.webp', '.png', '.jpg', '.jpeg', '.gif', '.svg', 
+                   '.css', '.js', '.woff', '.woff2']:
+            response.headers['Cache-Control'] = 'public, max-age=31536000, immutable'
+        else:
+            # Otros archivos: caché más corto
+            response.headers['Cache-Control'] = 'public, max-age=86400'
+        
+        return response
+
+# Montar archivos estáticos con caché
+app.mount("/static", CachedStaticFiles(directory="static"), name="static")
 
 
 # =================================================================

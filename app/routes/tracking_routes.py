@@ -61,7 +61,8 @@ async def track_lead_endpoint(
             data.event_id,
             data.source,
             fbclid,
-            external_id
+            external_id,
+            data.service_data
         )
         
         return TrackResponse(status="success", event_id=data.event_id)
@@ -81,13 +82,14 @@ async def track_viewcontent_endpoint(
     Envía evento ViewContent para retargeting de servicios específicos
     """
     try:
-        event_id = f"vc_{int(time.time() * 1000)}"
+        # Usar event_id del frontend si existe (mejor deduplicación), si no generar uno
+        event_id = data.event_id if data.event_id else f"vc_{int(time.time() * 1000)}"
         
         client_ip = request.client.host
         user_agent = request.headers.get('user-agent', '')
         external_id = generate_external_id(client_ip, user_agent)
         
-        # Recuperar fbclid
+        # Recuperar fbclid wait...
         fbclid = None
         fbc_cookie = request.cookies.get("_fbc")
         if fbc_cookie:
