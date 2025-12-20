@@ -95,13 +95,30 @@ document.querySelectorAll('[data-slider]').forEach(slider => {
         });
     };
 
-    slider.addEventListener('mousedown', (e) => { isDown = true; updateSlider(e.clientX); });
+    // Start dragging
+    const startDrag = (x) => {
+        isDown = true;
+        slider.classList.add('dragging');
+        updateSlider(x);
+    };
+
+    // Stop dragging
+    const stopDrag = () => {
+        isDown = false;
+        slider.classList.remove('dragging');
+    };
+
+    // Mouse events
+    slider.addEventListener('mousedown', (e) => startDrag(e.clientX));
     slider.addEventListener('mousemove', (e) => { if (isDown) updateSlider(e.clientX); });
-    slider.addEventListener('mouseup', () => isDown = false);
-    slider.addEventListener('mouseleave', () => isDown = false);
-    slider.addEventListener('touchstart', (e) => { isDown = true; updateSlider(e.touches[0].clientX); }, { passive: true });
+    slider.addEventListener('mouseup', stopDrag);
+    slider.addEventListener('mouseleave', stopDrag);
+
+    // Touch events - optimized for mobile
+    slider.addEventListener('touchstart', (e) => startDrag(e.touches[0].clientX), { passive: true });
     slider.addEventListener('touchmove', (e) => { if (isDown) updateSlider(e.touches[0].clientX); }, { passive: true });
-    slider.addEventListener('touchend', () => isDown = false);
+    slider.addEventListener('touchend', stopDrag);
+    slider.addEventListener('touchcancel', stopDrag);
 });
 
 // =================================================================

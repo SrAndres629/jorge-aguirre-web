@@ -78,6 +78,13 @@
     z-index: 10;
     will-change: left;
     box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+    /* Smooth touch physics - suave al soltar */
+    transition: left 0.05s ease-out;
+}
+
+/* Durante el arrastre - sin transición para respuesta inmediata */
+.ba-slider.dragging .divider {
+    transition: none;
 }
 
 /* El Manubrio - Botón Dorado */
@@ -93,6 +100,15 @@
     transform: translate(-50%, -50%);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
     border: 2px solid rgba(255, 255, 255, 0.3);
+    /* Feedback táctil visual */
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Efecto de "presión" al tocar */
+.ba-slider:active .divider::before,
+.ba-slider.dragging .divider::before {
+    transform: translate(-50%, -50%) scale(1.1);
+    box-shadow: 0 6px 25px rgba(197, 160, 89, 0.6);
 }
 
 /* Flechas en el Manubrio */
