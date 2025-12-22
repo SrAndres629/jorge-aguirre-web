@@ -23,6 +23,20 @@ brain/
 # System
 .DS_Store
 Thumbs.db
+*.log
+*.tmp
+
+# Design Source Files (High File Size)
+*.psd
+*.ai
+*.fig
+*.raw
+*.sketch
+design_backups/
+
+# Production Secrets
+.env.production
+.env.test
 
 # Output artifacts that are built (Optional - depends on deployment strategy)
 # static/css/output.css # Mantener comentado si despliegas archivos estáticos

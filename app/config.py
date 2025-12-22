@@ -19,11 +19,8 @@ class Settings:
     
     def __init__(self):
         # Meta Ads (Pixel + CAPI)
-        self.META_PIXEL_ID: str = os.getenv("META_PIXEL_ID", "1412977383680793")
-        self.META_ACCESS_TOKEN: str = os.getenv(
-            "META_ACCESS_TOKEN",
-            "EAAmeW8lDnZAQBQJ61ZC4CCfcNFZBZAQuFBJE06SOZB1AvAexCyUVY3ajvW9u46dvMoYvFMSudqhdYNW4A2PQicr0tcUZBG0itr9ZBUZAuzq7eC83avJT9ox75W5WrncNheJ928IZAo4BxB403x8eeckpdYU8dgu84pHxZC0lEVssgLWWE1Xm30JZCuQbKKkoZB2dkgZDZD"
-        )
+        self.META_PIXEL_ID: str = os.getenv("META_PIXEL_ID", "")
+        self.META_ACCESS_TOKEN: str = os.getenv("META_ACCESS_TOKEN", "")
         self.META_API_VERSION: str = "v21.0"
         self.TEST_EVENT_CODE: Optional[str] = os.getenv("TEST_EVENT_CODE")
         
