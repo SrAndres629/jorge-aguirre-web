@@ -130,6 +130,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
                 console.log(`🔥 SliderInteraction: Jugó con ${serviceName}`);
             }
+
+            // CAPI (Server)
+            sendToCAPI('Slider', {
+                event_id: 'slider_' + Date.now() + '_' + serviceId,
+                service_name: serviceName,
+                service_id: serviceId,
+                interaction_type: 'compare_before_after'
+            });
         };
 
         // Trigger en click o touch en el slider

@@ -1,0 +1,10 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Luxury Tokens Refactor */
+@layer components {
+    .btn-gold-liquid {
+        @apply relative overflow-hidden font-bold text-black border-none transition-transform duration-500 bg-gradient-to-br from-luxury-gold via-luxury-gold-light to-luxury-gold-dark bg-[length:200%_200%];
+    }
+}

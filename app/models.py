@@ -21,6 +21,14 @@ class ViewContentRequest(BaseModel):
     event_id: Optional[str] = Field(default=None, description="ID generado en frontend para deduplicación")
 
 
+class SliderTrackRequest(BaseModel):
+    """Schema para POST /track-slider"""
+    event_id: str = Field(..., description="ID único del evento")
+    service_name: str = Field(..., description="Nombre del servicio (ej: 'Microblading 3D')")
+    service_id: str = Field(..., description="ID técnico del servicio")
+    interaction_type: str = Field(default="compare_before_after", description="Tipo de interacción")
+
+
 class VisitorResponse(BaseModel):
     """Response schema para visitantes"""
     id: int

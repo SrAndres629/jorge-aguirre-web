@@ -231,6 +231,37 @@ def track_viewcontent(
     )
 
 
+def track_slider_interaction(
+    url: str,
+    client_ip: str,
+    user_agent: str,
+    event_id: str,
+    service_name: str,
+    service_id: str,
+    interaction_type: str,
+    fbclid: Optional[str] = None,
+    external_id: Optional[str] = None
+) -> bool:
+    """Shortcut para enviar SliderInteraction (Custom Event)"""
+    custom_data = {
+        "content_name": service_name,
+        "content_id": service_id,
+        "interaction_type": interaction_type,
+        "content_category": "interaction"
+    }
+    
+    return send_event(
+        event_name="SliderInteraction",
+        event_source_url=url,
+        client_ip=client_ip,
+        user_agent=user_agent,
+        event_id=event_id,
+        fbclid=fbclid,
+        external_id=external_id,
+        custom_data=custom_data
+    )
+
+
 def track_purchase(
     external_id: str,
     fbclid: Optional[str],
