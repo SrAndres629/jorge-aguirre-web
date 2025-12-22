@@ -461,15 +461,38 @@ button:focus-visible {
     }
 
     /* Disable heavy animations on mobile for performance */
-    @media (prefers-reduced-motion: reduce) {
+    @media (prefers-reduced-motion: no-preference) {
+        /* Solo permitir animaciones si el usuario NO ha pedido reducirlas
+           Y estamos en móvil (donde ya estamos dentro del media query max-width 768px) 
+           -> En realidad queremos DESHABILITARLAS por defecto en móvil para rendimiento */
+    }
 
-        *,
-        *::before,
-        *::after {
-            animation-duration: 0.01ms !important;
-            animation-iteration-count: 1 !important;
-            transition-duration: 0.01ms !important;
-        }
+    /* Force disable CPU/GPU heavy effects on mobile */
+    .btn-gold-liquid {
+        animation: none !important;
+        box-shadow: 0 4px 15px rgba(197, 160, 89, 0.4) !important;
+        /* Static shadow */
+    }
+
+    .animate-pulse-gold,
+    .animate-float,
+    .animate-shimmer {
+        animation: none !important;
+    }
+
+    .glass-card,
+    .service-card-skin {
+        backdrop-filter: blur(10px);
+        /* Reduce blur radius */
+        -webkit-backdrop-filter: blur(10px);
+        transform: none !important;
+        /* Disable tilt transform on scroll */
+        transition: none !important;
+    }
+
+    /* Disable Particles.js on mobile */
+    #particles-js {
+        display: none !important;
     }
 }
 

@@ -3,15 +3,26 @@ __pycache__/
 *.py[cod]
 *$py.class
 venv/
-.env
+.venv/
+env/
 
-# Node.js
+# Environment Variables (Security)
+.env
+.env.local
+
+# Node
 node_modules/
 npm-debug.log
 
-# VS Code
-.vscode/
+# Private Assets (Local Only)
+design_assets/
+raw_images/
+docs/private/
+brain/
 
-# OS
+# System
 .DS_Store
 Thumbs.db
+
+# Output artifacts that are built (Optional - depends on deployment strategy)
+# static/css/output.css # Mantener comentado si despliegas archivos estáticos

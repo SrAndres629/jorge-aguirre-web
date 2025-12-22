@@ -235,28 +235,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 2. Observer options
     const observer = new IntersectionObserver((entries) => {
-        // Check if ANY of the triggers are currently visible
-        // We need to know if *any* trigger is intersecting, not just the one that changed
-        // So we might need to track state more robustly, but for simple toggle:
-        // If *this* entry is intersecting, hide.
-        // But what if two are visible? (Unlikely for Hero/Final, they are far apart)
-        // Simple logic: If entry.isIntersecting -> Hide. If !isIntersecting -> Show?
-        // Wait, if I scroll past Hero, it triggers !isIntersecting -> Show. Correct.
-
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 // If a Main CTA is visible, HIDE the sticky bar
                 stickyBar.classList.add('translate-y-full', 'opacity-0', 'pointer-events-none');
             } else {
-                // If a Main CTA is NOT visible, SHOW the sticky bar...
-                // BUT only if NO OTHER trigger is visible?
-                // Given Hero and Final are far apart, this simple toggle is likely fine.
-                // However, if I rely on 'forEach', one entry might say "hidden" and another "visible" in the same tick if they were close.
-                // Better: Check active triggers.
-
-                // Let's stick to the entry logic. If 'isIntersecting' is false, it means *that specific button* left view.
-                // We should check if any others are visible?
-                // For simplicity/robustness:
+                // Only show if none are visible (simplified logic for now, works for distant sections)
+                // Re-check all triggers in case multiple observers fire
                 const isAnyVisible = triggers.some(t => {
                     const rect = t.getBoundingClientRect();
                     return (rect.top < window.innerHeight && rect.bottom > 0);
@@ -271,4 +256,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 3. Start observing
     triggers.forEach(trigger => observer.observe(trigger));
+});
+
+
+// =================================================================
+// 9. SMART ANIMATION ENGINE (Premium Performance)
+// =================================================================
+document.addEventListener('DOMContentLoaded', () => {
+    // Select heavy animated elements
+    const heavyElements = document.querySelectorAll(
+        '.btn-gold-liquid, .animate-pulse-gold, .glass-card, .service-card-skin, #particles-js'
+    );
+
+    if (heavyElements.length === 0) return;
+
+    const smartObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                // In viewport: RESUME animation
+                entry.target.classList.remove('paused');
+            } else {
+                // Out viewport: PAUSE animation (Release CPU/GPU)
+                entry.target.classList.add('paused');
+            }
+        });
+    }, {
+        root: null,
+        rootMargin: '100px 0px', // Resume slightly before entering screen
+        threshold: 0.01
+    });
+
+    heavyElements.forEach(el => smartObserver.observe(el));
+    console.log(`⚡ Smart Animation Engine: Managing ${heavyElements.length} premium elements`);
 });
