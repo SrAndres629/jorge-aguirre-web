@@ -10,3 +10,26 @@
         background-size: 200% 200%;
     }
 }
+
+@layer utilities {
+    .skip-link {
+        @apply sr-only focus:not-sr-only fixed top-0 left-0 z-[100] bg-black text-luxury-gold px-4 py-2 font-bold transition-all;
+    }
+}
+
+/* Base Styles */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Sticky Header Offset Fix */
+section {
+    scroll-margin-top: 80px;
+}
+
+/* Mobile Scroll Offset */
+@media (max-width: 768px) {
+    section {
+        scroll-margin-top: 60px;
+    }
+}

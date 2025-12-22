@@ -35,7 +35,8 @@
 
     <!-- Tailwind CSS -->
     <!-- Tailwind CSS (Local Build) -->
-    <link rel="stylesheet" href="/static/css/output.css?v=4">
+    <link rel="preload" href="/static/css/output.css?v=5" as="style">
+    <link rel="stylesheet" href="/static/css/output.css?v=5">
 
     <!-- Google Fonts + Icons -->
     <link
@@ -143,6 +144,9 @@
 </head>
 
 <body class="bg-luxury-black text-luxury-text font-sans antialiased selection:bg-luxury-gold selection:text-black">
+    <!-- Skip Link for Accessibility -->
+    <a href="#main-content" class="skip-link">Saltar al contenido principal</a>
+
     <!-- Google Tag Manager (noscript) -->
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-55HC7GRT" height="0" width="0"
             style="display:none;visibility:hidden"></iframe></noscript>
@@ -154,11 +158,50 @@
     <nav id="stickyNav"
         class="fixed top-0 w-full z-50 bg-luxury-black/95 backdrop-blur-md border-b border-luxury-gold/20 shadow-lg transform -translate-y-full transition-transform duration-300">
         <div class="container mx-auto px-4 py-3 flex justify-between items-center">
-            <span class="text-luxury-gold font-serif text-lg">Jorge Aguirre Flores</span>
+            <span class="text-luxury-gold font-serif text-lg font-bold"><a href="#">Jorge Aguirre Flores</a></span>
+
+            <!-- Desktop Navigation -->
+            <ul class="hidden md:flex space-x-8 text-sm font-medium text-gray-300">
+                <li><a href="#galeria" class="hover:text-luxury-gold transition-colors">Galería</a></li>
+                <li><a href="#servicios" class="hover:text-luxury-gold transition-colors">Servicios</a></li>
+                <li><a href="#proceso" class="hover:text-luxury-gold transition-colors">Proceso</a></li>
+                <li><a href="#testimonios" class="hover:text-luxury-gold transition-colors">Testimonios</a></li>
+                <li><a href="#faq" class="hover:text-luxury-gold transition-colors">Preguntas</a></li>
+            </ul>
+
             <button onclick="handleConversion('Sticky Header')"
-                class="hidden md:flex px-4 py-2 bg-luxury-gold text-black font-bold text-xs uppercase tracking-wider hover:bg-white transition-all duration-300 items-center gap-2 rounded">
+                class="hidden md:flex px-4 py-2 bg-luxury-gold text-black font-bold text-xs uppercase tracking-wider hover:bg-white transition-all duration-300 items-center gap-2 rounded shadow-lg hover:shadow-gold/50">
                 <i class="fab fa-whatsapp"></i> Agendar Cita
             </button>
+
+            <!-- Mobile Menu Button (Hamburger) -->
+            <button class="md:hidden text-luxury-gold text-2xl focus:outline-none"
+                onclick="document.getElementById('mobileMenu').classList.toggle('hidden')">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+
+        <!-- Mobile Menu Dropdown -->
+        <div id="mobileMenu" class="hidden md:hidden bg-luxury-dark border-t border-luxury-gold/10">
+            <ul class="flex flex-col p-4 space-y-4 text-center text-gray-300">
+                <li><a href="#galeria" class="block hover:text-luxury-gold"
+                        onclick="document.getElementById('mobileMenu').classList.add('hidden')">Galería</a></li>
+                <li><a href="#servicios" class="block hover:text-luxury-gold"
+                        onclick="document.getElementById('mobileMenu').classList.add('hidden')">Servicios</a></li>
+                <li><a href="#proceso" class="block hover:text-luxury-gold"
+                        onclick="document.getElementById('mobileMenu').classList.add('hidden')">Proceso</a></li>
+                <li><a href="#testimonios" class="block hover:text-luxury-gold"
+                        onclick="document.getElementById('mobileMenu').classList.add('hidden')">Testimonios</a></li>
+                <li><a href="#faq" class="block hover:text-luxury-gold"
+                        onclick="document.getElementById('mobileMenu').classList.add('hidden')">Preguntas</a></li>
+                <li>
+                    <button
+                        onclick="handleConversion('Mobile Menu'); document.getElementById('mobileMenu').classList.add('hidden')"
+                        class="w-full px-4 py-2 bg-luxury-gold text-black font-bold uppercase rounded mt-2">
+                        <i class="fab fa-whatsapp"></i> Agendar
+                    </button>
+                </li>
+            </ul>
         </div>
     </nav>
 
@@ -169,401 +212,413 @@
     </div>
 
     <!-- ========== HERO SECTION ========== -->
-    <header class="relative min-h-screen flex items-center justify-center pt-10 overflow-hidden">
-        <!-- Fondo con gradiente -->
-        <div class="absolute inset-0 z-0">
-            <div class="w-full h-full bg-gradient-to-br from-luxury-black via-luxury-dark to-luxury-black"></div>
-            <div
-                class="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(197,160,89,0.1)_0%,_transparent_50%)]">
-            </div>
-        </div>
-
-        <!-- Gold Dust Particles (Atmósfera Premium) -->
-        <div id="particles-js" class="absolute inset-0 z-[1] pointer-events-none"></div>
-
-        <div
-            class="container mx-auto px-6 relative z-10 text-center md:text-left grid md:grid-cols-2 gap-12 items-center">
-            <div class="space-y-8 animate-fade-in-up">
-                <div class="inline-block border border-luxury-gold px-4 py-1 rounded-full mb-2">
-                    <span class="text-luxury-gold text-xs font-bold uppercase tracking-[0.3em]">Arte Facial • 30
-                        Años</span>
+    <main id="main-content" role="main">
+        <header class="relative min-h-screen flex items-center justify-center pt-10 overflow-hidden">
+            <!-- Fondo con gradiente -->
+            <div class="absolute inset-0 z-0">
+                <div class="w-full h-full bg-gradient-to-br from-luxury-black via-luxury-dark to-luxury-black"></div>
+                <div
+                    class="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(197,160,89,0.1)_0%,_transparent_50%)]">
                 </div>
-                <h1 class="font-serif text-4xl md:text-6xl leading-tight text-white drop-shadow-2xl mb-6">
-                    Despierta Maquillada y <br>
-                    <span
-                        class="text-transparent bg-clip-text bg-gradient-to-r from-luxury-gold to-yellow-200 italic">Perfecta</span>
-                </h1>
-                <p class="text-gray-300 text-lg md:text-xl font-light max-w-lg leading-relaxed mb-6">
-                    Ahorra 20 minutos cada mañana. Olvídate del delineador con resultados <strong>100%
-                        naturales</strong> garantizados por 30 años de experiencia.
-                </p>
-                <div class="flex flex-col sm:flex-row gap-4 pt-4" data-aos="fade-up" data-aos-delay="300">
-                    <button onclick="handleConversion('Hero CTA')"
-                        class="btn-gold-liquid group relative px-8 py-5 font-bold uppercase tracking-widest rounded-lg w-full md:w-auto">
-                        <span class="flex items-center gap-2 justify-center relative z-10">
-                            <i class="fab fa-whatsapp text-xl"></i> Solicitar Diseño Gratis
-                        </span>
-                    </button>
-                    <!-- Trust Badge & Objection Handling -->
-                    <div class="flex flex-col gap-2 mt-4 md:mt-0 justify-center text-left">
-                        <div class="flex items-center gap-2 text-yellow-400 text-sm">
-                            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i
-                                class="fas fa-star"></i><i class="fas fa-star"></i>
-                            <span class="text-gray-300 text-xs font-semibold">+1,500 Clientas Felices</span>
+            </div>
+
+            <!-- Gold Dust Particles (Atmósfera Premium) -->
+            <div id="particles-js" class="absolute inset-0 z-[1] pointer-events-none"></div>
+
+            <div
+                class="container mx-auto px-6 relative z-10 text-center md:text-left grid md:grid-cols-2 gap-12 items-center">
+                <div class="space-y-8 animate-fade-in-up">
+                    <div class="inline-block border border-luxury-gold px-4 py-1 rounded-full mb-2">
+                        <span class="text-luxury-gold text-xs font-bold uppercase tracking-[0.3em]">Arte Facial • 30
+                            Años</span>
+                    </div>
+                    <h1 class="font-serif text-4xl md:text-6xl leading-tight text-white drop-shadow-2xl mb-6">
+                        Despierta Maquillada y <br>
+                        <span
+                            class="text-transparent bg-clip-text bg-gradient-to-r from-luxury-gold to-yellow-200 italic">Perfecta</span>
+                    </h1>
+                    <p class="text-gray-300 text-lg md:text-xl font-light max-w-lg leading-relaxed mb-6">
+                        Ahorra 20 minutos cada mañana. Olvídate del delineador con resultados <strong>100%
+                            naturales</strong> garantizados por 30 años de experiencia.
+                    </p>
+                    <div class="flex flex-col sm:flex-row gap-4 pt-4" data-aos="fade-up" data-aos-delay="300">
+                        <button onclick="handleConversion('Hero CTA')"
+                            class="btn-gold-liquid group relative px-8 py-5 font-bold uppercase tracking-widest rounded-lg w-full md:w-auto">
+                            <span class="flex items-center gap-2 justify-center relative z-10">
+                                <i class="fab fa-whatsapp text-xl"></i> Solicitar Diseño Gratis
+                            </span>
+                        </button>
+                        <!-- Trust Badge & Objection Handling -->
+                        <div class="flex flex-col gap-2 mt-4 md:mt-0 justify-center text-left">
+                            <div class="flex items-center gap-2 text-yellow-400 text-sm">
+                                <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i
+                                    class="fas fa-star"></i><i class="fas fa-star"></i>
+                                <span class="text-gray-300 text-xs font-semibold">+1,500 Clientas Felices</span>
+                            </div>
+                            <p class="text-gray-400 text-[10px] uppercase tracking-wider">
+                                ✅ Sin Dolor • ✅ Diseño Aprobado por Ti
+                            </p>
                         </div>
-                        <p class="text-gray-400 text-[10px] uppercase tracking-wider">
-                            ✅ Sin Dolor • ✅ Diseño Aprobado por Ti
+                    </div>
+                </div>
+
+                <div class="relative animate-fade-in-up" style="animation-delay: 0.2s;">
+                    <img src="/static/images/image_ce4884.webp"
+                        srcset="/static/images/image_ce4884.webp 480w, /static/images/image_ce4884.webp 768w, /static/images/image_ce4884.webp 1024w"
+                        sizes="(max-width: 640px) 100vw, 50vw" alt="Jorge Aguirre Flores - Especialista"
+                        class="rounded-lg shadow-2xl border border-white/10 relative z-10 w-full max-w-md mx-auto"
+                        width="480" height="600" loading="eager" fetchpriority="high" />
+                </div>
+            </div>
+            <!-- Removed extra closing div that was present in the original code -->
+
+            <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
+                <i class="fas fa-chevron-down text-luxury-gold text-2xl"></i>
+            </div>
+        </header>
+
+        <!-- ========== PROCESO (SEO) ========== -->
+        <section id="proceso" class="py-20 bg-luxury-black border-t border-white/5">
+            <div class="container mx-auto px-6 text-center">
+                <span class="text-luxury-gold text-xs font-bold uppercase tracking-[0.3em]">Tu Experiencia VIP</span>
+                <h2 class="font-serif text-3xl md:text-4xl text-white mt-4 mb-12">Tu Camino a la <span
+                        class="italic text-luxury-gold">Perfección</span></h2>
+
+                <div class="grid md:grid-cols-3 gap-8 relative mt-12">
+                    <!-- Línea conectora dorada (solo desktop) -->
+                    <div
+                        class="hidden md:block absolute top-1/2 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-luxury-gold/30 to-transparent -translate-y-1/2 z-0">
+                    </div>
+
+                    <!-- Paso 01: Diagnóstico -->
+                    <div class="process-step group z-10" data-aos="fade-up" data-aos-delay="0">
+                        <div class="text-center mb-4">
+                            <span class="step-number mb-2">01</span>
+                            <div class="progress-bar w-12 h-1 bg-luxury-gold mx-auto rounded-full opacity-50"></div>
+                        </div>
+                        <h3 class="text-xl font-bold text-white text-center mb-3">Diagnóstico Visagista</h3>
+                        <p class="text-gray-400 text-sm text-center leading-relaxed">
+                            No adivinamos. Analizamos la geometría de tu rostro por WhatsApp para recomendarte la
+                            técnica
+                            exacta que armoniza con tus facciones.
+                        </p>
+                    </div>
+
+                    <!-- Paso 02: Diseño -->
+                    <div class="process-step group z-10" data-aos="fade-up" data-aos-delay="200">
+                        <div class="text-center mb-4">
+                            <span class="step-number mb-2">02</span>
+                            <div class="progress-bar w-12 h-1 bg-luxury-gold mx-auto rounded-full opacity-50"></div>
+                        </div>
+                        <h3 class="text-xl font-bold text-white text-center mb-3">Diseño de Autor</h3>
+                        <p class="text-gray-400 text-sm text-center leading-relaxed">
+                            Dibujamos el diseño previo con lápiz sobre tu piel. Nada es definitivo hasta que te miras al
+                            espejo y dices: "Me encanta".
+                        </p>
+                    </div>
+
+                    <!-- Paso 03: Revelación -->
+                    <div class="process-step group z-10" data-aos="fade-up" data-aos-delay="400">
+                        <div class="text-center mb-4">
+                            <span class="step-number mb-2">03</span>
+                            <div class="progress-bar w-12 h-1 bg-luxury-gold mx-auto rounded-full opacity-50"></div>
+                        </div>
+                        <h3 class="text-xl font-bold text-white text-center mb-3">La Revelación</h3>
+                        <p class="text-gray-400 text-sm text-center leading-relaxed">
+                            En solo 2 horas, sales lista. Sin hinchazón extrema, sin dolor traumático. Solo tú, pero en
+                            tu
+                            versión más radiante y segura.
                         </p>
                     </div>
                 </div>
             </div>
+        </section>
 
-            <div class="relative animate-fade-in-up" style="animation-delay: 0.2s;">
-                <img src="/static/images/image_ce4884.webp"
-                    srcset="/static/images/image_ce4884.webp 480w, /static/images/image_ce4884.webp 768w, /static/images/image_ce4884.webp 1024w"
-                    sizes="(max-width: 640px) 100vw, 50vw" alt="Jorge Aguirre Flores - Especialista"
-                    class="rounded-lg shadow-2xl border border-white/10 relative z-10 w-full max-w-md mx-auto"
-                    width="480" height="600" loading="eager" fetchpriority="high" />
-            </div>
-        </div>
-        </div>
-
-        <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
-            <i class="fas fa-chevron-down text-luxury-gold text-2xl"></i>
-        </div>
-    </header>
-
-    <!-- ========== PROCESO (SEO) ========== -->
-    <section class="py-20 bg-luxury-black border-t border-white/5">
-        <div class="container mx-auto px-6 text-center">
-            <span class="text-luxury-gold text-xs font-bold uppercase tracking-[0.3em]">Tu Experiencia VIP</span>
-            <h2 class="font-serif text-3xl md:text-4xl text-white mt-4 mb-12">Tu Camino a la <span
-                    class="italic text-luxury-gold">Perfección</span></h2>
-
-            <div class="grid md:grid-cols-3 gap-8 relative mt-12">
-                <!-- Línea conectora dorada (solo desktop) -->
-                <div
-                    class="hidden md:block absolute top-1/2 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-luxury-gold/30 to-transparent -translate-y-1/2 z-0">
+        <!-- ========== GALERÍA ANTES/DESPUÉS ========== -->
+        <section id="galeria" class="py-20 bg-luxury-dark border-t border-white/5">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-16">
+                    <span class="text-luxury-gold text-xs font-bold uppercase tracking-[0.3em]">Resultados Reales</span>
+                    <h2 class="font-serif text-4xl md:text-5xl text-white mt-4 mb-4">Transformaciones que <span
+                            class="italic text-luxury-gold">Hablan</span></h2>
+                    <p class="text-gray-400">Desliza para ver el antes y después</p>
                 </div>
+                <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <!-- Slider: Update structure for arrows -->
+                    <div class="space-y-4" data-aos="fade-up">
+                        <div class="ba-slider rounded-lg overflow-hidden shadow-2xl border border-white/10" data-slider>
+                            <img src="/static/images/brows_after.webp" alt="Microblading después" class="w-full"
+                                width="1024" height="1024" loading="lazy" decoding="async">
+                            <div class="resize"><img src="/static/images/brows_microblading_before.webp"
+                                    alt="Microblading antes" width="1024" height="1024" loading="lazy" decoding="async">
+                            </div>
+                            <!-- Arrows -->
+                            <button class="slider-arrow left"><i class="fas fa-chevron-left"></i></button>
+                            <button class="slider-arrow right"><i class="fas fa-chevron-right"></i></button>
 
-                <!-- Paso 01: Diagnóstico -->
-                <div class="process-step group z-10" data-aos="fade-up" data-aos-delay="0">
-                    <div class="text-center mb-4">
-                        <span class="step-number mb-2">01</span>
-                        <div class="progress-bar w-12 h-1 bg-luxury-gold mx-auto rounded-full opacity-50"></div>
-                    </div>
-                    <h3 class="text-xl font-bold text-white text-center mb-3">Diagnóstico Visagista</h3>
-                    <p class="text-gray-400 text-sm text-center leading-relaxed">
-                        No adivinamos. Analizamos la geometría de tu rostro por WhatsApp para recomendarte la técnica
-                        exacta que armoniza con tus facciones.
-                    </p>
-                </div>
-
-                <!-- Paso 02: Diseño -->
-                <div class="process-step group z-10" data-aos="fade-up" data-aos-delay="200">
-                    <div class="text-center mb-4">
-                        <span class="step-number mb-2">02</span>
-                        <div class="progress-bar w-12 h-1 bg-luxury-gold mx-auto rounded-full opacity-50"></div>
-                    </div>
-                    <h3 class="text-xl font-bold text-white text-center mb-3">Diseño de Autor</h3>
-                    <p class="text-gray-400 text-sm text-center leading-relaxed">
-                        Dibujamos el diseño previo con lápiz sobre tu piel. Nada es definitivo hasta que te miras al
-                        espejo y dices: "Me encanta".
-                    </p>
-                </div>
-
-                <!-- Paso 03: Revelación -->
-                <div class="process-step group z-10" data-aos="fade-up" data-aos-delay="400">
-                    <div class="text-center mb-4">
-                        <span class="step-number mb-2">03</span>
-                        <div class="progress-bar w-12 h-1 bg-luxury-gold mx-auto rounded-full opacity-50"></div>
-                    </div>
-                    <h3 class="text-xl font-bold text-white text-center mb-3">La Revelación</h3>
-                    <p class="text-gray-400 text-sm text-center leading-relaxed">
-                        En solo 2 horas, sales lista. Sin hinchazón extrema, sin dolor traumático. Solo tú, pero en tu
-                        versión más radiante y segura.
-                    </p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- ========== GALERÍA ANTES/DESPUÉS ========== -->
-    <section class="py-20 bg-luxury-dark border-t border-white/5">
-        <div class="container mx-auto px-6">
-            <div class="text-center mb-16">
-                <span class="text-luxury-gold text-xs font-bold uppercase tracking-[0.3em]">Resultados Reales</span>
-                <h2 class="font-serif text-4xl md:text-5xl text-white mt-4 mb-4">Transformaciones que <span
-                        class="italic text-luxury-gold">Hablan</span></h2>
-                <p class="text-gray-400">Desliza para ver el antes y después</p>
-            </div>
-            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <!-- Slider: Update structure for arrows -->
-                <div class="space-y-4" data-aos="fade-up">
-                    <div class="ba-slider rounded-lg overflow-hidden shadow-2xl border border-white/10" data-slider>
-                        <img src="/static/images/brows_after.webp" alt="Microblading después" class="w-full"
-                            width="1024" height="1024" loading="lazy" decoding="async">
-                        <div class="resize"><img src="/static/images/brows_microblading_before.webp"
-                                alt="Microblading antes" width="1024" height="1024" loading="lazy" decoding="async">
+                            <span class="ba-label before">Antes</span>
+                            <span class="ba-label after">Después</span>
                         </div>
-                        <!-- Arrows -->
-                        <button class="slider-arrow left"><i class="fas fa-chevron-left"></i></button>
-                        <button class="slider-arrow right"><i class="fas fa-chevron-right"></i></button>
-
-                        <span class="ba-label before">Antes</span>
-                        <span class="ba-label after">Después</span>
+                        <h3 class="text-center text-white font-serif text-xl">Microblading 3D (Pelo a Pelo)</h3>
                     </div>
-                    <h3 class="text-center text-white font-serif text-xl">Microblading 3D (Pelo a Pelo)</h3>
-                </div>
 
-                <!-- Slider 2 -->
-                <div class="space-y-4" data-aos="fade-up" data-aos-delay="100">
-                    <div class="ba-slider rounded-lg overflow-hidden shadow-2xl border border-white/10" data-slider>
-                        <img src="/static/images/brows_powder_after.webp" alt="Cejas sombra después" class="w-full"
-                            width="1024" height="1024" loading="lazy" decoding="async">
-                        <div class="resize"><img src="/static/images/brows_before.webp" alt="Cejas sombra antes"
-                                width="1024" height="1024" loading="lazy" decoding="async"></div>
-                        <!-- Arrows -->
-                        <button class="slider-arrow left"><i class="fas fa-chevron-left"></i></button>
-                        <button class="slider-arrow right"><i class="fas fa-chevron-right"></i></button>
+                    <!-- Slider 2 -->
+                    <div class="space-y-4" data-aos="fade-up" data-aos-delay="100">
+                        <div class="ba-slider rounded-lg overflow-hidden shadow-2xl border border-white/10" data-slider>
+                            <img src="/static/images/brows_powder_after.webp" alt="Cejas sombra después" class="w-full"
+                                width="1024" height="1024" loading="lazy" decoding="async">
+                            <div class="resize"><img src="/static/images/brows_before.webp" alt="Cejas sombra antes"
+                                    width="1024" height="1024" loading="lazy" decoding="async"></div>
+                            <!-- Arrows -->
+                            <button class="slider-arrow left"><i class="fas fa-chevron-left"></i></button>
+                            <button class="slider-arrow right"><i class="fas fa-chevron-right"></i></button>
 
-                        <span class="ba-label before">Antes</span>
-                        <span class="ba-label after">Después</span>
-                    </div>
-                    <h3 class="text-center text-white font-serif text-xl">Cejas Efecto Polvo (Sombra)</h3>
-                </div>
-
-                <!-- Slider 3 -->
-                <div class="space-y-4" data-aos="fade-up" data-aos-delay="200">
-                    <div class="ba-slider rounded-lg overflow-hidden shadow-2xl border border-white/10" data-slider>
-                        <img src="/static/images/eyes_after.webp" alt="Delineado después" class="w-full" loading="lazy"
-                            width="1024" height="1024" decoding="async">
-                        <div class="resize"><img src="/static/images/eyes_before.webp" alt="Delineado antes"
-                                width="1024" height="1024" loading="lazy" decoding="async"></div>
-                        <!-- Arrows -->
-                        <button class="slider-arrow left"><i class="fas fa-chevron-left"></i></button>
-                        <button class="slider-arrow right"><i class="fas fa-chevron-right"></i></button>
-
-                        <span class="ba-label before">Antes</span>
-                        <span class="ba-label after">Después</span>
-                    </div>
-                    <h3 class="text-center text-white font-serif text-xl">Delineado Permanente</h3>
-                </div>
-
-                <!-- Slider 4 -->
-                <div class="space-y-4" data-aos="fade-up" data-aos-delay="300">
-                    <div class="ba-slider rounded-lg overflow-hidden shadow-2xl border border-white/10" data-slider>
-                        <img src="/static/images/lips_after.webp" alt="Labios después" class="w-full" loading="lazy"
-                            width="1024" height="1024" decoding="async">
-                        <div class="resize"><img src="/static/images/lips_before.webp" alt="Labios antes" loading="lazy"
-                                width="1024" height="1024" decoding="async"></div>
-                        <!-- Arrows -->
-                        <button class="slider-arrow left"><i class="fas fa-chevron-left"></i></button>
-                        <button class="slider-arrow right"><i class="fas fa-chevron-right"></i></button>
-
-                        <span class="ba-label before">Antes</span>
-                        <span class="ba-label after">Después</span>
-                    </div>
-                    <h3 class="text-center text-white font-serif text-xl">Labios Full Color</h3>
-                </div>
-            </div>
-            <div class="text-center mt-12">
-                <button onclick="handleConversion('Galería CTA')"
-                    class="px-8 py-4 border-2 border-luxury-gold text-luxury-gold font-bold uppercase tracking-widest hover:bg-luxury-gold hover:text-black transition-all duration-300">
-                    <i class="fab fa-whatsapp mr-2"></i> Quiero Mi Transformación
-                </button>
-            </div>
-        </div>
-    </section>
-
-    <!-- ========== TESTIMONIOS REALES ========== -->
-    <section class="py-20 bg-luxury-black border-t border-white/5">
-        <div class="container mx-auto px-6">
-            <div class="text-center mb-12">
-                <span class="text-luxury-gold text-xs font-bold uppercase tracking-[0.3em]">Prueba Social</span>
-                <h2 class="font-serif text-3xl md:text-4xl text-white mt-4">Historias <span
-                        class="italic text-luxury-gold">Reales</span></h2>
-                <p class="text-gray-400 mt-2">Ellas confiaron en Jorge</p>
-            </div>
-            <div class="grid md:grid-cols-3 gap-8">
-                <!-- Testimonio 1: La Ejecutiva -->
-                <div class="service-card-skin group p-6 h-[500px] flex flex-col justify-end"
-                    style="background-image: url('/static/images/testimonial_1.webp');" data-aos="fade-up" data-tilt
-                    data-tilt-max="4" data-tilt-speed="400">
-                    <div class="bg-black/60 backdrop-blur-sm rounded-lg p-4">
-                        <div class="flex items-center gap-3 mb-3">
-                            <div class="flex text-luxury-gold text-sm">★★★★★</div>
+                            <span class="ba-label before">Antes</span>
+                            <span class="ba-label after">Después</span>
                         </div>
-                        <p class="text-gray-200 text-sm italic mb-3">"Ahorro 20 minutos cada mañana. Es la mejor
-                            inversión profesional que he hecho."</p>
-                        <p class="text-luxury-gold font-bold text-sm">Ana M., Ejecutiva</p>
+                        <h3 class="text-center text-white font-serif text-xl">Cejas Efecto Polvo (Sombra)</h3>
                     </div>
-                </div>
-                <!-- Testimonio 2: La Elegancia Madura -->
-                <div class="service-card-skin group p-6 h-[500px] flex flex-col justify-end"
-                    style="background-image: url('/static/images/testimonial_2.webp');" data-aos="fade-up"
-                    data-aos-delay="100" data-tilt data-tilt-max="4" data-tilt-speed="400">
-                    <div class="bg-black/60 backdrop-blur-sm rounded-lg p-4">
-                        <div class="flex items-center gap-3 mb-3">
-                            <div class="flex text-luxury-gold text-sm">★★★★★</div>
+
+                    <!-- Slider 3 -->
+                    <div class="space-y-4" data-aos="fade-up" data-aos-delay="200">
+                        <div class="ba-slider rounded-lg overflow-hidden shadow-2xl border border-white/10" data-slider>
+                            <img src="/static/images/eyes_after.webp" alt="Delineado después" class="w-full"
+                                loading="lazy" width="1024" height="1024" decoding="async">
+                            <div class="resize"><img src="/static/images/eyes_before.webp" alt="Delineado antes"
+                                    width="1024" height="1024" loading="lazy" decoding="async"></div>
+                            <!-- Arrows -->
+                            <button class="slider-arrow left"><i class="fas fa-chevron-left"></i></button>
+                            <button class="slider-arrow right"><i class="fas fa-chevron-right"></i></button>
+
+                            <span class="ba-label before">Antes</span>
+                            <span class="ba-label after">Después</span>
                         </div>
-                        <p class="text-gray-200 text-sm italic mb-3">"Mis amigas dicen que me veo 10 años más joven. El
-                            resultado es tan elegante."</p>
-                        <p class="text-luxury-gold font-bold text-sm">Carmen R.</p>
+                        <h3 class="text-center text-white font-serif text-xl">Delineado Permanente</h3>
                     </div>
-                </div>
-                <!-- Testimonio 3: La Joven Tendencia -->
-                <div class="service-card-skin group p-6 h-[500px] flex flex-col justify-end"
-                    style="background-image: url('/static/images/testimonial_3.webp');" data-aos="fade-up"
-                    data-aos-delay="200" data-tilt data-tilt-max="4" data-tilt-speed="400">
-                    <div class="bg-black/60 backdrop-blur-sm rounded-lg p-4">
-                        <div class="flex items-center gap-3 mb-3">
-                            <div class="flex text-luxury-gold text-sm">★★★★★</div>
+
+                    <!-- Slider 4 -->
+                    <div class="space-y-4" data-aos="fade-up" data-aos-delay="300">
+                        <div class="ba-slider rounded-lg overflow-hidden shadow-2xl border border-white/10" data-slider>
+                            <img src="/static/images/lips_after.webp" alt="Labios después" class="w-full" loading="lazy"
+                                width="1024" height="1024" decoding="async">
+                            <div class="resize"><img src="/static/images/lips_before.webp" alt="Labios antes"
+                                    loading="lazy" width="1024" height="1024" decoding="async"></div>
+                            <!-- Arrows -->
+                            <button class="slider-arrow left"><i class="fas fa-chevron-left"></i></button>
+                            <button class="slider-arrow right"><i class="fas fa-chevron-right"></i></button>
+
+                            <span class="ba-label before">Antes</span>
+                            <span class="ba-label after">Después</span>
                         </div>
-                        <p class="text-gray-200 text-sm italic mb-3">"Tenía miedo de que se viera falso, pero es
-                            increíblemente natural. ¡Amo mis cejas!"</p>
-                        <p class="text-luxury-gold font-bold text-sm">Sofía L.</p>
+                        <h3 class="text-center text-white font-serif text-xl">Labios Full Color</h3>
+                    </div>
+                </div>
+                <div class="text-center mt-12">
+                    <button onclick="handleConversion('Galería CTA')"
+                        class="px-8 py-4 border-2 border-luxury-gold text-luxury-gold font-bold uppercase tracking-widest hover:bg-luxury-gold hover:text-black transition-all duration-300">
+                        <i class="fab fa-whatsapp mr-2"></i> Quiero Mi Transformación
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========== TESTIMONIOS REALES ========== -->
+        <section id="testimonios" class="py-20 bg-luxury-black border-t border-white/5">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12">
+                    <span class="text-luxury-gold text-xs font-bold uppercase tracking-[0.3em]">Prueba Social</span>
+                    <h2 class="font-serif text-3xl md:text-4xl text-white mt-4">Historias <span
+                            class="italic text-luxury-gold">Reales</span></h2>
+                    <p class="text-gray-400 mt-2">Ellas confiaron en Jorge</p>
+                </div>
+                <div class="grid md:grid-cols-3 gap-8">
+                    <!-- Testimonio 1: La Ejecutiva -->
+                    <div class="service-card-skin group p-6 h-[500px] flex flex-col justify-end"
+                        style="background-image: url('/static/images/testimonial_1.webp');" data-aos="fade-up" data-tilt
+                        data-tilt-max="4" data-tilt-speed="400">
+                        <div class="bg-black/60 backdrop-blur-sm rounded-lg p-4">
+                            <div class="flex items-center gap-3 mb-3">
+                                <div class="flex text-luxury-gold text-sm">★★★★★</div>
+                            </div>
+                            <p class="text-gray-200 text-sm italic mb-3">"Ahorro 20 minutos cada mañana. Es la mejor
+                                inversión profesional que he hecho."</p>
+                            <p class="text-luxury-gold font-bold text-sm">Ana M., Ejecutiva</p>
+                        </div>
+                    </div>
+                    <!-- Testimonio 2: La Elegancia Madura -->
+                    <div class="service-card-skin group p-6 h-[500px] flex flex-col justify-end"
+                        style="background-image: url('/static/images/testimonial_2.webp');" data-aos="fade-up"
+                        data-aos-delay="100" data-tilt data-tilt-max="4" data-tilt-speed="400">
+                        <div class="bg-black/60 backdrop-blur-sm rounded-lg p-4">
+                            <div class="flex items-center gap-3 mb-3">
+                                <div class="flex text-luxury-gold text-sm">★★★★★</div>
+                            </div>
+                            <p class="text-gray-200 text-sm italic mb-3">"Mis amigas dicen que me veo 10 años más joven.
+                                El
+                                resultado es tan elegante."</p>
+                            <p class="text-luxury-gold font-bold text-sm">Carmen R.</p>
+                        </div>
+                    </div>
+                    <!-- Testimonio 3: La Joven Tendencia -->
+                    <div class="service-card-skin group p-6 h-[500px] flex flex-col justify-end"
+                        style="background-image: url('/static/images/testimonial_3.webp');" data-aos="fade-up"
+                        data-aos-delay="200" data-tilt data-tilt-max="4" data-tilt-speed="400">
+                        <div class="bg-black/60 backdrop-blur-sm rounded-lg p-4">
+                            <div class="flex items-center gap-3 mb-3">
+                                <div class="flex text-luxury-gold text-sm">★★★★★</div>
+                            </div>
+                            <p class="text-gray-200 text-sm italic mb-3">"Tenía miedo de que se viera falso, pero es
+                                increíblemente natural. ¡Amo mis cejas!"</p>
+                            <p class="text-luxury-gold font-bold text-sm">Sofía L.</p>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- ========== SERVICIOS ========== -->
-    <section class="py-20 bg-luxury-dark border-t border-white/5">
-        <div class="container mx-auto px-6 text-center mb-12">
-            <span class="text-luxury-gold text-xs font-bold uppercase tracking-[0.3em]">Especialidades</span>
-            <h2 class="font-serif text-3xl md:text-4xl text-white mt-4">Servicios Exclusivos</h2>
-        </div>
-        <div class="container mx-auto px-6 grid md:grid-cols-3 gap-6">
-            <!-- Cejas -->
-            <div data-service-category="cejas"
-                class="service-card-skin group p-8 h-96 flex flex-col justify-end overflow-visible relative"
-                style="background-image: url('/static/images/service_brows.webp');" data-aos="fade-up" data-tilt
-                data-tilt-max="5" data-tilt-speed="400" data-tilt-glare="true" data-tilt-max-glare="0.1">
-                <div
-                    class="absolute -top-3 right-4 bg-luxury-gold text-black text-[10px] font-bold px-3 py-1 uppercase tracking-wider rounded shadow-lg z-20">
-                    Más Pedido</div>
-                <h3 class="text-2xl font-bold text-luxury-gold mb-2">Microblading 3D</h3>
-                <p class="text-gray-300 text-sm mb-4 opacity-90">Rellena huecos y recupera la forma joven de tu ceja.
-                    Nadie notará que es un tatuaje.</p>
-                <button onclick="handleConversion('Servicio Cejas')"
-                    class="border-b border-luxury-gold w-max pb-1 text-white text-xs font-semibold uppercase tracking-widest hover:text-luxury-gold transition">
-                    Ver Resultados
+        <!-- ========== SERVICIOS ========== -->
+        <section id="servicios" class="py-20 bg-luxury-dark border-t border-white/5">
+            <div class="container mx-auto px-6 text-center mb-12">
+                <span class="text-luxury-gold text-xs font-bold uppercase tracking-[0.3em]">Especialidades</span>
+                <h2 class="font-serif text-3xl md:text-4xl text-white mt-4">Servicios Exclusivos</h2>
+            </div>
+            <div class="container mx-auto px-6 grid md:grid-cols-3 gap-6">
+                <!-- Cejas -->
+                <div data-service-category="cejas"
+                    class="service-card-skin group p-8 h-96 flex flex-col justify-end overflow-visible relative"
+                    style="background-image: url('/static/images/service_brows.webp');" data-aos="fade-up" data-tilt
+                    data-tilt-max="5" data-tilt-speed="400" data-tilt-glare="true" data-tilt-max-glare="0.1">
+                    <div
+                        class="absolute -top-3 right-4 bg-luxury-gold text-black text-[10px] font-bold px-3 py-1 uppercase tracking-wider rounded shadow-lg z-20">
+                        Más Pedido</div>
+                    <h3 class="text-2xl font-bold text-luxury-gold mb-2">Microblading 3D</h3>
+                    <p class="text-gray-300 text-sm mb-4 opacity-90">Rellena huecos y recupera la forma joven de tu
+                        ceja.
+                        Nadie notará que es un tatuaje.</p>
+                    <button onclick="handleConversion('Servicio Cejas')"
+                        class="border-b border-luxury-gold w-max pb-1 text-white text-xs font-semibold uppercase tracking-widest hover:text-luxury-gold transition">
+                        Ver Resultados
+                    </button>
+                </div>
+                <!-- Ojos -->
+                <div data-service-category="ojos" class="service-card-skin group p-8 h-96 flex flex-col justify-end"
+                    style="background-image: url('/static/images/service_eyes.webp');" data-aos="fade-up"
+                    data-aos-delay="100" data-tilt data-tilt-max="5" data-tilt-speed="400" data-tilt-glare="true"
+                    data-tilt-max-glare="0.1">
+
+                    <h3 class="text-2xl font-bold text-luxury-gold mb-2">Delineado Permanente</h3>
+                    <p class="text-gray-300 text-sm mb-4 opacity-90">Despierta con una mirada intensa y expresiva.
+                        Olvídate
+                        de que se corra el maquillaje en la piscina o el gimnasio.</p>
+                    <button onclick="handleConversion('Servicio Ojos')"
+                        class="border-b border-luxury-gold w-max pb-1 text-white text-xs font-semibold uppercase tracking-widest hover:text-luxury-gold transition">
+                        Ver Resultados
+                    </button>
+                </div>
+                <!-- Labios -->
+                <div data-service-category="labios" class="service-card-skin group p-8 h-96 flex flex-col justify-end"
+                    style="background-image: url('/static/images/service_lips.webp');" data-aos="fade-up"
+                    data-aos-delay="200" data-tilt data-tilt-max="5" data-tilt-speed="400" data-tilt-glare="true"
+                    data-tilt-max-glare="0.1">
+                    <h3 class="text-2xl font-bold text-luxury-gold mb-2">Labios Full Color</h3>
+                    <p class="text-gray-300 text-sm mb-4 opacity-90">Corrige asimetrías y luce una boca jugosa y
+                        saludable
+                        sin necesidad de retocarte el labial.</p>
+                    <button onclick="handleConversion('Servicio Labios')"
+                        class="border-b border-luxury-gold w-max pb-1 text-white text-xs font-semibold uppercase tracking-widest hover:text-luxury-gold transition">
+                        Ver Resultados
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========== FAQ (SEO) ========== -->
+        <section id="faq" class="py-20 bg-luxury-black border-t border-white/5">
+            <div class="container mx-auto px-6 max-w-4xl">
+                <div class="text-center mb-12">
+                    <span class="text-luxury-gold text-xs font-bold uppercase tracking-[0.3em]">Resolvemos tus
+                        Dudas</span>
+                    <h2 class="font-serif text-3xl md:text-4xl text-white mt-4">Preguntas <span
+                            class="italic text-luxury-gold">Frecuentes</span></h2>
+                </div>
+                <div class="space-y-4">
+                    <details
+                        class="group bg-white/5 p-6 rounded-lg cursor-pointer border border-white/5 open:border-luxury-gold/50 transition">
+                        <summary class="flex justify-between items-center font-medium text-luxury-text">
+                            <span>¿Es doloroso el microblading o delineado permanente?</span>
+                            <span class="text-luxury-gold group-open:rotate-180 transition-transform duration-300"><i
+                                    class="fas fa-chevron-down"></i></span>
+                        </summary>
+                        <p class="text-gray-400 mt-4 text-sm leading-relaxed">
+                            <strong>No.</strong> Utilizamos anestesia tópica de grado médico. La mayoría de clientas
+                            reportan solo una leve vibración.
+                        </p>
+                    </details>
+                    <details
+                        class="group bg-white/5 p-6 rounded-lg cursor-pointer border border-white/5 open:border-luxury-gold/50 transition">
+                        <summary class="flex justify-between items-center font-medium text-luxury-text">
+                            <span>¿Cuánto tiempo dura el maquillaje permanente?</span>
+                            <span class="text-luxury-gold group-open:rotate-180 transition-transform duration-300"><i
+                                    class="fas fa-chevron-down"></i></span>
+                        </summary>
+                        <p class="text-gray-400 mt-4 text-sm leading-relaxed">
+                            Entre <strong>1 a 3 años</strong> dependiendo de tu tipo de piel y cuidados
+                            post-procedimiento.
+                        </p>
+                    </details>
+                    <details
+                        class="group bg-white/5 p-6 rounded-lg cursor-pointer border border-white/5 open:border-luxury-gold/50 transition">
+                        <summary class="flex justify-between items-center font-medium text-luxury-text">
+                            <span>¿Cuál es el precio del microblading en Santa Cruz?</span>
+                            <span class="text-luxury-gold group-open:rotate-180 transition-transform duration-300"><i
+                                    class="fas fa-chevron-down"></i></span>
+                        </summary>
+                        <p class="text-gray-400 mt-4 text-sm leading-relaxed">
+                            El costo varía según la técnica. Ofrecemos <strong>valoración gratuita</strong> para darte
+                            un
+                            presupuesto personalizado. ¡Escríbenos!
+                        </p>
+                    </details>
+                    <details
+                        class="group bg-white/5 p-6 rounded-lg cursor-pointer border border-white/5 open:border-luxury-gold/50 transition">
+                        <summary class="flex justify-between items-center font-medium text-luxury-text">
+                            <span>¿Cómo debo cuidar mis cejas después?</span>
+                            <span class="text-luxury-gold group-open:rotate-180 transition-transform duration-300"><i
+                                    class="fas fa-chevron-down"></i></span>
+                        </summary>
+                        <p class="text-gray-400 mt-4 text-sm leading-relaxed">
+                            Mantener la zona <strong>seca y limpia</strong> los primeros 7 días. Evitar sol, ejercicio
+                            intenso y piscinas. Te damos un kit de cuidados.
+                        </p>
+                    </details>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========== CTA FINAL ========== -->
+        <section
+            class="py-24 bg-gradient-to-r from-luxury-gold/10 via-luxury-gold/5 to-luxury-gold/10 border-t border-luxury-gold/20">
+            <div class="container mx-auto px-6 text-center">
+                <span
+                    class="inline-block py-1 px-3 rounded bg-red-900/30 border border-red-500/30 text-red-200 text-xs font-bold uppercase tracking-widest mb-4">
+                    🔴 Oferta Limitada
+                </span>
+                <h2 class="font-serif text-4xl md:text-5xl text-white mb-6">¿Lista para dejar de <span
+                        class="italic text-luxury-gold">Maquillarte</span>?</h2>
+                <p class="text-gray-400 max-w-2xl mx-auto mb-10 text-lg">
+                    Agenda tu diseño gratuito hoy. Solo liberamos 5 cupos de valoración por semana.
+                </p>
+                <button onclick="handleConversion('CTA Final')"
+                    class="px-12 py-6 bg-luxury-gold text-black font-bold uppercase tracking-widest text-xl hover:bg-white transition-all duration-300 shadow-[0_0_40px_rgba(197,160,89,0.5)]">
+                    <i class="fab fa-whatsapp mr-3"></i> Agendar Valoración GRATIS
                 </button>
+                <p class="text-gray-600 text-sm mt-6">
+                    <i class="fas fa-map-marker-alt mr-2"></i> Santa Cruz de la Sierra, Bolivia
+                </p>
             </div>
-            <!-- Ojos -->
-            <div data-service-category="ojos" class="service-card-skin group p-8 h-96 flex flex-col justify-end"
-                style="background-image: url('/static/images/service_eyes.webp');" data-aos="fade-up"
-                data-aos-delay="100" data-tilt data-tilt-max="5" data-tilt-speed="400" data-tilt-glare="true"
-                data-tilt-max-glare="0.1">
+        </section>
 
-                <h3 class="text-2xl font-bold text-luxury-gold mb-2">Delineado Permanente</h3>
-                <p class="text-gray-300 text-sm mb-4 opacity-90">Despierta con una mirada intensa y expresiva. Olvídate
-                    de que se corra el maquillaje en la piscina o el gimnasio.</p>
-                <button onclick="handleConversion('Servicio Ojos')"
-                    class="border-b border-luxury-gold w-max pb-1 text-white text-xs font-semibold uppercase tracking-widest hover:text-luxury-gold transition">
-                    Ver Resultados
-                </button>
-            </div>
-            <!-- Labios -->
-            <div data-service-category="labios" class="service-card-skin group p-8 h-96 flex flex-col justify-end"
-                style="background-image: url('/static/images/service_lips.webp');" data-aos="fade-up"
-                data-aos-delay="200" data-tilt data-tilt-max="5" data-tilt-speed="400" data-tilt-glare="true"
-                data-tilt-max-glare="0.1">
-                <h3 class="text-2xl font-bold text-luxury-gold mb-2">Labios Full Color</h3>
-                <p class="text-gray-300 text-sm mb-4 opacity-90">Corrige asimetrías y luce una boca jugosa y saludable
-                    sin necesidad de retocarte el labial.</p>
-                <button onclick="handleConversion('Servicio Labios')"
-                    class="border-b border-luxury-gold w-max pb-1 text-white text-xs font-semibold uppercase tracking-widest hover:text-luxury-gold transition">
-                    Ver Resultados
-                </button>
-            </div>
-        </div>
-    </section>
-
-    <!-- ========== FAQ (SEO) ========== -->
-    <section class="py-20 bg-luxury-black border-t border-white/5">
-        <div class="container mx-auto px-6 max-w-4xl">
-            <div class="text-center mb-12">
-                <span class="text-luxury-gold text-xs font-bold uppercase tracking-[0.3em]">Resolvemos tus Dudas</span>
-                <h2 class="font-serif text-3xl md:text-4xl text-white mt-4">Preguntas <span
-                        class="italic text-luxury-gold">Frecuentes</span></h2>
-            </div>
-            <div class="space-y-4">
-                <details
-                    class="group bg-white/5 p-6 rounded-lg cursor-pointer border border-white/5 open:border-luxury-gold/50 transition">
-                    <summary class="flex justify-between items-center font-medium text-luxury-text">
-                        <span>¿Es doloroso el microblading o delineado permanente?</span>
-                        <span class="text-luxury-gold group-open:rotate-180 transition-transform duration-300"><i
-                                class="fas fa-chevron-down"></i></span>
-                    </summary>
-                    <p class="text-gray-400 mt-4 text-sm leading-relaxed">
-                        <strong>No.</strong> Utilizamos anestesia tópica de grado médico. La mayoría de clientas
-                        reportan solo una leve vibración.
-                    </p>
-                </details>
-                <details
-                    class="group bg-white/5 p-6 rounded-lg cursor-pointer border border-white/5 open:border-luxury-gold/50 transition">
-                    <summary class="flex justify-between items-center font-medium text-luxury-text">
-                        <span>¿Cuánto tiempo dura el maquillaje permanente?</span>
-                        <span class="text-luxury-gold group-open:rotate-180 transition-transform duration-300"><i
-                                class="fas fa-chevron-down"></i></span>
-                    </summary>
-                    <p class="text-gray-400 mt-4 text-sm leading-relaxed">
-                        Entre <strong>1 a 3 años</strong> dependiendo de tu tipo de piel y cuidados post-procedimiento.
-                    </p>
-                </details>
-                <details
-                    class="group bg-white/5 p-6 rounded-lg cursor-pointer border border-white/5 open:border-luxury-gold/50 transition">
-                    <summary class="flex justify-between items-center font-medium text-luxury-text">
-                        <span>¿Cuál es el precio del microblading en Santa Cruz?</span>
-                        <span class="text-luxury-gold group-open:rotate-180 transition-transform duration-300"><i
-                                class="fas fa-chevron-down"></i></span>
-                    </summary>
-                    <p class="text-gray-400 mt-4 text-sm leading-relaxed">
-                        El costo varía según la técnica. Ofrecemos <strong>valoración gratuita</strong> para darte un
-                        presupuesto personalizado. ¡Escríbenos!
-                    </p>
-                </details>
-                <details
-                    class="group bg-white/5 p-6 rounded-lg cursor-pointer border border-white/5 open:border-luxury-gold/50 transition">
-                    <summary class="flex justify-between items-center font-medium text-luxury-text">
-                        <span>¿Cómo debo cuidar mis cejas después?</span>
-                        <span class="text-luxury-gold group-open:rotate-180 transition-transform duration-300"><i
-                                class="fas fa-chevron-down"></i></span>
-                    </summary>
-                    <p class="text-gray-400 mt-4 text-sm leading-relaxed">
-                        Mantener la zona <strong>seca y limpia</strong> los primeros 7 días. Evitar sol, ejercicio
-                        intenso y piscinas. Te damos un kit de cuidados.
-                    </p>
-                </details>
-            </div>
-        </div>
-    </section>
-
-    <!-- ========== CTA FINAL ========== -->
-    <section
-        class="py-24 bg-gradient-to-r from-luxury-gold/10 via-luxury-gold/5 to-luxury-gold/10 border-t border-luxury-gold/20">
-        <div class="container mx-auto px-6 text-center">
-            <span
-                class="inline-block py-1 px-3 rounded bg-red-900/30 border border-red-500/30 text-red-200 text-xs font-bold uppercase tracking-widest mb-4">
-                🔴 Oferta Limitada
-            </span>
-            <h2 class="font-serif text-4xl md:text-5xl text-white mb-6">¿Lista para dejar de <span
-                    class="italic text-luxury-gold">Maquillarte</span>?</h2>
-            <p class="text-gray-400 max-w-2xl mx-auto mb-10 text-lg">
-                Agenda tu diseño gratuito hoy. Solo liberamos 5 cupos de valoración por semana.
-            </p>
-            <button onclick="handleConversion('CTA Final')"
-                class="px-12 py-6 bg-luxury-gold text-black font-bold uppercase tracking-widest text-xl hover:bg-white transition-all duration-300 shadow-[0_0_40px_rgba(197,160,89,0.5)]">
-                <i class="fab fa-whatsapp mr-3"></i> Agendar Valoración GRATIS
-            </button>
-            <p class="text-gray-600 text-sm mt-6">
-                <i class="fas fa-map-marker-alt mr-2"></i> Santa Cruz de la Sierra, Bolivia
-            </p>
-        </div>
-    </section>
+    </main>
 
     <!-- ========== FOOTER ========== -->
     <footer class="bg-black py-12 border-t border-white/5">
@@ -577,7 +632,8 @@
                 <a href="#" class="text-gray-500 hover:text-luxury-gold transition"><i
                         class="fab fa-instagram fa-lg"></i></a>
             </div>
-            <p class="text-gray-800 text-[10px] mt-8">© 2025 Jorge Aguirre Flores. Todos los derechos reservados.</p>
+            <p class="text-gray-800 text-[10px] mt-8">© 2025 Jorge Aguirre Flores. Todos los derechos reservados.
+            </p>
         </div>
     </footer>
 
@@ -604,8 +660,15 @@
         <i class="fab fa-whatsapp text-white text-2xl md:text-3xl"></i>
     </button>
 
-    <!-- Particles.js (Gold Dust Effect) - Defer for non-blocking -->
-    <script defer src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <!-- Particles.js (Gold Dust Effect) - Conditional Desktop Only -->
+    <script>
+        if (window.innerWidth > 768) {
+            const script = document.createElement('script');
+            script.src = "https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js";
+            script.defer = true;
+            document.body.appendChild(script);
+        }
+    </script>
 
     <!-- AOS (Animate On Scroll) - Defer for non-blocking -->
     <script defer src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>

@@ -43,6 +43,21 @@ app = FastAPI(
 # Middleware GZip para compresión (5x más rápido en móviles)
 app.add_middleware(GZipMiddleware, minimum_size=500)
 
+# Middleware para Proxy/CDN (Cloudflare/Render)
+# Confía en headers X-Forwarded-For y X-Forwarded-Proto
+from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
+app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=["*"])
+
+# Middleware CORS (Seguridad: permitir solo dominios propios)
+from fastapi.middleware.cors import CORSMiddleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["https://jorgeaguirreflores.com", "https://www.jorgeaguirreflores.com", "http://localhost:8000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # =================================================================
 # ARCHIVOS ESTÁTICOS CON CACHE AGRESIVO
 # =================================================================

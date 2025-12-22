@@ -211,7 +211,8 @@ async function handleConversion(source) {
     }
 
     const url = `https://wa.me/${TrackingConfig.phone}?text=${encodeURIComponent(message)}`;
-    setTimeout(() => window.open(url, '_blank'), 300);
+    // Immediate open to prevent popup blockers
+    window.open(url, '_blank');
 }
 
 // Helper para CAPI
@@ -220,7 +221,8 @@ async function sendToCAPI(eventName, eventData) {
         await fetch('/track-' + eventName.toLowerCase(), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(eventData)
+            body: JSON.stringify(eventData),
+            keepalive: true // Ensures request survives navigation
         });
     } catch (e) {
         // Silent fail para no interrumpir UX
