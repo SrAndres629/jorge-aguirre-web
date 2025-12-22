@@ -11,6 +11,12 @@ from app.database import check_connection
 router = APIRouter(tags=["Health"])
 
 
+@router.head("/health")
+async def head_health_check():
+    """HEAD check for UptimeRobot"""
+    return JSONResponse({"status": "healthy"})
+
+
 @router.get("/health")
 async def health_check():
     """

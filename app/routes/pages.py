@@ -15,6 +15,12 @@ router = APIRouter()
 templates = Jinja2Templates(directory="templates")
 
 
+@router.head("/", response_class=HTMLResponse)
+async def head_root():
+    """HEAD response for UptimeRobot (sin tracking)"""
+    return Response(status_code=200)
+
+
 @router.get("/", response_class=HTMLResponse)
 async def read_root(
     request: Request, 
