@@ -65,14 +65,28 @@
     <!-- Lenis Smooth Scroll (Butter Feel) -->
     <script defer src="https://unpkg.com/lenis@1.1.18/dist/lenis.min.js"></script>
 
-    <!-- Dynamic Configuration -->
+    <!-- Dynamic Configuration (Server-side rendered data) -->
+    <!-- Using application/json to avoid JS linting errors - Industry standard approach -->
+    <script type="application/json" id="app-config">
+        {
+            "META_PIXEL_ID": "{{ pixel_id }}",
+            "META_EVENT_ID": "{{ pageview_event_id }}",
+            "EXTERNAL_ID": "{{ external_id }}",
+            "SERVICES_CONFIG": {{ services | tojson }},
+            "CONTACT_CONFIG": {{ contact | tojson }}
+        }
+    </script>
+
+    <!-- Initialize config from JSON (lint-safe) -->
     <script>
-        // Guardamos los IDs de Jinja2
-        window.META_PIXEL_ID = "{{ pixel_id }}";
-        window.META_EVENT_ID = "{{ pageview_event_id }}";
-        window.EXTERNAL_ID = "{{ external_id }}";
-        window.SERVICES_CONFIG = {{ services | tojson }};
-        window.CONTACT_CONFIG = {{ contact | tojson }};
+        (function () {
+            const config = JSON.parse(document.getElementById('app-config').textContent);
+            window.META_PIXEL_ID = config.META_PIXEL_ID;
+            window.META_EVENT_ID = config.META_EVENT_ID;
+            window.EXTERNAL_ID = config.EXTERNAL_ID;
+            window.SERVICES_CONFIG = config.SERVICES_CONFIG;
+            window.CONTACT_CONFIG = config.CONTACT_CONFIG;
+        })();
     </script>
 
     <!-- TrackingJS (Granular Interest) -->

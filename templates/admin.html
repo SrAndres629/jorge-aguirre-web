@@ -103,8 +103,8 @@
                             </td>
                             <td class="px-4 py-3">
                                 {% if v.fbclid %}
-                                <button onclick="confirmSale({{ v.id }})" id="btn-{{ v.id }}"
-                                    class="px-3 py-1 bg-green-600 hover:bg-green-500 text-white text-xs font-bold rounded transition">
+                                <button data-visitor-id="{{ v.id }}" id="btn-{{ v.id }}"
+                                    class="confirm-sale-btn px-3 py-1 bg-green-600 hover:bg-green-500 text-white text-xs font-bold rounded transition">
                                     💰 Confirmar Venta
                                 </button>
                                 {% else %}
@@ -130,6 +130,18 @@
     <script>
         // Variable global para evitar errores de lint con Jinja2
         const ADMIN_KEY = "{{ admin_key }}";
+
+        // Event delegation for confirm sale buttons
+        document.addEventListener('DOMContentLoaded', function () {
+            document.addEventListener('click', function (e) {
+                if (e.target.classList.contains('confirm-sale-btn')) {
+                    const visitorId = e.target.getAttribute('data-visitor-id');
+                    if (visitorId) {
+                        confirmSale(visitorId);
+                    }
+                }
+            });
+        });
 
         async function confirmSale(visitorId) {
             const btn = document.getElementById('btn-' + visitorId);
