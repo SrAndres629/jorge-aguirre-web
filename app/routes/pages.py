@@ -10,6 +10,7 @@ from fastapi.templating import Jinja2Templates
 from app.config import settings
 from app.database import save_visitor, get_visitor_fbclid
 from app.tracking import generate_external_id, generate_fbc, track_pageview
+from app.services import SERVICES_CONFIG, CONTACT_CONFIG
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
@@ -86,5 +87,7 @@ async def read_root(
         "pixel_id": settings.META_PIXEL_ID,
         "pageview_event_id": event_id,
         "external_id": external_id,
-        "fbclid": fbclid or ""
+        "fbclid": fbclid or "",
+        "services": SERVICES_CONFIG,
+        "contact": CONTACT_CONFIG
     })

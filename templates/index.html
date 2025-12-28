@@ -81,14 +81,18 @@
     <!-- Lenis Smooth Scroll (Butter Feel) -->
     <script defer src="https://unpkg.com/lenis@1.1.18/dist/lenis.min.js"></script>
 
-    <!-- Meta Pixel - Variables de Jinja2 -->
+    <!-- Dynamic Configuration -->
     <script>
-        // Guardamos los IDs de Jinja2 en variables globales antes de cargar el pixel
+        // Guardamos los IDs de Jinja2
         window.META_PIXEL_ID = "{{ pixel_id }}";
         window.META_EVENT_ID = "{{ pageview_event_id }}";
         window.EXTERNAL_ID = "{{ external_id }}";
+        window.SERVICES_CONFIG = {{ services | tojson }};
+        window.CONTACT_CONFIG = {{ contact | tojson }};
     </script>
 
+    <!-- TrackingJS (Granular Interest) -->
+    <script src="/static/js/tracking.js"></script>
     <!-- Schema Markup - SEO Local (Google Maps / Rich Results) -->
     <script type="application/ld+json">
     {

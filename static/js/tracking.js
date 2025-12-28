@@ -33,12 +33,9 @@
 // 2. CONFIGURACIÓN DE TRACKING
 // =================================================================
 const TrackingConfig = {
-    services: {
-        'cejas': { name: 'Microblading de Cejas', category: 'cejas', price: 350 },
-        'ojos': { name: 'Delineado Permanente', category: 'ojos', price: 300 },
-        'labios': { name: 'Labios Full Color', category: 'labios', price: 400 }
-    },
-    phone: "59176375924",
+    // Usar configuración inyectada desde backend o fallback vacío
+    services: window.SERVICES_CONFIG || {},
+    phone: (window.CONTACT_CONFIG && window.CONTACT_CONFIG.phone) || "59176375924",
     viewedSections: new Set(),
 
     // Capturar fbclid de la URL para tracking
