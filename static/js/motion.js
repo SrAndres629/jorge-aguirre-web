@@ -248,7 +248,38 @@ function initMobileScrollTriggers() {
 }
 
 // =================================================================
-// 6. INITIALIZATION
+// 6. MOUSE SPOTLIGHT (Global Ambient)
+// =================================================================
+function initSpotlight() {
+    const spotlight = document.getElementById('mouse-spotlight');
+    if (!spotlight) return;
+
+    // Use requestAnimationFrame for performance
+    let x = 0, y = 0;
+    let currentX = 0, currentY = 0;
+
+    window.addEventListener('mousemove', (e) => {
+        x = e.clientX;
+        y = e.clientY;
+    });
+
+    function updateSpotlight() {
+        // Smooth follow with simple lerp
+        currentX += (x - currentX) * 0.1;
+        currentY += (y - currentY) * 0.1;
+
+        // Dynamic gold gradient
+        spotlight.style.background = `radial-gradient(800px circle at ${currentX}px ${currentY}px, rgba(212, 175, 55, 0.08), transparent 50%)`;
+
+        requestAnimationFrame(updateSpotlight);
+    }
+    updateSpotlight();
+
+    console.log('🔦 Spotlight effect initialized');
+}
+
+// =================================================================
+// 7. INITIALIZATION
 // =================================================================
 document.addEventListener('DOMContentLoaded', () => {
     // Wait a frame for all scripts to be ready
@@ -256,8 +287,10 @@ document.addEventListener('DOMContentLoaded', () => {
         initLenisScroll();
         initGSAPAnimations();
         initParallax();
+        initParallax();
         initMagneticButton();
         initMobileScrollTriggers();
+        initSpotlight();
     });
 });
 
@@ -267,8 +300,10 @@ if (document.readyState === 'complete' || document.readyState === 'interactive')
         initLenisScroll();
         initGSAPAnimations();
         initParallax();
+        initParallax();
         initMagneticButton();
         initMobileScrollTriggers();
+        initSpotlight();
     });
 }
 

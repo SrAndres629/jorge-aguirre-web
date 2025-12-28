@@ -36,79 +36,43 @@
 })();
 
 // =================================================================
-// 2. BEFORE/AFTER SLIDERS (GPU Optimized + Mobile Fixed)
+// 2. BEFORE/AFTER SLIDERS (Modern Range Input Approach)
 // =================================================================
-document.querySelectorAll('[data-slider]').forEach(slider => {
-    const resize = slider.querySelector('.resize');
+window.updateSlider = function (id, value) {
+    const clip = document.getElementById(`clip-${id}`);
+    const handle = document.getElementById(`handle-line-${id}`);
 
-    // Divider removed as we moved to arrow-only navigation for mobile stability
-    const resizeImg = resize?.querySelector('img');
-
-    if (!resize) return;
-
-    // Función para calcular y establecer el ancho correcto del slider
-    const setSliderWidth = () => {
+    if (clip && handle) {
+        // GPU Accelerated updates
         requestAnimationFrame(() => {
-            const width = slider.offsetWidth;
-            if (resizeImg && width > 0) {
-                // Aplicar el ancho exacto del contenedor a la imagen overlay
-                resizeImg.style.width = width + 'px';
-                // También establecer como variable CSS de respaldo
-                slider.style.setProperty('--slider-width', width + 'px');
-            }
-        });
-    };
-
-    // Ejecutar después de que las imágenes carguen
-    const initSlider = () => {
-        setSliderWidth();
-        // Doble verificación después de un pequeño delay
-        setTimeout(setSliderWidth, 100);
-        setTimeout(setSliderWidth, 500);
-    };
-
-    // Eventos de inicialización
-    initSlider();
-    window.addEventListener('resize', setSliderWidth);
-    window.addEventListener('orientationchange', () => setTimeout(setSliderWidth, 100));
-
-    // También recalcular cuando las imágenes carguen
-    const images = slider.querySelectorAll('img');
-    images.forEach(img => {
-        if (!img.complete) {
-            img.addEventListener('load', setSliderWidth);
-        }
-    });
-
-    // =================================================================
-    // NEW: ARROW TOGGLE LOGIC (Mobile Friendly)
-    // =================================================================
-    const leftArrow = slider.querySelector('.slider-arrow.left');
-    const rightArrow = slider.querySelector('.slider-arrow.right');
-
-    if (leftArrow && rightArrow) {
-        // Click Right -> Show After (Overlay Width 0%)
-        rightArrow.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            resize.style.width = '0%';
-            slider.classList.add('show-after');
-        });
-
-        // Click Left -> Show Before (Overlay Width 100%)
-        leftArrow.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            resize.style.width = '100%';
-            slider.classList.remove('show-after');
+            clip.style.width = `${value}%`;
+            handle.style.left = `${value}%`;
         });
     }
+};
 
-    // Initialize state
-    // Default is width: 100% (Before) via CSS
-    // Optional: Ensure class sync
-    // slider.classList.remove('show-after');
+// Sync Inner Image Width to Container Width to prevent distortion
+const syncSliderImages = () => {
+    const sliders = document.querySelectorAll('[id^="clip-"]');
+    sliders.forEach(clip => {
+        const container = clip.parentElement;
+        const innerImg = clip.querySelector('img');
+
+        if (container && innerImg) {
+            const width = container.offsetWidth;
+            innerImg.style.width = `${width}px`;
+        }
+    });
+};
+
+// Init & Observers
+window.addEventListener('load', syncSliderImages);
+window.addEventListener('resize', syncSliderImages);
+// Also use ResizeObserver for robustness
+const sliderObserver = new ResizeObserver(() => {
+    requestAnimationFrame(syncSliderImages);
 });
+document.querySelectorAll('#galeria .group').forEach(el => sliderObserver.observe(el));
 
 // =================================================================
 // 3. FAQ ACCORDION (Auto-close others)

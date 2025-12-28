@@ -4,16 +4,19 @@ module.exports = {
     theme: {
         extend: {
             colors: {
-                'luxury-black': '#0a0a0a',
-                'luxury-gold': '#C5A059',
-                'luxury-gold-light': '#E5C585',
-                'luxury-dark': '#121212',
-                'luxury-text': '#e5e7eb',
-                'test-color': '#ff0000'
+                'luxury-black': '#020202', // Deepest black
+                'luxury-dark': '#0a0a0a',   // Secondary black
+                'luxury-gold': '#D4AF37',   // Classic Metallic Gold
+                'luxury-gold-light': '#F1E5AC', // Champagne highlight
+                'luxury-text': '#FAFAFA',   // Off-white for readability
+                'luxury-gray': '#A1A1A1',   // Muted text
             },
             fontFamily: {
                 'serif': ['Playfair Display', 'serif'],
                 'sans': ['Montserrat', 'sans-serif'],
+            },
+            letterSpacing: {
+                'widest': '.25em',
             }
         },
     },

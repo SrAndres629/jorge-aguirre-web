@@ -20,7 +20,7 @@ class Settings:
     def __init__(self):
         # Meta Ads (Pixel + CAPI)
         self.META_PIXEL_ID: str = os.getenv("META_PIXEL_ID", "")
-        self.META_ACCESS_TOKEN: str = os.getenv("META_ACCESS_TOKEN", "")
+        self.META_ACCESS_TOKEN: str = os.getenv("META_ACCESS_TOKEN")
         self.META_API_VERSION: str = "v21.0"
         self.TEST_EVENT_CODE: Optional[str] = os.getenv("TEST_EVENT_CODE")
         

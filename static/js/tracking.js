@@ -87,7 +87,9 @@ const TrackingConfig = {
                     // B) Meta CAPI (Server)
                     sendToCAPI('ViewContent', {
                         event_id: eventId,
-                        ...serviceData
+                        service: serviceData.name,   // Mapped for Backend Model (ViewContentRequest)
+                        category: serviceData.category,
+                        price: serviceData.price
                     });
                 }
             }
@@ -218,14 +220,23 @@ async function handleConversion(source) {
 // Helper para CAPI
 async function sendToCAPI(eventName, eventData) {
     try {
-        await fetch('/track-' + eventName.toLowerCase(), {
+        const response = await fetch('/track-' + eventName.toLowerCase(), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(eventData),
             keepalive: true // Ensures request survives navigation
         });
+
+        if (!response.ok) {
+            console.error(`❌ CAPI Error for ${eventName}:`, response.status, response.statusText);
+            // Optional: Log body for debugging
+            // const errBody = await response.text();
+            // console.error(errBody);
+        } else {
+            console.log(`✅ CAPI Success for ${eventName}`);
+        }
     } catch (e) {
-        // Silent fail para no interrumpir UX
+        console.error(`❌ CAPI Network Error:`, e);
     }
 }
 

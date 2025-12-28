@@ -5,8 +5,8 @@
 @layer components {
     .btn-gold-liquid {
         @apply relative overflow-hidden font-bold text-black border-none transition-transform duration-500;
-        /* Tailwind gradient classes failing in @apply on Windows Node environment, using standard CSS fallback */
-        background-image: linear-gradient(135deg, #C5A059 0%, #E5C585 50%, #B08D45 100%);
+        /* Refined Champagne Gold Gradient */
+        background-image: linear-gradient(135deg, #D4AF37 0%, #F1E5AC 50%, #C5A059 100%);
         background-size: 200% 200%;
     }
 }
