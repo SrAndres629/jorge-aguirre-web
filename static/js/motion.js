@@ -16,6 +16,18 @@ function initLenisScroll() {
         return;
     }
 
+    // WPO: Disable on Mobile to save battery/performance (Native scroll is better on touch)
+    if (window.innerWidth < 768) {
+        console.log('📱 Mobile detected: Skipping Lenis (using Native Scroll)');
+        return;
+    }
+
+    // WPO: Disable if user prefers reduced motion
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        console.log('♿ Reduced Motion detected: Skipping Lenis');
+        return;
+    }
+
     lenis = new Lenis({
         duration: 1.2,          // Scroll duration (luxury feel)
         easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), // Ease out expo
@@ -147,6 +159,11 @@ function initGSAPAnimations() {
 function initParallax() {
     if (typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') {
         setTimeout(initParallax, 100);
+        return;
+    }
+
+    // WPO: Disable Parallax if user prefers reduced motion
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
         return;
     }
 

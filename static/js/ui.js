@@ -1,255 +1,188 @@
-/* =================================================================
-   UI.JS - Interactividad Spaceship / High-End Desire
-   Sliders, Sticky Header, Particles, AOS, Vanilla-Tilt
-   ================================================================= */
+/**
+ * UI.js - Core Frontend Logic & Interaction Manager
+ * Handles Sliders, Navigation, and Performance Optimization
+ */
 
-// =================================================================
-// 1. STICKY HEADER SCROLL HANDLER
-// =================================================================
-(function () {
-    const stickyNav = document.getElementById('stickyNav');
-    const urgencyBanner = document.getElementById('urgencyBanner');
+const UI = {
+    init() {
+        this.SliderManager.init();
+        this.NavManager.init();
+        this.PerformanceManager.init();
+        console.log('✅ UI Core Initialized');
+    },
 
-    if (stickyNav && urgencyBanner) {
-        let ticking = false;
+    /**
+     * Module: SliderManager
+     * Handles Before/After image comparison sliders with touch support
+     */
+    SliderManager: {
+        sliders: [],
 
-        window.addEventListener('scroll', () => {
-            if (!ticking) {
-                window.requestAnimationFrame(() => {
-                    const currentScroll = window.pageYOffset;
+        init() {
+            const sliders = document.querySelectorAll('.slider-container');
+            if (!sliders.length) return;
 
-                    if (currentScroll > 400) {
-                        stickyNav.style.transform = 'translateY(0)';
-                        urgencyBanner.style.opacity = '0';
-                        urgencyBanner.style.pointerEvents = 'none';
-                    } else {
-                        stickyNav.style.transform = 'translateY(-100%)';
-                        urgencyBanner.style.opacity = '1';
-                        urgencyBanner.style.pointerEvents = 'auto';
-                    }
-                    ticking = false;
-                });
-                ticking = true;
-            }
-        }, { passive: true });
-    }
-})();
-
-// =================================================================
-// 2. BEFORE/AFTER SLIDERS (Modern Range Input Approach)
-// =================================================================
-window.updateSlider = function (id, value) {
-    const clip = document.getElementById(`clip-${id}`);
-    const handle = document.getElementById(`handle-line-${id}`);
-
-    if (clip && handle) {
-        // GPU Accelerated updates
-        requestAnimationFrame(() => {
-            clip.style.width = `${value}%`;
-            handle.style.left = `${value}%`;
-        });
-    }
-};
-
-// Sync Inner Image Width to Container Width to prevent distortion
-const syncSliderImages = () => {
-    const sliders = document.querySelectorAll('[id^="clip-"]');
-    sliders.forEach(clip => {
-        const container = clip.parentElement;
-        const innerImg = clip.querySelector('img');
-
-        if (container && innerImg) {
-            const width = container.offsetWidth;
-            innerImg.style.width = `${width}px`;
-        }
-    });
-};
-
-// Init & Observers
-window.addEventListener('load', syncSliderImages);
-window.addEventListener('resize', syncSliderImages);
-// Also use ResizeObserver for robustness
-const sliderObserver = new ResizeObserver(() => {
-    requestAnimationFrame(syncSliderImages);
-});
-document.querySelectorAll('#galeria .group').forEach(el => sliderObserver.observe(el));
-
-// =================================================================
-// 3. FAQ ACCORDION (Auto-close others)
-// =================================================================
-document.querySelectorAll('details').forEach((detail) => {
-    detail.addEventListener('toggle', () => {
-        if (detail.open) {
-            document.querySelectorAll('details').forEach((otherDetail) => {
-                if (otherDetail !== detail && otherDetail.open) {
-                    otherDetail.open = false;
-                }
+            sliders.forEach(slider => {
+                this.setupSlider(slider);
             });
-        }
-    });
-});
 
-// =================================================================
-// 4. WHATSAPP BUTTON ATTENTION ANIMATION
-// =================================================================
-(function () {
-    const whatsappBtn = document.getElementById('whatsappFloat');
+            // Handle resize to keep sliders synced
+            window.addEventListener('resize', this.debounce(() => {
+                this.syncAllSliders();
+            }, 250));
+        },
 
-    if (whatsappBtn) {
-        setInterval(() => {
-            whatsappBtn.classList.add('animate-bounce');
-            setTimeout(() => whatsappBtn.classList.remove('animate-bounce'), 2000);
-        }, 10000);
+        setupSlider(container) {
+            const range = container.querySelector('.slider-range');
+            const foreground = container.querySelector('.foreground-img');
+            const thumb = container.querySelector('.slider-thumb');
 
-        setTimeout(() => {
-            whatsappBtn.classList.add('animate-bounce');
-            setTimeout(() => whatsappBtn.classList.remove('animate-bounce'), 2000);
-        }, 3000);
-    }
-})();
+            if (!range || !foreground || !thumb) return;
 
-// =================================================================
-// 5. PARTICLES.JS - Gold Dust (Atmósfera Premium)
-// =================================================================
-(function () {
-    if (typeof particlesJS !== 'undefined' && document.getElementById('particles-js')) {
-        particlesJS("particles-js", {
-            "particles": {
-                "number": {
-                    "value": 40,
-                    "density": { "enable": true, "value_area": 800 }
-                },
-                "color": { "value": "#C5A059" },
-                "shape": { "type": "circle" },
-                "opacity": {
-                    "value": 0.3,
-                    "random": true,
-                    "anim": { "enable": true, "speed": 0.3, "opacity_min": 0.1 }
-                },
-                "size": {
-                    "value": 3,
-                    "random": true,
-                    "anim": { "enable": true, "speed": 0.5, "size_min": 0.5 }
-                },
-                "line_linked": { "enable": false },
-                "move": {
-                    "enable": true,
-                    "speed": 0.5,
-                    "direction": "top",
-                    "random": true,
-                    "straight": false,
-                    "out_mode": "out"
-                }
-            },
-            "interactivity": {
-                "detect_on": "window",
-                "events": {
-                    "onhover": { "enable": true, "mode": "repulse" },
-                    "onclick": { "enable": false }
-                },
-                "modes": {
-                    "repulse": {
-                        "distance": 100,
-                        "duration": 0.4
-                    }
-                }
-            },
-            "retina_detect": true
-        });
-        console.log('✨ Particles.js initialized (Gold Dust + Repulse)');
-    }
-})();
-
-// =================================================================
-// 6. AOS (Animate On Scroll)
-// =================================================================
-if (typeof AOS !== 'undefined') {
-    AOS.init({
-        duration: 800,
-        easing: 'ease-out-quart',
-        once: true,
-        offset: 50
-    });
-    console.log('✅ AOS initialized');
-}
-
-// =================================================================
-// 7. VANILLA-TILT (Física 3D) - Auto-init via data-tilt
-// =================================================================
-// Vanilla-Tilt se inicializa automáticamente con data-tilt attributes
-if (typeof VanillaTilt !== 'undefined') {
-    console.log('🎯 Vanilla-Tilt.js ready (3D Physics)');
-}
-
-console.log('✅ UI.js loaded (Spaceship v3.0)');
-
-// =================================================================
-// 8. SMART STICKY BAR (Mobile) - Hide when collision with other CTAs
-// =================================================================
-document.addEventListener('DOMContentLoaded', () => {
-    // 1. Identify key elements
-    const stickyBar = document.querySelector('.fixed.bottom-0.md\\:hidden');
-    // Select buttons that are conceptually "Main CTAs"
-    const triggers = [
-        document.querySelector("button[onclick*='Hero CTA']"),
-        document.querySelector("button[onclick*='CTA Final']")
-    ].filter(el => el);
-
-    if (!stickyBar || triggers.length === 0) return;
-
-    // 2. Observer options
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                // If a Main CTA is visible, HIDE the sticky bar
-                stickyBar.classList.add('translate-y-full', 'opacity-0', 'pointer-events-none');
-            } else {
-                // Only show if none are visible (simplified logic for now, works for distant sections)
-                // Re-check all triggers in case multiple observers fire
-                const isAnyVisible = triggers.some(t => {
-                    const rect = t.getBoundingClientRect();
-                    return (rect.top < window.innerHeight && rect.bottom > 0);
+            const update = () => {
+                const val = range.value;
+                requestAnimationFrame(() => {
+                    foreground.style.setProperty('clip-path', `polygon(0 0, ${val}% 0, ${val}% 100%, 0 100%)`);
+                    thumb.style.left = `${val}%`;
                 });
+            };
 
-                if (!isAnyVisible) {
-                    stickyBar.classList.remove('translate-y-full', 'opacity-0', 'pointer-events-none');
+            // Touch events (passive for performance)
+            range.addEventListener('input', update);
+            range.addEventListener('touchmove', (e) => {
+                // Logic to handle custom touch tracking if range input fails on specific iOS versions
+                // For now, relying on native range with passive listener usually works well
+            }, { passive: true });
+
+            // Initial update
+            update();
+
+            this.sliders.push({ container, range, update });
+        },
+
+        syncAllSliders() {
+            this.sliders.forEach(s => s.update());
+        },
+
+        debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+    },
+
+    /**
+     * Module: NavManager
+     * Handles Sticky Header and Mobile Menu Scroll Lock
+     */
+    NavManager: {
+        nav: document.getElementById('mainNav'),
+        mobileMenuBtn: document.getElementById('mobileMenuBtn'),
+        mobileMenuDiv: document.getElementById('mobileMenu'),
+        body: document.body,
+        isMenuOpen: false,
+
+        init() {
+            if (!this.nav) return;
+            this.setupStickyObserver();
+            this.setupMobileMenu();
+        },
+
+        setupStickyObserver() {
+            // Create a sentinel element at the top of the body
+            const sentinel = document.createElement('div');
+            sentinel.style.position = 'absolute';
+            sentinel.style.top = '100px'; // Trigger point
+            sentinel.style.left = '0';
+            sentinel.style.width = '1px';
+            sentinel.style.height = '1px';
+            sentinel.style.pointerEvents = 'none';
+            document.body.prepend(sentinel);
+
+            const observer = new IntersectionObserver((entries) => {
+                const isTop = entries[0].isIntersecting;
+                if (!isTop) {
+                    this.nav.classList.add('glass-nav', 'border-b', 'border-white/10', 'bg-luxury-black/90', 'backdrop-blur-md');
+                    this.nav.classList.remove('bg-transparent');
+                } else {
+                    this.nav.classList.remove('glass-nav', 'border-b', 'border-white/10', 'bg-luxury-black/90', 'backdrop-blur-md');
+                    this.nav.classList.add('bg-transparent');
                 }
-            }
-        });
-    }, { root: null, threshold: 0.1 });
+            }, { threshold: 0 });
 
-    // 3. Start observing
-    triggers.forEach(trigger => observer.observe(trigger));
-});
+            observer.observe(sentinel);
+        },
 
+        setupMobileMenu() {
+            if (!this.mobileMenuBtn || !this.mobileMenuDiv) return;
 
-// =================================================================
-// 9. SMART ANIMATION ENGINE (Premium Performance)
-// =================================================================
-document.addEventListener('DOMContentLoaded', () => {
-    // Select heavy animated elements
-    const heavyElements = document.querySelectorAll(
-        '.btn-gold-liquid, .animate-pulse-gold, .glass-card, .service-card-skin, #particles-js'
-    );
+            this.mobileMenuBtn.addEventListener('click', () => {
+                this.toggleMenu();
+            });
 
-    if (heavyElements.length === 0) return;
+            // Close menu when clicking a link
+            const links = this.mobileMenuDiv.querySelectorAll('a');
+            links.forEach(link => {
+                link.addEventListener('click', () => {
+                    if (this.isMenuOpen) this.toggleMenu();
+                });
+            });
+        },
 
-    const smartObserver = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                // In viewport: RESUME animation
-                entry.target.classList.remove('paused');
+        toggleMenu() {
+            this.isMenuOpen = !this.isMenuOpen;
+
+            if (this.isMenuOpen) {
+                // Lock Scroll
+                this.mobileMenuDiv.classList.remove('hidden');
+                // Small delay to allow display block to apply before transition could ideally be handled here, 
+                // but for simple visibility toggle:
+                this.body.style.overflow = 'hidden';
             } else {
-                // Out viewport: PAUSE animation (Release CPU/GPU)
-                entry.target.classList.add('paused');
+                // Unlock Scroll
+                this.mobileMenuDiv.classList.add('hidden');
+                this.body.style.overflow = '';
             }
-        });
-    }, {
-        root: null,
-        rootMargin: '100px 0px', // Resume slightly before entering screen
-        threshold: 0.01
-    });
+        }
+    },
 
-    heavyElements.forEach(el => smartObserver.observe(el));
-    console.log(`⚡ Smart Animation Engine: Managing ${heavyElements.length} premium elements`);
-});
+    /**
+     * Module: PerformanceManager
+     * Pauses heavy animations when off-screen
+     */
+    PerformanceManager: {
+        observer: null,
+
+        init() {
+            this.setupObserver();
+            this.observeHeavyElements();
+        },
+
+        setupObserver() {
+            this.observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.remove('paused-animation');
+                    } else {
+                        entry.target.classList.add('paused-animation');
+                    }
+                });
+            }, { rootMargin: '50px' });
+        },
+
+        observeHeavyElements() {
+            // Select elements with heavy CSS animations or canvas
+            const targets = document.querySelectorAll('#particles-js, .animate-shine, .btn-gold-liquid');
+            targets.forEach(target => this.observer.observe(target));
+        }
+    }
+};
+
+// Initialize when DOM is ready
+document.addEventListener('DOMContentLoaded', () => UI.init());

@@ -3,8 +3,8 @@
 # Imagen optimizada para FastAPI en producción
 # =================================================================
 
-# Python 3.10 slim para menor tamaño de imagen
-FROM python:3.10-slim
+# Python 3.11 slim para mejor performance
+FROM python:3.11-slim
 
 # Variables de entorno para Python optimizado
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -25,11 +25,11 @@ RUN pip install --no-cache-dir --upgrade pip && \
 COPY . .
 
 # Puerto que expone la aplicación
-EXPOSE 80
+EXPOSE $PORT
 
 # Health check para monitoreo
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:80/ || exit 1
+    CMD curl -f http://localhost:$PORT/ || exit 1
 
-# Comando de inicio - Puerto 80 para producción
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80"]
+# Comando de inicio - Gunicorn para producción
+CMD sh -c "gunicorn -w 4 -k uvicorn.workers.UvicornWorker main:app --bind 0.0.0.0:$PORT"
