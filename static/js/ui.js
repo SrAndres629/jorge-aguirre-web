@@ -1,14 +1,28 @@
 /**
  * UI.js - Core Frontend Logic & Interaction Manager
- * Handles Sliders, Navigation, and Performance Optimization
+ * Refactored for High-Performance (60fps Mobile) & Non-Blocking Init
  */
 
 const UI = {
     init() {
-        this.SliderManager.init();
+        // Critical: Nav & Basic Interactions (Immediate)
         this.NavManager.init();
-        this.PerformanceManager.init();
-        console.log('✅ UI Core Initialized');
+
+        // Non-Critical: Sliders & Heavy Observers (Deferred)
+        // Use requestIdleCallback if available, else setTimeout
+        if ('requestIdleCallback' in window) {
+            requestIdleCallback(() => {
+                this.SliderManager.init();
+                this.PerformanceManager.init();
+            });
+        } else {
+            setTimeout(() => {
+                this.SliderManager.init();
+                this.PerformanceManager.init();
+            }, 50);
+        }
+
+        console.log('✅ UI Core Initialized (Non-Blocking Pattern)');
     },
 
     /**
@@ -17,13 +31,17 @@ const UI = {
      */
     SliderManager: {
         sliders: [],
+        observer: null,
 
         init() {
-            const sliders = document.querySelectorAll('.slider-container');
-            if (!sliders.length) return;
+            const sliderContainers = document.querySelectorAll('.slider-container');
+            if (!sliderContainers.length) return;
 
-            sliders.forEach(slider => {
-                this.setupSlider(slider);
+            // Optimization: Only initialize slider logic when visible
+            this.setupIntersectionObserver();
+
+            sliderContainers.forEach(slider => {
+                this.observer.observe(slider);
             });
 
             // Handle resize to keep sliders synced
@@ -32,7 +50,21 @@ const UI = {
             }, 250));
         },
 
+        setupIntersectionObserver() {
+            this.observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        this.setupSlider(entry.target);
+                        this.observer.unobserve(entry.target); // Initialize once
+                    }
+                });
+            }, { rootMargin: '100px' });
+        },
+
         setupSlider(container) {
+            // Check if already initialized to avoid duplicates
+            if (container.dataset.initialized) return;
+
             const range = container.querySelector('.slider-range');
             const foreground = container.querySelector('.foreground-img');
             const thumb = container.querySelector('.slider-thumb');
@@ -41,6 +73,7 @@ const UI = {
 
             const update = () => {
                 const val = range.value;
+                // Use requestAnimationFrame for smooth 60fps
                 requestAnimationFrame(() => {
                     foreground.style.setProperty('clip-path', `polygon(0 0, ${val}% 0, ${val}% 100%, 0 100%)`);
                     thumb.style.left = `${val}%`;
@@ -48,15 +81,12 @@ const UI = {
             };
 
             // Touch events (passive for performance)
-            range.addEventListener('input', update);
-            range.addEventListener('touchmove', (e) => {
-                // Logic to handle custom touch tracking if range input fails on specific iOS versions
-                // For now, relying on native range with passive listener usually works well
-            }, { passive: true });
+            range.addEventListener('input', update, { passive: true });
+            range.addEventListener('touchmove', () => { }, { passive: true }); // iOS fix
 
             // Initial update
             update();
-
+            container.dataset.initialized = "true";
             this.sliders.push({ container, range, update });
         },
 
@@ -66,7 +96,7 @@ const UI = {
 
         debounce(func, wait) {
             let timeout;
-            return function executedFunction(...args) {
+            return function (...args) {
                 const later = () => {
                     clearTimeout(timeout);
                     func(...args);
@@ -97,12 +127,14 @@ const UI = {
         setupStickyObserver() {
             // Create a sentinel element at the top of the body
             const sentinel = document.createElement('div');
-            sentinel.style.position = 'absolute';
-            sentinel.style.top = '100px'; // Trigger point
-            sentinel.style.left = '0';
-            sentinel.style.width = '1px';
-            sentinel.style.height = '1px';
-            sentinel.style.pointerEvents = 'none';
+            Object.assign(sentinel.style, {
+                position: 'absolute',
+                top: '100px',
+                left: '0',
+                width: '1px',
+                height: '1px',
+                pointerEvents: 'none'
+            });
             document.body.prepend(sentinel);
 
             const observer = new IntersectionObserver((entries) => {
@@ -122,32 +154,24 @@ const UI = {
         setupMobileMenu() {
             if (!this.mobileMenuBtn || !this.mobileMenuDiv) return;
 
-            this.mobileMenuBtn.addEventListener('click', () => {
-                this.toggleMenu();
-            });
+            const toggle = () => this.toggleMenu();
+            this.mobileMenuBtn.addEventListener('click', toggle);
 
             // Close menu when clicking a link
             const links = this.mobileMenuDiv.querySelectorAll('a');
-            links.forEach(link => {
-                link.addEventListener('click', () => {
-                    if (this.isMenuOpen) this.toggleMenu();
-                });
-            });
+            links.forEach(link => link.addEventListener('click', () => {
+                if (this.isMenuOpen) toggle();
+            }));
         },
 
         toggleMenu() {
             this.isMenuOpen = !this.isMenuOpen;
-
             if (this.isMenuOpen) {
-                // Lock Scroll
                 this.mobileMenuDiv.classList.remove('hidden');
-                // Small delay to allow display block to apply before transition could ideally be handled here, 
-                // but for simple visibility toggle:
-                this.body.style.overflow = 'hidden';
+                this.body.style.overflow = 'hidden'; // Lock scroll
             } else {
-                // Unlock Scroll
                 this.mobileMenuDiv.classList.add('hidden');
-                this.body.style.overflow = '';
+                this.body.style.overflow = ''; // Unlock scroll
             }
         }
     },
@@ -184,5 +208,9 @@ const UI = {
     }
 };
 
-// Initialize when DOM is ready
-document.addEventListener('DOMContentLoaded', () => UI.init());
+// Initialize when DOM is ready (deferred)
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => UI.init());
+} else {
+    UI.init();
+}

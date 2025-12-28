@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: jorge-web-dev
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    environment:
+      - PORT=8000
+      - ENV=development
+    # Override the production Gunicorn command with Uvicorn + Reload for Dev
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    networks:
+      - app_network
+    restart: unless-stopped
+
+networks:
+  app_network:
+    driver: bridge

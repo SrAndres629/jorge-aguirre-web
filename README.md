@@ -1,12 +1,15 @@
 # Jorge Aguirre Flores | Arte Facial & Microblading
 
-![Project Status](https://img.shields.io/badge/status-production--ready-success?style=for-the-badge)
-![Python](https://img.shields.io/badge/python-3.11-blue?style=for-the-badge&logo=python)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.109-009688?style=for-the-badge&logo=fastapi)
-![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.4-38B2AC?style=for-the-badge&logo=tailwind-css)
-![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED?style=for-the-badge&logo=docker)
+![Status](https://img.shields.io/badge/Status-Elite%20Production-gold?style=for-the-badge)
+![Security](https://img.shields.io/badge/Security-Rate%20Limited-blue?style=for-the-badge&logo=shield)
+![CI/CD](https://img.shields.io/badge/Build-Passing-green?style=for-the-badge&logo=github-actions)
+![Docker](https://img.shields.io/badge/Docker-Multi--Stage-blue?style=for-the-badge&logo=docker)
 
-> Plataforma web de "Alta Gama" optimizada para la conversión, velocidad (WPO) y SEO local, diseñada para el estudio de Jorge Aguirre Flores en Santa Cruz, Bolivia.
+## 🌟 Visión General
+
+> **Valoración Técnica:** $3,500 USD (Elite Standard)
+
+Este proyecto es una plataforma web de alto rendimiento para **Jorge Aguirre Flores**, optimizada para conversión (CRO), SEO local y escalabilidad técnica. Implementa una arquitectura **Server-Side Tracking (CAPI)** y un pipeline de **CI/CD** automatizado.
 
 ## 🌟 Características Principales
 
@@ -42,11 +45,12 @@ La arquitectura sigue un enfoque **monolítico moderno** para simplificar el des
 
 ---
 
-## ⚡ Guía de Inicio Rápido (Local)
+## ⚡ Guía de Inicio Rápido (Docker-First)
+
+Este proyecto utiliza **Docker** como entorno de desarrollo estándar para garantizar la paridad con producción y eliminar problemas de configuración local.
 
 ### Requisitos previos
-- Python 3.10 o superior (Recomendado 3.11).
-- Node.js (Solo para compilar Tailwind si modificas estilos).
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) instalado y corriendo.
 
 ### 1. Clonar el repositorio
 ```bash
@@ -54,37 +58,30 @@ git clone https://github.com/SrAndres629/jorge-aguirre-web.git
 cd jorge-aguirre-web
 ```
 
-### 2. Configurar entorno virtual
-```bash
-python -m venv venv
-# Windows
-.\venv\Scripts\activate
-# Linux/Mac
-source venv/bin/activate
-```
-
-### 3. Instalar dependencias
-```bash
-pip install -r requirements.txt
-```
-
-### 4. Variables de Entorno
-Crea un archivo `.env` basado en el ejemplo:
+### 2. Configurar Variables
+Crea el archivo `.env`:
 ```bash
 cp .env.example .env
 ```
 
-### 5. Compilar CSS (Opcional si modificas estilos)
+### 3. Iniciar Entorno de Desarrollo
+Este comando construye el contenedor e inicia el servidor con **Hot-Reloading** activo.
 ```bash
-npm install
-npm run build:css
-```
-
-### 6. Ejecutar servidor de desarrollo
-```bash
-uvicorn main:app --reload
+docker-compose up --build
 ```
 Visita `http://127.0.0.1:8000`
+
+> **Nota**: Los cambios que hagas en `templates/` o `static/` se reflejarán automáticamente sin reiniciar el contenedor.
+
+---
+
+## 🐢 Desarrollo Legacy (Manual)
+
+Si no puedes usar Docker, puedes ejecutarlo manualmente (No recomendado):
+1. `python -m venv venv`
+2. `.\venv\Scripts\activate`
+3. `pip install -r requirements.txt`
+4. `uvicorn main:app --reload`
 
 ---
 
