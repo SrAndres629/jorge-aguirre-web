@@ -1,258 +1,214 @@
 /* =================================================================
-   TRACKING.JS - Meta Pixel, CAPI, GTM, ViewContent
-   OPTIMIZADO PARA MÁXIMO EMQ (Event Match Quality)
+   TRACKING.JS - Meta Pixel & CAPI Universal Engine (Senior Edition)
+   Architecture: Idempotent Single-Instance Tracker
    ================================================================= */
 
-// =================================================================
-// 1. META PIXEL INITIALIZATION (Con external_id)
-// =================================================================
-(function () {
-    !function (f, b, e, v, n, t, s) {
-        if (f.fbq) return; n = f.fbq = function () {
-            n.callMethod ?
-                n.callMethod.apply(n, arguments) : n.queue.push(arguments)
-        }; if (!f._fbq) f._fbq = n;
-        n.push = n; n.loaded = !0; n.version = '2.0'; n.queue = []; t = b.createElement(e); t.async = !0;
-        t.src = v; s = b.getElementsByTagName(e)[0]; s.parentNode.insertBefore(t, s)
-    }(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
+const TrackingEngine = {
+    initialized: false,
+    viewedSections: new Set(),
 
-    if (window.META_PIXEL_ID) {
-        // Inicializar Pixel con external_id para mejor matching
-        const initData = {};
-        if (window.EXTERNAL_ID) {
-            initData.external_id = window.EXTERNAL_ID;
-        }
-
-        fbq('init', window.META_PIXEL_ID, initData);
-        fbq('track', 'PageView', {}, { eventID: window.META_EVENT_ID });
-        console.log('📊 Meta Pixel initialized with external_id');
-    }
-})();
-
-// =================================================================
-// 2. CONFIGURACIÓN DE TRACKING
-// =================================================================
-if (typeof TrackingConfig === 'undefined') {
-    window.TrackingConfig = {
-        // Usar configuración inyectada desde backend o fallback vacío
+    config: {
         services: window.SERVICES_CONFIG || {},
         phone: (window.CONTACT_CONFIG && window.CONTACT_CONFIG.phone) || "59176375924",
-        viewedSections: new Set(),
+    },
 
-        // Capturar fbclid de la URL para tracking
-        getFbclid: function () {
-            const urlParams = new URLSearchParams(window.location.search);
-            return urlParams.get('fbclid') || '';
+    init() {
+        if (this.initialized) return;
+        this.initialized = true;
+
+        this.setupPixel();
+        this.setupViewContentObserver();
+        this.setupSliderListeners();
+
+        console.log('📊 [Senior Architecture] Tracking Engine Active (Pixel + CAPI)');
+    },
+
+    /**
+     * 1. META PIXEL INITIALIZATION
+     */
+    setupPixel() {
+        if (window.fbq) return;
+
+        !function (f, b, e, v, n, t, s) {
+            if (f.fbq) return; n = f.fbq = function () {
+                n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments)
+            }; if (!f._fbq) f._fbq = n;
+            n.push = n; n.loaded = !0; n.version = '2.0'; n.queue = []; t = b.createElement(e); t.async = !0;
+            t.src = v; s = b.getElementsByTagName(e)[0]; s.parentNode.insertBefore(t, s)
+        }(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
+
+        if (window.META_PIXEL_ID) {
+            const initData = window.EXTERNAL_ID ? { external_id: window.EXTERNAL_ID } : {};
+            fbq('init', window.META_PIXEL_ID, initData);
+            fbq('track', 'PageView', {}, { eventID: window.META_EVENT_ID });
         }
-    };
-}
+    },
 
-// =================================================================
-// 3. VIEWCONTENT TRACKING (Interés Específico - Scroll)
-// =================================================================
-(function () {
-    const observerOptions = {
-        root: null,
-        rootMargin: '0px',
-        threshold: 0.6 // Requiere 60% de visibilidad para confirmar interés
-    };
-
-    const sectionObserver = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                const sectionId = entry.target.dataset.serviceCategory || entry.target.dataset.trackingId;
-
-                // Evitar duplicados en la misma sesión
-                if (sectionId && !TrackingConfig.viewedSections.has(sectionId)) {
-                    TrackingConfig.viewedSections.add(sectionId);
-
-                    // Datos enriquecidos del servicio
-                    const serviceData = TrackingConfig.services[sectionId] || { name: sectionId, category: 'General', price: 0 };
-                    const eventId = 'vc_' + Date.now() + '_' + sectionId;
-
-                    // A) Meta Pixel
-                    if (typeof fbq === 'function') {
-                        fbq('track', 'ViewContent', {
-                            content_name: serviceData.name,
-                            content_category: serviceData.category,
-                            content_ids: [sectionId], // ID técnico para catálogo
-                            content_type: 'product',
-                            value: serviceData.price,
-                            currency: 'USD'
-                        }, { eventID: eventId });
-                        console.log(`👁️ ViewContent: Interés en ${serviceData.name}`);
+    /**
+     * 2. VIEWCONTENT OBSERVER (Specific Interest)
+     */
+    setupViewContentObserver() {
+        const observerOptions = { threshold: 0.6 };
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const sectionId = entry.target.dataset.serviceCategory || entry.target.dataset.trackingId;
+                    if (sectionId && !this.viewedSections.has(sectionId)) {
+                        this.viewedSections.add(sectionId);
+                        this.trackIndividualView(sectionId);
                     }
-
-                    // B) Meta CAPI (Server)
-                    sendToCAPI('ViewContent', {
-                        event_id: eventId,
-                        service: serviceData.name,   // Mapped for Backend Model (ViewContentRequest)
-                        category: serviceData.category,
-                        price: serviceData.price
-                    });
                 }
-            }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('[data-service-category]').forEach(el => observer.observe(el));
+    },
+
+    trackIndividualView(sectionId) {
+        const serviceData = this.config.services[sectionId] || { name: sectionId, category: 'General', price: 0 };
+        const eventId = `vc_${Date.now()}_${sectionId}`;
+
+        // Pixel
+        if (window.fbq) {
+            fbq('track', 'ViewContent', {
+                content_name: serviceData.name,
+                content_category: serviceData.category,
+                content_ids: [sectionId],
+                content_type: 'product',
+                value: serviceData.price,
+                currency: 'USD'
+            }, { eventID: eventId });
+        }
+
+        // CAPI
+        this.sendToCAPI('ViewContent', {
+            event_id: eventId,
+            service: serviceData.name,
+            category: serviceData.category,
+            price: serviceData.price
         });
-    }, observerOptions);
+    },
 
-    document.addEventListener('DOMContentLoaded', () => {
-        // Observar tarjetas de servicio
-        document.querySelectorAll('[data-service-category]').forEach(el => sectionObserver.observe(el));
-    });
-})();
-
-// =================================================================
-// 4. ACTIVE INTEREST TRACKING (Interacción con Sliders)
-// =================================================================
-document.addEventListener('DOMContentLoaded', () => {
-    // Detectar cuando alguien "juega" con el antes/después
-    const sliders = document.querySelectorAll('.ba-slider');
-
-    sliders.forEach((slider, index) => {
-        // Identificar qué servicio es basado en el título cercano o orden
-        // Asumimos orden: 0=Microblading, 1=Cejas Sombra, 2=Ojos, 3=Labios
+    /**
+     * 3. SLIDER INTERACTION LISTENERS
+     */
+    setupSliderListeners() {
+        const sliders = document.querySelectorAll('.ba-slider');
         const serviceNames = ['Microblading 3D', 'Cejas Sombra', 'Delineado Permanente', 'Labios Full Color'];
         const serviceIds = ['microblading_3d', 'cejas_sombra', 'delineado_ojos', 'labios_full'];
-        const serviceName = serviceNames[index] || 'Servicio Desconocido';
-        const serviceId = serviceIds[index] || 'unknown_service';
 
-        // Listener de 'una sola vez' para no saturar
-        const trackInteraction = () => {
-            if (slider.dataset.tracked) return;
-            slider.dataset.tracked = "true";
+        sliders.forEach((slider, index) => {
+            const trackInteraction = () => {
+                if (slider.dataset.tracked) return;
+                slider.dataset.tracked = "true";
 
-            // Custom Event: "UserInterestedInResult"
-            // Esto le dice a Facebook: "Este usuario comparó resultados activamente"
-            if (typeof fbq === 'function') {
-                fbq('trackCustom', 'SliderInteraction', {
-                    content_name: serviceName,
-                    content_id: serviceId,
+                const serviceName = serviceNames[index] || 'Servicio Desconocido';
+                const serviceId = serviceIds[index] || 'unknown';
+
+                if (window.fbq) {
+                    fbq('trackCustom', 'SliderInteraction', {
+                        content_name: serviceName,
+                        content_id: serviceId,
+                        interaction_type: 'compare_before_after'
+                    });
+                }
+
+                this.sendToCAPI('SliderInteraction', {
+                    event_id: `slider_${Date.now()}_${serviceId}`,
+                    service_name: serviceName,
+                    service_id: serviceId,
                     interaction_type: 'compare_before_after'
                 });
-                console.log(`🔥 SliderInteraction: Jugó con ${serviceName}`);
-            }
+            };
 
-            // CAPI (Server)
-            sendToCAPI('SliderInteraction', {
-                event_id: 'slider_' + Date.now() + '_' + serviceId,
-                service_name: serviceName,
-                service_id: serviceId,
-                interaction_type: 'compare_before_after'
-            });
+            slider.addEventListener('click', trackInteraction, { passive: true });
+            slider.addEventListener('touchmove', trackInteraction, { passive: true });
+        });
+    },
+
+    /**
+     * 4. CONVERSION HANDLER (WhatsApp Leads)
+     */
+    async handleConversion(source) {
+        const triggerMap = {
+            'Hero CTA': { name: 'Diseño de Cejas', id: 'hero_offer', intent: 'discovery' },
+            'Sticky Header': { name: 'Consulta General', id: 'sticky_bar', intent: 'convenience' },
+            'Floating Button': { name: 'Consulta WhatsApp', id: 'float_btn', intent: 'convenience' },
+            'Galería CTA': { name: 'Transformación Completa', id: 'gallery_cta', intent: 'inspiration' },
+            'CTA Final': { name: 'Oferta Limitada', id: 'final_offer', intent: 'urgency' },
+            'Servicio Cejas': { name: 'Microblading 3D', id: 'service_brows', intent: 'service_interest' },
+            'Servicio Ojos': { name: 'Delineado Ojos', id: 'service_eyes', intent: 'service_interest' },
+            'Servicio Labios': { name: 'Labios Full Color', id: 'service_lips', intent: 'service_interest' },
+            'Sticky Mobile CTA': { name: 'Cita VIP Móvil', id: 'mobile_sticky', intent: 'convenience' }
         };
 
-        // Trigger en click o touch en el slider
-        slider.addEventListener('click', trackInteraction);
-        slider.addEventListener('touchmove', trackInteraction);
-        // También en las flechas
-        const arrows = slider.querySelectorAll('.slider-arrow');
-        arrows.forEach(arrow => arrow.addEventListener('click', trackInteraction));
-    });
-});
+        const eventId = `lead_${Date.now()}`;
+        const data = triggerMap[source] || { name: source, id: 'unknown', intent: 'general' };
 
-// =================================================================
-// 5. CONVERSION HANDLER (Smart Lead Tracking)
-// =================================================================
-const triggerMap = {
-    // Mapa de "Fuente" -> { Nombre Servicio, ID Contenido, Intención }
-    'Hero CTA': { name: 'Diseño de Cejas', id: 'hero_offer', intent: 'discovery' },
-    'Sticky Header': { name: 'Consulta General', id: 'sticky_bar', intent: 'convenience' },
-    'Floating Button': { name: 'Consulta WhatsApp', id: 'float_btn', intent: 'convenience' },
-    'Galería CTA': { name: 'Transformación Completa', id: 'gallery_cta', intent: 'inspiration' },
-    'CTA Final': { name: 'Oferta Limitada', id: 'final_offer', intent: 'urgency' },
-    'Servicio Cejas': { name: 'Microblading 3D', id: 'service_brows', intent: 'service_interest' },
-    'Servicio Ojos': { name: 'Delineado Ojos', id: 'service_eyes', intent: 'service_interest' },
-    'Servicio Labios': { name: 'Labios Full Color', id: 'service_lips', intent: 'service_interest' },
-    'Sticky Mobile CTA': { name: 'Cita VIP Móvil', id: 'mobile_sticky', intent: 'convenience' }
-};
+        // Pixel
+        if (window.fbq) {
+            fbq('track', 'Lead', {
+                content_name: data.name,
+                content_category: data.intent,
+                content_ids: [data.id],
+                lead_source: 'whatsapp',
+                trigger_location: source
+            }, { eventID: eventId });
+        }
 
-async function handleConversion(source) {
-    const eventId = 'lead_' + Date.now();
-
-    // Obtener datos ricos del trigger
-    const triggerData = triggerMap[source] || { name: source, id: 'unknown', intent: 'general' };
-
-    // 1. Meta Pixel (Browser)
-    if (typeof fbq === 'function') {
-        fbq('track', 'Lead', {
-            content_name: triggerData.name,    // Ej: Microblading 3D
-            content_category: triggerData.intent, // Ej: service_interest
-            content_ids: [triggerData.id],     // Ej: service_brows
-            lead_source: 'whatsapp',
-            trigger_location: source
-        }, { eventID: eventId });
-        console.log(`🚀 Lead Enviado: Interés en ${triggerData.name} (${source})`);
-    }
-
-    // 2. DataLayer (GTM)
-    if (typeof dataLayer !== 'undefined') {
-        dataLayer.push({
-            'event': 'lead_uwu', // Unique WhatsApp User
-            'lead_context': triggerData,
-            'event_id': eventId
+        // CAPI
+        this.sendToCAPI('Lead', {
+            event_id: eventId,
+            source: source,
+            service_data: data
         });
-    }
 
-    // 3. Meta CAPI (Server Helper)
-    sendToCAPI('Lead', {
-        event_id: eventId,
-        source: source,
-        service_data: triggerData
-    });
+        // WhatsApp Redirect
+        let message = `Hola Jorge 👋`;
+        if (data.intent === 'service_interest') message += ` Me interesa el *${data.name}*. ¿Podría ver si soy candidata?`;
+        else if (data.intent === 'urgency') message += ` Quisiera aprovechar la *Oferta Limitada* de valoración gratuita.`;
+        else message += ` Quisiera información sobre sus servicios de maquillaje permanente.`;
 
-    // 4. Redirigir a WhatsApp
-    // Personalizamos el mensaje según lo que vio
-    let message = `Hola Jorge 👋`;
-    if (triggerData.intent === 'service_interest') {
-        message += ` Me interesa el *${triggerData.name}*. ¿Podría ver si soy candidata?`;
-    } else if (triggerData.intent === 'urgency') {
-        message += ` Quisiera aprovechar la *Oferta Limitada* de valoración gratuita.`;
-    } else {
-        message += ` Quisiera información sobre sus servicios de maquillaje permanente.`;
-    }
+        window.open(`https://wa.me/${this.config.phone}?text=${encodeURIComponent(message)}`, '_blank');
+    },
 
-    const url = `https://wa.me/${TrackingConfig.phone}?text=${encodeURIComponent(message)}`;
-    // Immediate open to prevent popup blockers
-    window.open(url, '_blank');
-}
-
-// Helper para CAPI
-async function sendToCAPI(eventName, customData) {
-    try {
-        const eventId = customData.event_id || (eventName.toLowerCase() + '_' + Date.now());
-
+    /**
+     * 5. CAPI HELPER
+     */
+    async sendToCAPI(eventName, customData) {
+        const fbclid = new URLSearchParams(window.location.search).get('fbclid');
         const payload = {
             event_name: eventName,
             event_time: Math.floor(Date.now() / 1000),
-            event_id: eventId,
+            event_id: customData.event_id || `${eventName.toLowerCase()}_${Date.now()}`,
             event_source_url: window.location.href,
             action_source: "website",
             user_data: {
                 external_id: window.EXTERNAL_ID || '',
-                // Hashed PII can be added here
+                fbc: fbclid ? `fb.1.${Math.floor(Date.now() / 1000)}.${fbclid}` : null
             },
-            custom_data: customData
+            custom_data: { ...customData, fbclid }
         };
 
-        const response = await fetch('/track/event', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
-            keepalive: true
-        });
-
-        if (!response.ok) {
-            console.error(`❌ CAPI Error for ${eventName}:`, response.status, response.statusText);
-        } else {
-            console.log(`✅ CAPI Success for ${eventName}`);
+        try {
+            await fetch('/track/event', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+                keepalive: true
+            });
+        } catch (e) {
+            console.warn(`[CAPI] Network Error for ${eventName}`);
         }
-    } catch (e) {
-        console.error(`❌ CAPI Network Error:`, e);
     }
-}
+};
 
-// =================================================================
-// 6. INICIALIZACIÓN
-// =================================================================
-console.log('⚡ Tracking.js v4.0 Loaded: Granular Interest Enabled');
-console.log('🎯 Objetivos: Sliders, Tarjetas y Ofertas Específicas');
+// Global Exposure for UI clicks
+window.handleConversion = (source) => TrackingEngine.handleConversion(source);
+
+// Init
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    TrackingEngine.init();
+} else {
+    document.addEventListener('DOMContentLoaded', () => TrackingEngine.init(), { once: true });
+}

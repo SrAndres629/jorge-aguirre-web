@@ -1,68 +1,64 @@
 /**
- * UI.js - Core Frontend Logic & Interaction Manager
- * Refactored for High-Performance (60fps Mobile) & Non-Blocking Init
+ * UI.JS - Core Frontend Logic & Interaction Manager (Senior Edition)
+ * Architecture: Optimized Modular UI Engine
  */
 
-const UI = {
+const UIEngine = {
+    initialized: false,
+
     init() {
-        // Critical: Nav & Basic Interactions (Immediate)
+        if (this.initialized) return;
+        this.initialized = true;
+
         this.NavManager.init();
 
-        // Non-Critical: Sliders & Heavy Observers (Deferred)
-        // Use requestIdleCallback if available, else setTimeout
+        // Performance-safe initialization
         if ('requestIdleCallback' in window) {
-            requestIdleCallback(() => {
-                this.SliderManager.init();
-                this.PerformanceManager.init();
-            });
+            requestIdleCallback(() => this.deferredInit());
         } else {
-            setTimeout(() => {
-                this.SliderManager.init();
-                this.PerformanceManager.init();
-            }, 50);
+            setTimeout(() => this.deferredInit(), 50);
         }
 
-        console.log('✅ UI Core Initialized (Non-Blocking Pattern)');
+        console.log('✨ [Senior Architecture] UI Engine Active');
+    },
+
+    deferredInit() {
+        this.SliderManager.init();
+        this.PerformanceManager.init();
     },
 
     /**
-     * Module: SliderManager
-     * Handles Before/After image comparison sliders with touch support
+     * 1. SLIDER MANAGER (Before/After Comparisons)
      */
     SliderManager: {
         sliders: [],
         observer: null,
 
         init() {
-            const sliderContainers = document.querySelectorAll('.slider-container');
-            if (!sliderContainers.length) return;
+            const containers = document.querySelectorAll('.slider-container');
+            if (!containers.length) return;
 
-            // Optimization: Only initialize slider logic when visible
-            this.setupIntersectionObserver();
+            this.setupObserver();
+            containers.forEach(el => this.observer.observe(el));
 
-            sliderContainers.forEach(slider => {
-                this.observer.observe(slider);
-            });
-
-            // Handle resize to keep sliders synced
+            // Sync on resize
             window.addEventListener('resize', this.debounce(() => {
-                this.syncAllSliders();
-            }, 250));
+                this.sliders.forEach(s => s.update());
+            }, 250), { passive: true });
         },
 
-        setupIntersectionObserver() {
+        setupObserver() {
             this.observer = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
                     if (entry.isIntersecting) {
                         this.setupSlider(entry.target);
-                        this.observer.unobserve(entry.target); // Initialize once
+                        this.observer.unobserve(entry.target);
                     }
                 });
             }, { rootMargin: '100px' });
         },
 
         setupSlider(container) {
-            // Check if already initialized to avoid duplicates
             if (container.dataset.initialized) return;
 
             const range = container.querySelector('.slider-range');
@@ -73,144 +69,80 @@ const UI = {
 
             const update = () => {
                 const val = range.value;
-                // Use requestAnimationFrame for smooth 60fps
                 requestAnimationFrame(() => {
                     foreground.style.setProperty('clip-path', `polygon(0 0, ${val}% 0, ${val}% 100%, 0 100%)`);
                     thumb.style.left = `${val}%`;
                 });
             };
 
-            // Touch events (passive for performance)
             range.addEventListener('input', update, { passive: true });
-            range.addEventListener('touchmove', () => { }, { passive: true }); // iOS fix
 
-            // Initial update
             update();
             container.dataset.initialized = "true";
-            this.sliders.push({ container, range, update });
-        },
-
-        syncAllSliders() {
-            this.sliders.forEach(s => s.update());
+            this.sliders.push({ update });
         },
 
         debounce(func, wait) {
             let timeout;
-            return function (...args) {
-                const later = () => {
-                    clearTimeout(timeout);
-                    func(...args);
-                };
+            return (...args) => {
                 clearTimeout(timeout);
-                timeout = setTimeout(later, wait);
+                timeout = setTimeout(() => func(...args), wait);
             };
         }
     },
 
     /**
-     * Module: NavManager
-     * Handles Sticky Header and Mobile Menu Scroll Lock
+     * 2. NAV MANAGER (Sticky Glass Logic)
      */
     NavManager: {
-        nav: document.getElementById('mainNav'),
-        mobileMenuBtn: document.getElementById('mobileMenuBtn'),
-        mobileMenuDiv: document.getElementById('mobileMenu'),
-        body: document.body,
-        isMenuOpen: false,
-
         init() {
+            this.nav = document.getElementById('mainNav');
+            this.menuBtn = document.getElementById('mobileMenuBtn');
+            this.menuDiv = document.getElementById('mobileMenu');
+
             if (!this.nav) return;
-            this.setupStickyObserver();
             this.setupMobileMenu();
         },
 
-        setupStickyObserver() {
-            // Create a sentinel element at the top of the body
-            const sentinel = document.createElement('div');
-            Object.assign(sentinel.style, {
-                position: 'absolute',
-                top: '100px',
-                left: '0',
-                width: '1px',
-                height: '1px',
-                pointerEvents: 'none'
-            });
-            document.body.prepend(sentinel);
-
-            const observer = new IntersectionObserver((entries) => {
-                const isTop = entries[0].isIntersecting;
-                if (!isTop) {
-                    this.nav.classList.add('glass-nav', 'border-b', 'border-white/10', 'bg-luxury-black/90', 'backdrop-blur-md');
-                    this.nav.classList.remove('bg-transparent');
-                } else {
-                    this.nav.classList.remove('glass-nav', 'border-b', 'border-white/10', 'bg-luxury-black/90', 'backdrop-blur-md');
-                    this.nav.classList.add('bg-transparent');
-                }
-            }, { threshold: 0 });
-
-            observer.observe(sentinel);
-        },
-
         setupMobileMenu() {
-            if (!this.mobileMenuBtn || !this.mobileMenuDiv) return;
+            if (!this.menuBtn || !this.menuDiv) return;
 
-            const toggle = () => this.toggleMenu();
-            this.mobileMenuBtn.addEventListener('click', toggle);
+            const toggle = () => {
+                const isOpen = !this.menuDiv.classList.contains('hidden');
+                this.menuDiv.classList.toggle('hidden', isOpen);
+                document.body.style.overflow = isOpen ? '' : 'hidden';
+            };
 
-            // Close menu when clicking a link
-            const links = this.mobileMenuDiv.querySelectorAll('a');
-            links.forEach(link => link.addEventListener('click', () => {
-                if (this.isMenuOpen) toggle();
-            }));
-        },
-
-        toggleMenu() {
-            this.isMenuOpen = !this.isMenuOpen;
-            if (this.isMenuOpen) {
-                this.mobileMenuDiv.classList.remove('hidden');
-                this.body.style.overflow = 'hidden'; // Lock scroll
-            } else {
-                this.mobileMenuDiv.classList.add('hidden');
-                this.body.style.overflow = ''; // Unlock scroll
-            }
+            this.menuBtn.addEventListener('click', toggle);
+            this.menuDiv.querySelectorAll('a').forEach(link => {
+                link.addEventListener('click', () => {
+                    this.menuDiv.classList.add('hidden');
+                    document.body.style.overflow = '';
+                });
+            });
         }
     },
 
     /**
-     * Module: PerformanceManager
-     * Pauses heavy animations when off-screen
+     * 3. PERFORMANCE MANAGER (Eco-Mode Animations)
      */
     PerformanceManager: {
-        observer: null,
-
         init() {
-            this.setupObserver();
-            this.observeHeavyElements();
-        },
-
-        setupObserver() {
-            this.observer = new IntersectionObserver((entries) => {
+            const observer = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.remove('paused-animation');
-                    } else {
-                        entry.target.classList.add('paused-animation');
-                    }
+                    entry.target.classList.toggle('paused-animation', !entry.isIntersecting);
                 });
             }, { rootMargin: '50px' });
-        },
 
-        observeHeavyElements() {
-            // Select elements with heavy CSS animations or canvas
-            const targets = document.querySelectorAll('#particles-js, .animate-shine, .btn-gold-liquid');
-            targets.forEach(target => this.observer.observe(target));
+            document.querySelectorAll('#particles-js, .animate-shine, .btn-gold-liquid')
+                .forEach(el => observer.observe(el));
         }
     }
 };
 
-// Initialize when DOM is ready (deferred)
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => UI.init());
+// Init
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    UIEngine.init();
 } else {
-    UI.init();
+    document.addEventListener('DOMContentLoaded', () => UIEngine.init(), { once: true });
 }

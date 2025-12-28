@@ -17,6 +17,8 @@ PIXEL_ID = os.getenv("META_PIXEL_ID", "123456789")
 ACCESS_TOKEN = os.getenv("META_ACCESS_TOKEN", "EAA...")
 TEST_EVENT_CODE = os.getenv("META_TEST_EVENT_CODE")
 
+from app.tracking import send_event
+
 class TrackingEvent(BaseModel):
     event_name: str
     event_time: int
@@ -26,59 +28,71 @@ class TrackingEvent(BaseModel):
     event_source_url: str
     action_source: str = "website"
 
-async def send_to_capi(event: TrackingEvent, client_ip: str, user_agent: str):
-    """
-    Simula (o ejecuta) el envío del evento a Meta Conversions API.
-    En un entorno real, descomentar la petición HTTP.
-    """
-    
-    # Preparar payload para Meta
-    payload = {
-        "data": [
-            {
-                "event_name": event.event_name,
-                "event_time": event.event_time,
-                "event_id": event.event_id,
-                "event_source_url": event.event_source_url,
-                "action_source": event.action_source,
-                "user_data": {
-                    "client_ip_address": client_ip,
-                    "client_user_agent": user_agent,
-                    # Hashed PII should be passed here (email, phone) if available
-                    **event.user_data
-                },
-                "custom_data": event.custom_data
-            }
-        ]
-    }
-    
-    if TEST_EVENT_CODE:
-        payload["test_event_code"] = TEST_EVENT_CODE
-
-    url = f"https://graph.facebook.com/v18.0/{PIXEL_ID}/events?access_token={ACCESS_TOKEN}"
-    
-    try:
-        # async with httpx.AsyncClient() as client:
-        #     resp = await client.post(url, json=payload)
-        #     resp.raise_for_status()
-        #     logger.info(f"CAPI Success: {resp.json()}")
-        
-        # Simulación de éxito para evitar errores sin token real
-        logger.info(f"CAPI Simulated Send: {event.event_name} | ID: {event.event_id}")
-        
-    except Exception as e:
-        logger.error(f"CAPI Error: {str(e)}")
-
 @router.post("/track/event")
 async def track_event(event: TrackingEvent, request: Request, background_tasks: BackgroundTasks):
     """
-    Endpoint paralizado para recibir eventos del frontend y enviarlos a CAPI
-    de forma asíncrona (Fire & Forget).
+    Recibe eventos del frontend y los envía a CAPI de forma asíncrona.
     """
+    return await process_tracking_event(event, request, background_tasks)
+
+# LEGACY ENDPOINTS (Prevents 404 from cached scripts)
+@router.post("/track-lead")
+async def track_lead_legacy(data: Dict[str, Any], request: Request, background_tasks: BackgroundTasks):
+    event = TrackingEvent(
+        event_name="Lead",
+        event_time=int(time.time()),
+        event_id=f"legacy_lead_{int(time.time())}",
+        user_data={"external_id": data.get("external_id", "")},
+        custom_data=data,
+        event_source_url=str(request.url)
+    )
+    return await process_tracking_event(event, request, background_tasks)
+
+@router.post("/track-viewcontent")
+async def track_vc_legacy(data: Dict[str, Any], request: Request, background_tasks: BackgroundTasks):
+    event = TrackingEvent(
+        event_name="ViewContent",
+        event_time=int(time.time()),
+        event_id=f"legacy_vc_{int(time.time())}",
+        user_data={"external_id": data.get("external_id", "")},
+        custom_data=data,
+        event_source_url=str(request.url)
+    )
+    return await process_tracking_event(event, request, background_tasks)
+
+@router.post("/track-slider")
+async def track_slider_legacy(data: Dict[str, Any], request: Request, background_tasks: BackgroundTasks):
+    event = TrackingEvent(
+        event_name="SliderInteraction",
+        event_time=int(time.time()),
+        event_id=f"legacy_slider_{int(time.time())}",
+        user_data={"external_id": data.get("external_id", "")},
+        custom_data=data,
+        event_source_url=str(request.url)
+    )
+    return await process_tracking_event(event, request, background_tasks)
+
+async def process_tracking_event(event: TrackingEvent, request: Request, background_tasks: BackgroundTasks):
     client_ip = request.client.host
     user_agent = request.headers.get("user-agent", "unknown")
     
-    # Delegar envío a background para no bloquear respuesta al cliente
-    background_tasks.add_task(send_to_capi, event, client_ip, user_agent)
+    fbclid = None
+    if event.custom_data:
+        fbclid = event.custom_data.get('fbclid')
+    
+    external_id = event.user_data.get('external_id')
+    
+    background_tasks.add_task(
+        send_event,
+        event_name=event.event_name,
+        event_source_url=event.event_source_url,
+        client_ip=client_ip,
+        user_agent=user_agent,
+        event_id=event.event_id,
+        fbclid=fbclid,
+        external_id=external_id,
+        custom_data=event.custom_data
+    )
     
     return {"status": "queued", "event_id": event.event_id}
+
