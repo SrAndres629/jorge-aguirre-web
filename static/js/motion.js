@@ -250,6 +250,9 @@ function initMobileScrollTriggers() {
 // =================================================================
 // 6. MOUSE SPOTLIGHT (Global Ambient)
 // =================================================================
+// =================================================================
+// 6. MOUSE SPOTLIGHT (Global Ambient)
+// =================================================================
 function initSpotlight() {
     const spotlight = document.getElementById('mouse-spotlight');
     if (!spotlight) return;
@@ -279,6 +282,46 @@ function initSpotlight() {
 }
 
 // =================================================================
+// 7. UNIFIED NAVIGATION LOGIC (Sticky/Glass)
+// =================================================================
+function initNavLogic() {
+    const nav = document.getElementById('mainNav');
+    const navCta = document.getElementById('navCta');
+
+    if (!nav) return;
+
+    // Use ScrollTrigger to toggle class based on scroll position
+    // We want the glass effect to start 100px down
+    ScrollTrigger.create({
+        start: 'top -100',
+        end: 99999,
+        toggleClass: { className: 'bg-luxury-black/95', targets: nav },
+        onUpdate: (self) => {
+            // Manual check for other classes if toggleClass isn't enough OR specific logic for CTA
+            if (self.progress > 0 && self.scroll() > 100) {
+                nav.classList.add('backdrop-blur-md', 'border-luxury-gold/20', 'shadow-lg');
+                nav.classList.remove('bg-transparent', 'border-transparent');
+
+                // Show CTA
+                if (navCta) {
+                    navCta.classList.remove('opacity-0', 'translate-y-[-10px]');
+                }
+            } else {
+                nav.classList.remove('backdrop-blur-md', 'border-luxury-gold/20', 'shadow-lg', 'bg-luxury-black/95');
+                nav.classList.add('bg-transparent', 'border-transparent');
+
+                // Hide CTA
+                if (navCta) {
+                    navCta.classList.add('opacity-0', 'translate-y-[-10px]');
+                }
+            }
+        }
+    });
+
+    console.log('🧭 Unified Navigation Logic initialized');
+}
+
+// =================================================================
 // 7. INITIALIZATION
 // =================================================================
 document.addEventListener('DOMContentLoaded', () => {
@@ -287,7 +330,7 @@ document.addEventListener('DOMContentLoaded', () => {
         initLenisScroll();
         initGSAPAnimations();
         initParallax();
-        initParallax();
+        initNavLogic();
         initMagneticButton();
         initMobileScrollTriggers();
         initSpotlight();
@@ -300,7 +343,7 @@ if (document.readyState === 'complete' || document.readyState === 'interactive')
         initLenisScroll();
         initGSAPAnimations();
         initParallax();
-        initParallax();
+        initNavLogic();
         initMagneticButton();
         initMobileScrollTriggers();
         initSpotlight();
