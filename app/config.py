@@ -35,7 +35,7 @@ class Settings:
         self.PORT: int = int(os.getenv("PORT", "8000"))
         
         # WhatsApp
-        self.WHATSAPP_NUMBER: str = os.getenv("WHATSAPP_NUMBER", "59176375924")
+        self.WHATSAPP_NUMBER: str = os.getenv("WHATSAPP_NUMBER", "59164714751")
         
         self._validate()
     
