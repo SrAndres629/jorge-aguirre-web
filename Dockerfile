@@ -1,60 +1,46 @@
 # =================================================================
 # DOCKERFILE - Jorge Aguirre Flores Web
-# Arquitectura: Multi-Stage Build (Builder -> Runtime)
-# Nivel: Producción / Militar
+# Arquitectura: Production-Ready con Usuario No-Root
 # =================================================================
 
-# -----------------------------------------------------------------
-# ETAPA 1: BUILDER (Compilación y dependencias)
-# -----------------------------------------------------------------
-FROM python:3.11-slim as builder
+FROM python:3.11-slim
 
 WORKDIR /app
 
-# Variables de entorno para build
+# Variables de entorno para Python optimizado
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
+ENV PORT=8000
 
-# Instalar dependencias de sistema necesarias para compilar algunas librerías
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc \
-    && rm -rf /var/lib/apt/lists/*
-
-# Copiar y compilar dependencias Python en un entorno virtual o directorio específico
-COPY requirements.txt .
-RUN pip wheel --no-cache-dir --no-deps --wheel-dir /app/wheels -r requirements.txt
-
-# -----------------------------------------------------------------
-# ETAPA 2: RUNNER (Imagen final ligera)
-# -----------------------------------------------------------------
-FROM python:3.11-slim as runner
-
-WORKDIR /app
-
-# Instalar dependencias mínimas de sistema para runtime (curl para healthcheck)
+# Instalar dependencias de sistema mínimas
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copiar wheels compiladas desde la etapa builder e instalar
-COPY --from=builder /app/wheels /wheels
-COPY --from=builder /app/requirements.txt .
-RUN pip install --no-cache-dir /wheels/*
+# Copiar requirements primero (mejor cache de Docker)
+COPY requirements.txt .
 
-# Copiar el código fuente de la aplicación
+# Instalar dependencias de Python
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
+
+# Copiar el resto del código
 COPY . .
 
 # Crear un usuario no-root para seguridad
-RUN addgroup --system jorgeuser && adduser --system --group jorgeuser
+RUN addgroup --system jorgeuser && adduser --system --group jorgeuser && \
+    chown -R jorgeuser:jorgeuser /app
+
 USER jorgeuser
 
-# Exponer el puerto
-ENV PORT=80
+# Puerto que expone la aplicación
 EXPOSE $PORT
 
-# Healthcheck
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+# Health check para monitoreo
+HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
     CMD curl -f http://localhost:$PORT/ || exit 1
 
-# Comando de inicio optimizado (Gunicorn + Uvicorn Workers)
+# Comando de inicio predeterminado (Producción)
+# Nota: docker-compose.yml sobrescribe esto en desarrollo para habilitar --reload
 CMD sh -c "gunicorn -w 4 -k uvicorn.workers.UvicornWorker main:app --bind 0.0.0.0:$PORT"
+
