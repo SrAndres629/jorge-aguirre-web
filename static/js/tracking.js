@@ -32,18 +32,20 @@
 // =================================================================
 // 2. CONFIGURACIÓN DE TRACKING
 // =================================================================
-const TrackingConfig = {
-    // Usar configuración inyectada desde backend o fallback vacío
-    services: window.SERVICES_CONFIG || {},
-    phone: (window.CONTACT_CONFIG && window.CONTACT_CONFIG.phone) || "59176375924",
-    viewedSections: new Set(),
+if (typeof TrackingConfig === 'undefined') {
+    window.TrackingConfig = {
+        // Usar configuración inyectada desde backend o fallback vacío
+        services: window.SERVICES_CONFIG || {},
+        phone: (window.CONTACT_CONFIG && window.CONTACT_CONFIG.phone) || "59176375924",
+        viewedSections: new Set(),
 
-    // Capturar fbclid de la URL para tracking
-    getFbclid: function () {
-        const urlParams = new URLSearchParams(window.location.search);
-        return urlParams.get('fbclid') || '';
-    }
-};
+        // Capturar fbclid de la URL para tracking
+        getFbclid: function () {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('fbclid') || '';
+        }
+    };
+}
 
 // =================================================================
 // 3. VIEWCONTENT TRACKING (Interés Específico - Scroll)
@@ -131,7 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             // CAPI (Server)
-            sendToCAPI('Slider', {
+            sendToCAPI('SliderInteraction', {
                 event_id: 'slider_' + Date.now() + '_' + serviceId,
                 service_name: serviceName,
                 service_id: serviceId,
@@ -215,20 +217,32 @@ async function handleConversion(source) {
 }
 
 // Helper para CAPI
-async function sendToCAPI(eventName, eventData) {
+async function sendToCAPI(eventName, customData) {
     try {
-        const response = await fetch('/track-' + eventName.toLowerCase(), {
+        const eventId = customData.event_id || (eventName.toLowerCase() + '_' + Date.now());
+
+        const payload = {
+            event_name: eventName,
+            event_time: Math.floor(Date.now() / 1000),
+            event_id: eventId,
+            event_source_url: window.location.href,
+            action_source: "website",
+            user_data: {
+                external_id: window.EXTERNAL_ID || '',
+                // Hashed PII can be added here
+            },
+            custom_data: customData
+        };
+
+        const response = await fetch('/track/event', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(eventData),
-            keepalive: true // Ensures request survives navigation
+            body: JSON.stringify(payload),
+            keepalive: true
         });
 
         if (!response.ok) {
             console.error(`❌ CAPI Error for ${eventName}:`, response.status, response.statusText);
-            // Optional: Log body for debugging
-            // const errBody = await response.text();
-            // console.error(errBody);
         } else {
             console.log(`✅ CAPI Success for ${eventName}`);
         }

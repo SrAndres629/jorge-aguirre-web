@@ -341,21 +341,10 @@ function initNavLogic() {
 // =================================================================
 // 7. INITIALIZATION
 // =================================================================
-document.addEventListener('DOMContentLoaded', () => {
-    // Wait a frame for all scripts to be ready
-    requestAnimationFrame(() => {
-        initLenisScroll();
-        initGSAPAnimations();
-        initParallax();
-        initNavLogic();
-        initMagneticButton();
-        initMobileScrollTriggers();
-        initSpotlight();
-    });
-});
+function initAll() {
+    if (window.MOTION_INITIALIZED) return;
+    window.MOTION_INITIALIZED = true;
 
-// Fallback if DOMContentLoaded already fired
-if (document.readyState === 'complete' || document.readyState === 'interactive') {
     requestAnimationFrame(() => {
         initLenisScroll();
         initGSAPAnimations();
@@ -365,6 +354,12 @@ if (document.readyState === 'complete' || document.readyState === 'interactive')
         initMobileScrollTriggers();
         initSpotlight();
     });
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initAll);
+} else {
+    initAll();
 }
 
 console.log('✅ Motion.js loaded (Scrollytelling v1.1)');
