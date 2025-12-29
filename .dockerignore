@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+*$py.class
+env/
+venv/
+.env
+.git/
+.github/
+.gitignore
+node_modules/
+npm-debug.log*
+lighthouse_mobile.report.html
+lighthouse_mobile.report.json
+local_fallback.db
+.vscode/
+.idea/
+*.log
