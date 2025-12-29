@@ -40,6 +40,34 @@
             background-position: 200% center;
         }
     }
+
+    .service-card-premium {
+        @apply relative transition-all duration-500 hover:-translate-y-2;
+    }
+
+    .service-content-glass {
+        @apply backdrop-blur-xl bg-black/60 border border-white/10 shadow-2xl;
+    }
+
+    .process-icon {
+        @apply w-16 h-16 bg-luxury-dark border border-luxury-gold/20 rounded-2xl flex items-center justify-center text-2xl text-luxury-gold mb-6 mx-auto transition-all duration-500 group-hover:scale-110 group-hover:border-luxury-gold;
+    }
+
+    .animate-shine-sweep {
+        background: linear-gradient(110deg, transparent 45%, rgba(255, 255, 255, 0.1) 50%, transparent 55%);
+        background-size: 200% 100%;
+        animation: shine-sweep 3s infinite;
+    }
+
+    @keyframes shine-sweep {
+        0% {
+            background-position: -200% 0;
+        }
+
+        100% {
+            background-position: 200% 0;
+        }
+    }
 }
 
 @layer utilities {

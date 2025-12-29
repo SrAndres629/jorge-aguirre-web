@@ -28,7 +28,16 @@
     <meta property="og:title" content="Jorge Aguirre Flores | Maquillaje Permanente Premium">
     <meta property="og:description"
         content="30 años transformando miradas en Santa Cruz. Microblading, Delineado y Labios.">
+    <meta property="og:url" content="https://jorgeaguirreflores.com/">
+    <meta property="og:image" content="https://jorgeaguirreflores.com/static/images/og-image.webp">
     <meta property="og:locale" content="es_BO">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Jorge Aguirre Flores | Maquillaje Permanente Premium">
+    <meta name="twitter:description"
+        content="30 años transformando miradas en Santa Cruz. Microblading, Delineado y Labios.">
+    <meta name="twitter:image" content="https://jorgeaguirreflores.com/static/images/og-image.webp">
 
     <!-- Google Tag Manager -->
     <script>(function (w, d, s, l, i) {
@@ -43,8 +52,8 @@
 
     <!-- Tailwind CSS -->
     <!-- Tailwind CSS (Local Build) -->
-    <link rel="preload" href="/static/css/output.css?v=6" as="style">
-    <link rel="stylesheet" href="/static/css/output.css?v=6">
+    <link rel="preload" href="/static/css/output.css?v=11" as="style">
+    <link rel="stylesheet" href="/static/css/output.css?v=11">
 
     <!-- Google Fonts + Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -100,7 +109,7 @@
         "description": "Especialista en Microblading, Delineado Permanente y Labios. 30 años de experiencia transformando miradas en Santa Cruz de la Sierra, Bolivia.",
         "url": "https://jorgeaguirreflores.com",
         "logo": "https://jorgeaguirreflores.com/static/images/luxury_logo.svg",
-        "telephone": "+59176375924",
+        "telephone": "+59164714751",
         "priceRange": "$$",
         "image": [
             "https://jorgeaguirreflores.com/static/images/og-image.webp",
@@ -211,7 +220,7 @@
     <!-- ========== UNIFIED MAIN NAVIGATION ========== -->
     <nav id="mainNav"
         class="fixed top-0 w-full z-50 transition-all duration-500 bg-transparent border-b border-transparent">
-        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+        <div class="container mx-auto px-6 py-6 flex justify-between items-center">
             <!-- Logo -->
             <a href="#"
                 class="text-luxury-gold font-serif text-lg md:text-xl font-bold tracking-wide transition-transform hover:scale-105">
@@ -242,17 +251,26 @@
                     </a></li>
             </ul>
 
-            <!-- Mobile Menu Button -->
-            <button id="mobileMenuBtn" class="md:hidden text-white text-2xl focus:outline-none" aria-label="Menu">
-                <i class="fas fa-bars"></i>
-            </button>
+            <div class="flex items-center gap-4">
+                <!-- CTA Button (Visible on scroll via JS) -->
+                <button id="navCta" onclick="handleConversion('Nav CTA')"
+                    class="hidden md:flex opacity-0 translate-y-[-10px] transition-all duration-500 px-4 py-2 bg-luxury-gold text-black font-bold text-xs uppercase tracking-wider hover:bg-white items-center gap-2 rounded shadow-lg">
+                    <i class="fab fa-whatsapp"></i> Agendar
+                </button>
+
+                <!-- Mobile Menu Button -->
+                <button id="mobileMenuBtn" class="md:hidden text-luxury-gold text-2xl focus:outline-none"
+                    aria-label="Menu">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
         </div>
 
         <!-- Mobile Menu Overlay -->
         <div id="mobileMenu"
             class="fixed inset-0 bg-luxury-black/98 backdrop-blur-xl z-[60] hidden flex-col items-center justify-center space-y-8 touch-none">
             <button class="absolute top-6 right-6 text-white/50 hover:text-white text-4xl"
-                onclick="document.getElementById('mobileMenuBtn').click()">
+                onclick="document.getElementById('mobileMenuBtn').style.display='block'; document.getElementById('mobileMenu').classList.add('hidden'); document.body.style.overflow='';">
                 &times;
             </button>
             <a href="#galeria"
@@ -267,41 +285,6 @@
                 class="mt-8 px-8 py-3 border border-luxury-gold text-luxury-gold uppercase tracking-widest text-sm hover:bg-luxury-gold hover:text-black transition-all">
                 Agendar Cita
             </button>
-        </div>
-
-        <!-- CTA Button (Visible on scroll via JS) -->
-        <button id="navCta" onclick="handleConversion('Nav CTA')"
-            class="hidden md:flex opacity-0 translate-y-[-10px] transition-all duration-500 px-4 py-2 bg-luxury-gold text-black font-bold text-xs uppercase tracking-wider hover:bg-white items-center gap-2 rounded shadow-lg">
-            <i class="fab fa-whatsapp"></i> Agendar
-        </button>
-
-        <!-- Mobile Menu Toggle -->
-        <button class="md:hidden text-luxury-gold text-2xl focus:outline-none"
-            onclick="document.getElementById('mobileMenu').classList.toggle('hidden');" aria-label="Abrir menú">
-            <i class="fas fa-bars"></i>
-        </button>
-        </div>
-
-        <!-- Mobile Menu Dropdown -->
-        <div id="mobileMenu"
-            class="hidden md:hidden bg-luxury-black/95 backdrop-blur-md border-t border-luxury-gold/10 absolute w-full left-0">
-            <ul class="flex flex-col p-6 space-y-6 text-center text-gray-300 font-serif text-lg">
-                <li><a href="#galeria" class="block hover:text-luxury-gold"
-                        onclick="document.getElementById('mobileMenu').classList.add('hidden')">Galería</a></li>
-                <li><a href="#servicios" class="block hover:text-luxury-gold"
-                        onclick="document.getElementById('mobileMenu').classList.add('hidden')">Servicios</a></li>
-                <li><a href="#proceso" class="block hover:text-luxury-gold"
-                        onclick="document.getElementById('mobileMenu').classList.add('hidden')">Proceso</a></li>
-                <li><a href="#testimonios" class="block hover:text-luxury-gold"
-                        onclick="document.getElementById('mobileMenu').classList.add('hidden')">Testimonios</a></li>
-                <li>
-                    <button
-                        onclick="handleConversion('Mobile Menu'); document.getElementById('mobileMenu').classList.add('hidden')"
-                        class="w-full px-6 py-3 bg-luxury-gold text-black font-bold uppercase tracking-widest rounded mt-4">
-                        <i class="fab fa-whatsapp"></i> Agendar Ahora
-                    </button>
-                </li>
-            </ul>
         </div>
     </nav>
 
@@ -334,7 +317,7 @@
                     <h1
                         class="font-serif text-3xl md:text-5xl lg:text-7xl leading-tight text-luxury-text mb-6 tracking-wide">
                         Despierta Perfecta: <br>
-                        <span class="italic font-light text-luxury-gold-light">Microblading en Santa Cruz</span>
+                        <span class="italic font-light text-gradient-gold">Microblading en Santa Cruz</span>
                     </h1>
                     <p
                         class="text-luxury-gray text-lg md:text-xl font-light max-w-lg leading-relaxed mb-8 tracking-wide">
@@ -363,11 +346,11 @@
                 </div>
 
                 <div class="relative animate-fade-in-up" style="animation-delay: 0.2s;">
-                    <img src="/static/images/image_ce4884.webp"
-                        srcset="/static/images/image_ce4884.webp 480w, /static/images/image_ce4884.webp 768w, /static/images/image_ce4884.webp 1024w"
-                        sizes="(max-width: 640px) 100vw, 50vw" alt="Jorge Aguirre Flores - Especialista"
-                        class="rounded-lg shadow-2xl border border-white/10 relative z-10 w-full max-w-md mx-auto"
-                        width="480" height="600" loading="eager" fetchpriority="high" />
+                    <img src="/static/images/jorge_hero_new.webp"
+                        alt="Jorge Aguirre Flores - Especialista en Maquillaje Permanente"
+                        class="rounded-lg shadow-2xl border border-white/10 relative z-10 w-full max-w-lg mx-auto"
+                        style="mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent), linear-gradient(to bottom, transparent, black 15%, black 85%, transparent); mask-composite: intersect; -webkit-mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent), linear-gradient(to bottom, transparent, black 15%, black 85%, transparent); -webkit-mask-composite: source-in;"
+                        width="800" height="800" loading="eager" fetchpriority="high" />
                 </div>
             </div>
             <!-- Removed extra closing div that was present in the original code -->
@@ -414,13 +397,9 @@
                     <!-- Paso 01: Diagnóstico -->
                     <div class="process-step group" data-aos="fade-up" data-aos-delay="0">
                         <!-- Icon -->
-                        <div class="process-icon">
+                        <div class="process-icon mb-6">
                             <i class="fas fa-search-plus"></i>
                         </div>
-                        <!-- Number -->
-                        <div
-                            class="w-12 h-12 bg-luxury-black border-2 border-luxury-gold text-luxury-gold flex items-center justify-center rounded-full mx-auto mb-4 text-sm font-bold relative z-10 group-hover:bg-luxury-gold group-hover:text-black transition-all duration-500 group-hover:scale-110 group-hover:shadow-[0_0_20px_rgba(197,160,89,0.5)]">
-                            01</div>
                         <h3 class="text-xl font-serif text-luxury-text mb-3 tracking-wide">Diagnóstico</h3>
                         <p class="text-luxury-gray text-sm leading-relaxed font-light mb-4">
                             Analizamos la geometría de tu rostro para recomendarte la técnica exacta.
@@ -435,13 +414,9 @@
                     <!-- Paso 02: Diseño Previo -->
                     <div class="process-step group" data-aos="fade-up" data-aos-delay="200">
                         <!-- Icon -->
-                        <div class="process-icon">
+                        <div class="process-icon mb-6">
                             <i class="fas fa-pen-fancy"></i>
                         </div>
-                        <!-- Number -->
-                        <div
-                            class="w-12 h-12 bg-luxury-black border-2 border-luxury-gold text-luxury-gold flex items-center justify-center rounded-full mx-auto mb-4 text-sm font-bold relative z-10 group-hover:bg-luxury-gold group-hover:text-black transition-all duration-500 group-hover:scale-110 group-hover:shadow-[0_0_20px_rgba(197,160,89,0.5)]">
-                            02</div>
                         <h3 class="text-xl font-serif text-luxury-text mb-3 tracking-wide">Diseño Previo</h3>
                         <p class="text-luxury-gray text-sm leading-relaxed font-light mb-4">
                             Dibujamos con lápiz sobre tu piel. <span class="text-luxury-gold/90">Nada es definitivo
@@ -457,13 +432,9 @@
                     <!-- Paso 03: Transformación -->
                     <div class="process-step group" data-aos="fade-up" data-aos-delay="400">
                         <!-- Icon -->
-                        <div class="process-icon">
+                        <div class="process-icon mb-6">
                             <i class="fas fa-magic"></i>
                         </div>
-                        <!-- Number -->
-                        <div
-                            class="w-12 h-12 bg-luxury-black border-2 border-luxury-gold text-luxury-gold flex items-center justify-center rounded-full mx-auto mb-4 text-sm font-bold relative z-10 group-hover:bg-luxury-gold group-hover:text-black transition-all duration-500 group-hover:scale-110 group-hover:shadow-[0_0_20px_rgba(197,160,89,0.5)]">
-                            03</div>
                         <h3 class="text-xl font-serif text-luxury-text mb-3 tracking-wide">Transformación</h3>
                         <p class="text-luxury-gray text-sm leading-relaxed font-light mb-4">
                             <span class="text-luxury-gold/90">Sin dolor traumático.</span> Sales lista para lucir tu
@@ -520,11 +491,11 @@
                         <div class="w-full aspect-[4/5] relative overflow-hidden rounded-sm border border-white/10 shadow-2xl bg-black"
                             style="aspect-ratio: 4/5;">
                             <!-- After Image (Background) -->
-                            <img src="/static/images/brows_after.webp"
+                            <img src="/static/images/microblading_after_v3.webp"
                                 class="absolute inset-0 w-full h-full object-cover object-center" alt="Después"
                                 loading="lazy" width="400" height="500">
                             <!-- Before Image (Foreground - Clipped) -->
-                            <img src="/static/images/brows_microblading_before.webp"
+                            <img src="/static/images/microblading_before_v3.webp"
                                 class="absolute inset-0 w-full h-full object-cover object-center foreground-img"
                                 style="clip-path: polygon(0 0, 50% 0, 50% 100%, 0 100%);" alt="Antes">
 
@@ -555,9 +526,9 @@
                     <div class="relative slider-container ba-slider">
                         <div class="w-full aspect-[4/5] relative overflow-hidden rounded-sm border border-white/10 shadow-2xl bg-black"
                             style="aspect-ratio: 4/5;">
-                            <img src="/static/images/brows_powder_after.webp"
+                            <img src="/static/images/brows_after_v3.webp"
                                 class="absolute inset-0 w-full h-full object-cover object-center" alt="Después">
-                            <img src="/static/images/brows_before.webp"
+                            <img src="/static/images/brows_before_v3.webp"
                                 class="absolute inset-0 w-full h-full object-cover object-center foreground-img"
                                 style="clip-path: polygon(0 0, 50% 0, 50% 100%, 0 100%);" alt="Antes">
 
@@ -585,9 +556,9 @@
                     <div class="relative slider-container ba-slider">
                         <div class="w-full aspect-[4/5] relative overflow-hidden rounded-sm border border-white/10 shadow-2xl bg-black"
                             style="aspect-ratio: 4/5;">
-                            <img src="/static/images/eyes_after.webp"
+                            <img src="/static/images/eyes_after_v2.webp"
                                 class="absolute inset-0 w-full h-full object-cover object-center" alt="Después">
-                            <img src="/static/images/eyes_before.webp"
+                            <img src="/static/images/eyes_before_v2.webp"
                                 class="absolute inset-0 w-full h-full object-cover object-center foreground-img"
                                 style="clip-path: polygon(0 0, 50% 0, 50% 100%, 0 100%);" alt="Antes">
 
@@ -616,7 +587,7 @@
                         <div class="w-full aspect-[4/5] relative overflow-hidden rounded-sm border border-white/10 shadow-2xl bg-black"
                             style="aspect-ratio: 4/5;">
                             <!-- After Image (Background) -->
-                            <img src="/static/images/lips_after.webp"
+                            <img src="/static/images/lips_after_intense.webp"
                                 class="absolute inset-0 w-full h-full object-cover object-center" alt="Después"
                                 loading="lazy" width="400" height="500">
                             <!-- Before Image (Foreground - Clipped) -->
@@ -762,8 +733,7 @@
                         </div>
 
                         <!-- Content -->
-                        <div
-                            class="service-content-glass backdrop-blur-md bg-black/40 border border-white/5 rounded-b-2xl shadow-lg p-6 relative z-10">
+                        <div class="service-content-glass rounded-b-2xl p-6 relative z-10">
                             <!-- Icon -->
                             <div class="service-icon">
                                 <i class="fas fa-eye-dropper"></i>
@@ -801,7 +771,8 @@
                             </div>
 
                             <!-- CTA Button -->
-                            <button onclick="handleConversion('Servicio Cejas')" class="btn-service-cta w-full">
+                            <button onclick="handleConversion('Servicio Cejas')"
+                                class="btn-gold-liquid w-full py-3 rounded text-sm uppercase tracking-widest">
                                 <i class="fab fa-whatsapp"></i> Agendar Mi Cita
                             </button>
                         </div>
@@ -826,7 +797,7 @@
                         </div>
 
                         <!-- Content -->
-                        <div class="glass-panel rounded-b-2xl p-6 relative z-10">
+                        <div class="service-content-glass rounded-b-2xl p-6 relative z-10">
                             <!-- Icon -->
                             <div class="service-icon">
                                 <i class="fas fa-eye"></i>
@@ -863,7 +834,8 @@
                             </div>
 
                             <!-- CTA Button -->
-                            <button onclick="handleConversion('Servicio Ojos')" class="btn-service-cta w-full">
+                            <button onclick="handleConversion('Servicio Ojos')"
+                                class="btn-gold-liquid w-full py-3 rounded text-sm uppercase tracking-widest">
                                 <i class="fab fa-whatsapp"></i> Agendar Mi Cita
                             </button>
                         </div>
@@ -888,7 +860,7 @@
                         </div>
 
                         <!-- Content -->
-                        <div class="glass-panel rounded-b-2xl p-6 relative z-10">
+                        <div class="service-content-glass rounded-b-2xl p-6 relative z-10">
                             <!-- Icon -->
                             <div class="service-icon">
                                 <i class="fas fa-kiss-wink-heart"></i>
@@ -925,7 +897,8 @@
                             </div>
 
                             <!-- CTA Button -->
-                            <button onclick="handleConversion('Servicio Labios')" class="btn-service-cta w-full">
+                            <button onclick="handleConversion('Servicio Labios')"
+                                class="btn-gold-liquid w-full py-3 rounded text-sm uppercase tracking-widest">
                                 <i class="fab fa-whatsapp"></i> Agendar Mi Cita
                             </button>
                         </div>
@@ -1066,26 +1039,86 @@
     </main>
 
     <!-- ========== FOOTER ========== -->
-    <footer class="bg-black py-12 border-t border-white/5">
-        <div class="container mx-auto px-6 text-center">
-            <p class="text-luxury-gold font-serif text-xl mb-4">Jorge Aguirre Flores</p>
-            <p class="text-gray-600 text-xs tracking-widest uppercase">Especialista en Maquillaje Permanente</p>
-            <div class="mt-6 mb-6 text-gray-500 text-xs space-y-1">
-                <p><i class="far fa-clock text-luxury-gold mr-2"></i>Lun - Vie: 09:00 - 18:00</p>
-                <p><i class="far fa-clock text-luxury-gold mr-2"></i>Sáb: 09:00 - 14:00</p>
+    <footer class="bg-black py-20 border-t border-white/5 relative overflow-hidden">
+        <!-- Ambience Glow -->
+        <div
+            class="absolute top-0 right-0 w-[400px] h-[400px] bg-luxury-gold/5 blur-[120px] rounded-full pointer-events-none">
+        </div>
+
+        <div class="container mx-auto px-6 relative z-10">
+            <div class="grid md:grid-cols-4 gap-12 text-left mb-16">
+                <!-- Branding -->
+                <div class="md:col-span-2">
+                    <p class="text-luxury-gold font-serif text-2xl mb-4">Jorge Aguirre Flores</p>
+                    <p class="text-luxury-gray text-sm leading-relaxed max-w-sm mb-6">
+                        Más de 30 años transformando miradas con arte y precisión. El estándar de oro en microblading y
+                        maquillaje permanente en Bolivia.
+                    </p>
+                    <div class="flex gap-4">
+                        <a href="https://www.facebook.com/jorgeaguirreflores" target="_blank" rel="noopener noreferrer"
+                            class="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center text-gray-500 hover:text-luxury-gold hover:border-luxury-gold transition-all">
+                            <i class="fab fa-facebook-f"></i>
+                        </a>
+                        <a href="https://www.instagram.com/jorgeaguirreflores" target="_blank" rel="noopener noreferrer"
+                            class="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center text-gray-500 hover:text-luxury-gold hover:border-luxury-gold transition-all">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                        <a href="https://www.tiktok.com/@jorgeaguirreflores" target="_blank" rel="noopener noreferrer"
+                            class="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center text-gray-500 hover:text-luxury-gold hover:border-luxury-gold transition-all">
+                            <i class="fab fa-tiktok"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Contact -->
+                <div>
+                    <h4 class="text-white font-bold text-xs uppercase tracking-widest mb-6">Contacto</h4>
+                    <ul class="space-y-4 text-xs">
+                        <li class="flex items-start gap-3 text-gray-500">
+                            <i class="fas fa-location-dot text-luxury-gold mt-1"></i>
+                            <span>{{ contact.address }}</span>
+                        </li>
+                        <li class="flex items-center gap-3 text-gray-500">
+                            <i class="fab fa-whatsapp text-luxury-gold"></i>
+                            <span>+591 647 14 751</span>
+                        </li>
+                        <li class="flex items-center gap-3 text-gray-500">
+                            <i class="far fa-envelope text-luxury-gold"></i>
+                            <span>info@jorgeaguirreflores.com</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Schedule -->
+                <div>
+                    <h4 class="text-white font-bold text-xs uppercase tracking-widest mb-6">Horarios</h4>
+                    <ul class="space-y-4 text-xs text-gray-500">
+                        <li class="flex justify-between">
+                            <span>Lun - Vie:</span>
+                            <span class="text-white">09:00 - 18:00</span>
+                        </li>
+                        <li class="flex justify-between">
+                            <span>Sábado:</span>
+                            <span class="text-white">09:00 - 14:00</span>
+                        </li>
+                        <li class="flex justify-between">
+                            <span>Domingo:</span>
+                            <span class="text-luxury-gold italic">Cerrado</span>
+                        </li>
+                    </ul>
+                </div>
             </div>
-            <a href="{{ contact.maps_url }}" target="_blank" rel="noopener noreferrer"
-                class="text-gray-700 text-xs mt-2 hover:text-luxury-gold transition duration-300 block underline decoration-luxury-gold/30">
-                <i class="fas fa-location-dot text-luxury-gold mr-1"></i> {{ contact.address }}
-            </a>
-            <div class="flex justify-center gap-4 mt-6">
-                <a href="https://www.facebook.com/jorgeaguirreflores" target="_blank" rel="noopener noreferrer"
-                    class="text-gray-500 hover:text-luxury-gold transition"><i class="fab fa-facebook fa-lg"></i></a>
-                <a href="https://www.instagram.com/jorgeaguirreflores" target="_blank" rel="noopener noreferrer"
-                    class="text-gray-500 hover:text-luxury-gold transition"><i class="fab fa-instagram fa-lg"></i></a>
+
+            <div class="pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4">
+                <p class="text-gray-700 text-[10px] tracking-wider uppercase">
+                    © 2025 JORGE AGUIRRE FLORES • ARTE FACIAL & MICROBLADING
+                </p>
+                <div class="flex gap-6 text-[10px] text-gray-700 uppercase tracking-widest font-medium">
+                    <a href="#" class="hover:text-luxury-gold">Privacidad</a>
+                    <a href="#" class="hover:text-luxury-gold">Términos</a>
+                    <a href="#" class="hover:text-luxury-gold">Sitemap</a>
+                </div>
             </div>
-            <p class="text-gray-800 text-[10px] mt-8">© 2025 Jorge Aguirre Flores. Todos los derechos reservados.
-            </p>
         </div>
     </footer>
 
@@ -1104,13 +1137,25 @@
         </button>
     </div>
 
-    <!-- ========== BOTÓN FLOTANTE WHATSAPP (Desktop Only) ========== -->
-    <button id="whatsappFloat" onclick="handleConversion('Floating Button')"
-        class="hidden md:flex fixed bottom-6 right-4 z-50 bg-[#25D366] w-14 h-14 md:w-16 md:h-16 rounded-full items-center justify-center hover:scale-110 transition duration-300"
-        style="box-shadow: 0 6px 25px rgba(37,211,102,0.5), 0 4px 15px rgba(0,0,0,0.3);"
-        aria-label="Contactar por WhatsApp">
-        <i class="fab fa-whatsapp text-white text-2xl md:text-3xl"></i>
-    </button>
+    <!-- ========== PREMIUM WHATSAPP & CRO (Dual-Display) ========== -->
+    <div class="whatsapp-premium-container">
+        <!-- Experience Badge (Appears near button) -->
+        <div id="experienceBadge" class="experience-mini-badge">
+            <img src="/static/images/jorge_hero_new.webp" alt="Jorge Aguirre Flores">
+            <span>30 Años de Arte</span>
+        </div>
+
+        <!-- Tooltip Bubble -->
+        <div id="whatsappTooltip" class="whatsapp-tooltip">
+            ¿Dudas? Habla con el especialista aquí
+        </div>
+
+        <!-- Premium Button -->
+        <button id="whatsappPremium" onclick="handleConversion('Floating Button')" class="whatsapp-premium-btn"
+            aria-label="Contactar por WhatsApp">
+            <i class="fab fa-whatsapp"></i>
+        </button>
+    </div>
 
     <!-- Particles.js (Gold Dust Effect) - Conditional Desktop Only -->
     <script>

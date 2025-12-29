@@ -9,7 +9,7 @@ const TrackingEngine = {
 
     config: {
         services: window.SERVICES_CONFIG || {},
-        phone: (window.CONTACT_CONFIG && window.CONTACT_CONFIG.phone) || "59176375924",
+        phone: (window.CONTACT_CONFIG && window.CONTACT_CONFIG.phone) || "59164714751",
     },
 
     init() {
@@ -163,11 +163,27 @@ const TrackingEngine = {
             service_data: data
         });
 
+        // Google Analytics / GTM
+        if (window.dataLayer) {
+            window.dataLayer.push({
+                'event': 'whatsapp_contact',
+                'conversion_value': data.intent,
+                'lead_source': source,
+                'service_name': data.name
+            });
+        }
+
         // WhatsApp Redirect
         let message = `Hola Jorge 👋`;
-        if (data.intent === 'service_interest') message += ` Me interesa el *${data.name}*. ¿Podría ver si soy candidata?`;
-        else if (data.intent === 'urgency') message += ` Quisiera aprovechar la *Oferta Limitada* de valoración gratuita.`;
-        else message += ` Quisiera información sobre sus servicios de maquillaje permanente.`;
+        if (source === 'Floating Button') {
+            message = "Hola Jorge, estoy visitando tu web y me interesa una valoración para maquillaje permanente. ¿Podrían asesorarme?";
+        } else if (data.intent === 'service_interest') {
+            message += ` Me interesa el *${data.name}*. ¿Podría ver si soy candidata?`;
+        } else if (data.intent === 'urgency') {
+            message += ` Quisiera aprovechar la *Oferta Limitada* de valoración gratuita.`;
+        } else {
+            message += ` Quisiera información sobre sus servicios de maquillaje permanente.`;
+        }
 
         window.open(`https://wa.me/${this.config.phone}?text=${encodeURIComponent(message)}`, '_blank');
     },

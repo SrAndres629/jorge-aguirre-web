@@ -24,7 +24,44 @@ const UIEngine = {
 
     deferredInit() {
         this.SliderManager.init();
+        this.CROManager.init();
         this.PerformanceManager.init();
+    },
+
+    /**
+     * CRO MANAGER (Conversion Rate Optimization)
+     */
+    CROManager: {
+        init() {
+            this.setupWhatsAppCRO();
+        },
+
+        setupWhatsAppCRO() {
+            const tooltip = document.getElementById('whatsappTooltip');
+            const badge = document.getElementById('experienceBadge');
+            const btn = document.getElementById('whatsappPremium');
+
+            if (!tooltip || !btn) return;
+
+            // 1. Show Tooltip after 5 seconds
+            setTimeout(() => {
+                tooltip.classList.add('active');
+                if (badge) badge.classList.add('active');
+                btn.classList.add('pulse');
+
+                // Hide tooltip after 8 seconds of being visible (optional for UX, or keep it)
+                setTimeout(() => {
+                    tooltip.classList.remove('active');
+                    btn.classList.remove('pulse');
+                }, 8000);
+            }, 5000);
+
+            // 2. Interaction: Hide tooltip on click
+            btn.addEventListener('click', () => {
+                tooltip.classList.remove('active');
+                btn.classList.remove('pulse');
+            });
+        }
     },
 
     /**
