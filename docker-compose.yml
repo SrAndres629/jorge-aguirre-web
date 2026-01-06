@@ -42,7 +42,6 @@ services:
       dockerfile: infrastructure/docker/app.Dockerfile
     container_name: jorge-web-worker
     restart: always
-    # Inherits volumes/env from build, but we explicitly mount for dev
     volumes:
       - ./core:/app
     env_file:
@@ -92,7 +91,7 @@ services:
     command: redis-server --appendonly yes --maxmemory 128mb --maxmemory-policy allkeys-lru
     restart: always
     volumes:
-      - ./evolution_redis:/data
+      - ./data/redis:/data
     networks:
       - app_network
     healthcheck:
@@ -108,7 +107,7 @@ services:
           memory: 128M
 
   # =================================================================
-  # EVOLUTION API (WhatsApp) - CONNECTED TO SUPABASE
+  # EVOLUTION API (WhatsApp)
   # =================================================================
   evolution_api:
     image: evoapicloud/evolution-api:latest
@@ -121,7 +120,6 @@ services:
         condition: service_healthy
     env_file:
       - .env
-    # Override Entrypoint to bypass migration script (DB synced via manual push)
     entrypoint: ["node", "dist/main.js"]
     environment:
       - AUTHENTICATION_API_KEY=${EVOLUTION_API_KEY}
@@ -135,7 +133,7 @@ services:
       - CACHE_LOCAL_ENABLED=false
       - DEL_INSTANCE=false
     volumes:
-      - ./evolution_store:/evolution_store
+      - ./data/evolution_store:/evolution_store
     networks:
       - app_network
     deploy:
@@ -166,7 +164,7 @@ services:
       - 8.8.8.8
       - 1.1.1.1
     volumes:
-      - ./n8n_data:/home/node/.n8n
+      - ./data/n8n_data:/home/node/.n8n
     networks:
       - app_network
     deploy:

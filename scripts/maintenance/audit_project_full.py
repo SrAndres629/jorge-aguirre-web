@@ -6,7 +6,7 @@ import os
 
 # Configuration
 EVOLUTION_URL = "http://localhost:8081"
-EVOLUTION_KEY = os.getenv("EVOLUTION_API_KEY", "B89599B2-37E4-4DCA-92D3-87F8674C7D69")
+EVOLUTION_KEY = os.getenv("EVOLUTION_API_KEY")
 WEB_URL = "http://localhost:8000"
 N8N_URL = "http://localhost:5678"
 MCP_URL = "http://localhost:8002"

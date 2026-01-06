@@ -15,3 +15,5 @@ sentry-sdk[fastapi]==1.40.0
 # Async Worker
 celery==5.3.6
 redis==5.0.1
+# Data Handling
+python-dotenv==1.0.1

@@ -1,10 +1,11 @@
 # =================================================================
-# CONFIG.PY - Configuración centralizada con validación
+# CONFIG.PY - Configuración centralizada con validación (Pydantic)
 # Jorge Aguirre Flores Web
 # =================================================================
 import os
 from typing import Optional
 import logging
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Configurar logging
 logging.basicConfig(
@@ -14,35 +15,43 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-class Settings:
+class Settings(BaseSettings):
     """Configuración centralizada del sistema con validación"""
-    
-    def __init__(self):
-        # Meta Ads (Pixel + CAPI)
-        self.META_PIXEL_ID: str = os.getenv("META_PIXEL_ID", "")
-        self.META_ACCESS_TOKEN: str = os.getenv("META_ACCESS_TOKEN")
-        self.META_API_VERSION: str = "v21.0"
-        self.TEST_EVENT_CODE: Optional[str] = os.getenv("TEST_EVENT_CODE")
-        
-        # Database (Supabase PostgreSQL)
-        self.DATABASE_URL: Optional[str] = os.getenv("DATABASE_URL")
-        
-        # Admin Panel
-        self.ADMIN_KEY: str = os.getenv("ADMIN_KEY", "Andromeda2025")
-        
-        # Server
-        self.HOST: str = os.getenv("HOST", "0.0.0.0")
-        self.PORT: int = int(os.getenv("PORT", "8000"))
-        
-        # WhatsApp
-        self.WHATSAPP_NUMBER: str = os.getenv("WHATSAPP_NUMBER", "59164714751")
+    model_config = SettingsConfigDict(
+        env_file=".env", 
+        env_file_encoding="utf-8", 
+        extra="ignore"
+    )
 
-        # n8n Integration
-        self.N8N_WEBHOOK_URL: Optional[str] = os.getenv("N8N_WEBHOOK_URL", "http://n8n:5678/webhook/website-events")
-        
-        self._validate()
+    # Meta Ads (Pixel + CAPI)
+    META_PIXEL_ID: str = ""
+    META_ACCESS_TOKEN: Optional[str] = None
+    META_API_VERSION: str = "v21.0"
+    TEST_EVENT_CODE: Optional[str] = None
     
-    def _validate(self):
+    # Database (Supabase PostgreSQL)
+    DATABASE_URL: Optional[str] = None
+    
+    # Celery & Redis
+    CELERY_BROKER_URL: str = "redis://redis_evolution:6379/1"
+    CELERY_RESULT_BACKEND: str = "redis://redis_evolution:6379/1"
+    
+    # Admin Panel
+    ADMIN_KEY: str = "Andromeda2025"
+    
+    # Server
+    HOST: str = "0.0.0.0"
+    PORT: int = 8000
+    
+    # WhatsApp / Evolution API
+    WHATSAPP_NUMBER: str = "59164714751"
+    EVOLUTION_API_KEY: Optional[str] = None
+    EVOLUTION_API_URL: str = "http://evolution_api:8080"
+
+    # n8n Integration
+    N8N_WEBHOOK_URL: str = "http://n8n:5678/webhook/website-events"
+    
+    def validate_critical(self):
         """Valida configuración crítica"""
         if not self.META_PIXEL_ID:
             logger.warning("⚠️ META_PIXEL_ID no configurado")
@@ -66,3 +75,4 @@ class Settings:
 
 # Singleton de configuración
 settings = Settings()
+settings.validate_critical()

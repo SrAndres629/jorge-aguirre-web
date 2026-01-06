@@ -1,0 +1,95 @@
+{
+    "name": "00_Natalia_Onboarding_Trigger",
+    "nodes": [
+        {
+            "parameters": {
+                "userId": "jorge_admin"
+            },
+            "name": "Manual Launch",
+            "type": "n8n-nodes-base.manualTrigger",
+            "typeVersion": 1,
+            "position": [
+                250,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "={{ $env.EVOLUTION_API_URL }}/message/sendText/{{ $env.EVOLUTION_INSTANCE }}",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "apikey",
+                            "value": "={{ $env.EVOLUTION_API_KEY }}"
+                        }
+                    ]
+                },
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "number",
+                            "value": "59176863944@s.whatsapp.net"
+                        },
+                        {
+                            "name": "text",
+                            "value": "Hola Jorge 👋. Soy Natalia, tu nueva asistente de IA.\n\nHe terminado de configurar mi sistema básico y estoy lista para empezar a trabajar contigo. Sin embargo, para poder atender a tus clientas de forma profesional, necesito que me cuentes un poco más sobre el negocio.\n\n¿Estás listo para que te haga unas preguntas de configuración? Solo nos tomará 5 minutos."
+                        }
+                    ]
+                }
+            },
+            "name": "Send Welcome to Jorge",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 1,
+            "position": [
+                500,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "operation": "executeQuery",
+                "query": "UPDATE contacts SET is_admin = TRUE, onboarding_step = 'intro' WHERE whatsapp_number = '59176863944@s.whatsapp.net';",
+                "options": {}
+            },
+            "name": "Set Jorge as Admin",
+            "type": "n8n-nodes-base.postgres",
+            "typeVersion": 1,
+            "position": [
+                750,
+                300
+            ],
+            "credentials": {
+                "postgres": {
+                    "id": "postgres_cred",
+                    "name": "Local Postgres"
+                }
+            }
+        }
+    ],
+    "connections": {
+        "Manual Launch": {
+            "main": [
+                [
+                    {
+                        "node": "Send Welcome to Jorge",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Send Welcome to Jorge": {
+            "main": [
+                [
+                    {
+                        "node": "Set Jorge as Admin",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}

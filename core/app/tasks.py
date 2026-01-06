@@ -4,7 +4,7 @@
 # =================================================================
 from app.celery_app import celery_app
 from app.tracking import send_event, send_n8n_webhook
-from app.database import save_visitor, upsert_contact
+from app.database import save_visitor, upsert_contact_advanced, save_message
 import logging
 
 logger = logging.getLogger("worker")
@@ -32,12 +32,22 @@ def save_visitor_task(self, external_id, fbclid, client_ip, user_agent, source, 
 
 @celery_app.task(bind=True, name="upsert_contact_task", default_retry_delay=10, max_retries=5)
 def upsert_contact_task(self, contact_payload):
-    """Persist lead/contact data to DB asynchronously"""
+    """Persist lead/contact data to DB asynchronously (Natalia Sync)"""
     try:
-        upsert_contact(contact_payload)
-        logger.info(f"✅ Contact upserted: {contact_payload.get('phone')}")
+        upsert_contact_advanced(contact_payload)
+        logger.info(f"✅ Natalia Sync: {contact_payload.get('phone')}")
     except Exception as e:
-        logger.error(f"❌ Error upserting contact: {e}")
+        logger.error(f"❌ Error syncing Natalia contact: {e}")
+        raise self.retry(exc=e)
+
+@celery_app.task(bind=True, name="save_message_task", default_retry_delay=5, max_retries=3)
+def save_message_task(self, phone, role, content):
+    """Save message to contact history for AI context"""
+    try:
+        save_message(phone, role, content)
+        logger.info(f"📝 Message saved for {phone}")
+    except Exception as e:
+        logger.error(f"❌ Error saving message: {e}")
         raise self.retry(exc=e)
 
 # =================================================================

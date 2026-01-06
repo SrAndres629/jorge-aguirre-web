@@ -2,22 +2,15 @@ from fastapi import APIRouter, Request, BackgroundTasks
 from pydantic import BaseModel
 from typing import Optional, Dict, Any
 import time
-import os
-import logging
+from app.config import settings
 
-# Configurar logger
-logger = logging.getLogger("tracking")
-logger.setLevel(logging.INFO)
-
-router = APIRouter()
-
-# Meta CAPI Configuration (Environment Variables)
-PIXEL_ID = os.getenv("META_PIXEL_ID", "123456789")
-ACCESS_TOKEN = os.getenv("META_ACCESS_TOKEN", "EAA...")
-TEST_EVENT_CODE = os.getenv("META_TEST_EVENT_CODE")
+# Meta CAPI Configuration (From Central Settings)
+PIXEL_ID = settings.META_PIXEL_ID
+ACCESS_TOKEN = settings.META_ACCESS_TOKEN
+TEST_EVENT_CODE = settings.TEST_EVENT_CODE
 
 from app.tracking import send_event, send_n8n_webhook
-from app.database import save_visitor, upsert_contact
+from app.database import save_visitor, upsert_contact_advanced
 
 class TrackingEvent(BaseModel):
     event_name: str
@@ -74,6 +67,8 @@ async def process_tracking_event(event: TrackingEvent, request: Request, backgro
             'phone': phone,
             'name': custom_data.get('name') or event.user_data.get('name'),
             'fbclid': fbclid,
+            'status': 'interested', # Leads from web are interested
+            'service_interest': custom_data.get('service_type') or utm_data.get('utm_campaign'),
             **utm_data
         }
         upsert_contact_task.delay(contact_payload)

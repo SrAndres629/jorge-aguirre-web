@@ -1,0 +1,185 @@
+{
+    "name": "03_Natalia_Admin_Loop",
+    "nodes": [
+        {
+            "parameters": {
+                "operation": "executeQuery",
+                "query": "SELECT onboarding_step, full_name FROM contacts WHERE whatsapp_number = $1;",
+                "additionalFields": {
+                    "queryParams": "={{ $json.whatsapp_number }}"
+                }
+            },
+            "name": "Get Admin State",
+            "type": "n8n-nodes-base.postgres",
+            "typeVersion": 1,
+            "position": [
+                250,
+                300
+            ],
+            "credentials": {
+                "postgres": {
+                    "id": "postgres_cred",
+                    "name": "Local Postgres"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "options": {}
+            },
+            "name": "OpenAI Chat Model",
+            "type": "n8n-nodes-base.openAiChatModel",
+            "typeVersion": 1,
+            "position": [
+                500,
+                500
+            ],
+            "credentials": {
+                "openAiApi": {
+                    "id": "openai_cred",
+                    "name": "OpenAI Account"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "options": {}
+            },
+            "name": "Window Buffer Memory",
+            "type": "n8n-nodes-base.windowBufferMemory",
+            "typeVersion": 1,
+            "position": [
+                600,
+                500
+            ]
+        },
+        {
+            "parameters": {
+                "systemMessage": "=Eres Natalia, la asistente personal de IA de Jorge Aguirre. Estás en modo ONBOARDING.\nTu objetivo es entrevistar a Jorge (+59176863944) para extraer información del negocio.\n\nESTADO ACTUAL:\n- Nombre: {{ $json.full_name }}\n- Paso Actual: {{ $json.onboarding_step || 'Inicio' }}\n\nINSTRUCCIONES:\n1. Si es el primer mensaje, preséntate cálidamente: 'Hola Jorge, soy Natalia, tu asistente integral...'.\n2. Usa la herramienta 'save_knowledge' cada vez que Jorge te dé un dato útil (precios, bio, servicios).\n3. Al guardar algo, confirma: 'Entendido, ya guardé los precios de [Servicio]'.\n4. Solo una pregunta a la vez.\n\nCONOCIMIENTO RECOLECTADO:\n- (Usa la herramienta 'read_all_knowledge' si necesitas ver qué ya sabes).",
+                "options": {}
+            },
+            "name": "Natalia Admin Agent",
+            "type": "n8n-nodes-base.aiAgent",
+            "typeVersion": 1,
+            "position": [
+                550,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "name": "save_knowledge",
+                "description": "Guarda un hecho del negocio en la base de datos de conocimiento.",
+                "operation": "executeQuery",
+                "query": "INSERT INTO business_knowledge (slug, category, content) VALUES ($1, $2, $3) \nON CONFLICT (slug) DO UPDATE SET content = EXCLUDED.content, updated_at = NOW();",
+                "additionalFields": {
+                    "queryParams": "={{$node[\"Natalia Admin Agent\"].json[\"slug\"]}}, {{$node[\"Natalia Admin Agent\"].json[\"category\"]}}, {{$node[\"Natalia Admin Agent\"].json[\"content\"]}}"
+                }
+            },
+            "name": "save_knowledge_tool",
+            "type": "n8n-nodes-base.postgres",
+            "typeVersion": 1,
+            "position": [
+                800,
+                150
+            ],
+            "credentials": {
+                "postgres": {
+                    "id": "postgres_cred",
+                    "name": "Local Postgres"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "={{ $env.EVOLUTION_API_URL }}/message/sendText/{{ $env.EVOLUTION_INSTANCE }}",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "apikey",
+                            "value": "={{ $env.EVOLUTION_API_KEY }}"
+                        }
+                    ]
+                },
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "number",
+                            "value": "59176863944@s.whatsapp.net"
+                        },
+                        {
+                            "name": "text",
+                            "value": "={{ $json.output }}"
+                        }
+                    ]
+                }
+            },
+            "name": "Send to Jorge",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 1,
+            "position": [
+                850,
+                400
+            ]
+        }
+    ],
+    "connections": {
+        "Get Admin State": {
+            "main": [
+                [
+                    {
+                        "node": "Natalia Admin Agent",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "OpenAI Chat Model": {
+            "ai_languageModel": [
+                [
+                    {
+                        "node": "Natalia Admin Agent",
+                        "type": "ai_languageModel",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Window Buffer Memory": {
+            "ai_memory": [
+                [
+                    {
+                        "node": "Natalia Admin Agent",
+                        "type": "ai_memory",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "save_knowledge_tool": {
+            "ai_tool": [
+                [
+                    {
+                        "node": "Natalia Admin Agent",
+                        "type": "ai_tool",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Natalia Admin Agent": {
+            "main": [
+                [
+                    {
+                        "node": "Send to Jorge",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}

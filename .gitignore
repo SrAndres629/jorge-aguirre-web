@@ -1,17 +1,21 @@
 # =================================================================
-# DATOS SENSIBLES (NUNCA SUBIR -> TEMPORALMENTE PERMITIDO PARA RESPALDO)
+# .GITIGNORE BLINDADO
+# Jorge Aguirre Flores Web
 # =================================================================
-# .env
-# .env.local
-# .env.production
-# .env.test
-# *.key
-# *.pem
-# CREDENTIALS_AND_SECRETS.md
 
-# =================================================================
-# BASES DE DATOS (Datos en Runtime)
-# =================================================================
+# --- Datos Sensibles ---
+.env
+.env*
+! .env.example
+*.key
+*.pem
+*.cert
+credentials/
+secrets/
+
+# --- Datos de Aplicación (Runtime) ---
+data/
+archive/
 *.db
 *.sqlite
 *.sqlite3
@@ -25,56 +29,56 @@ core/evolution_redis/
 core/evolution_store/
 core/n8n_data/
 
-# =================================================================
-# PYTHON
-# =================================================================
+# --- Python ---
 __pycache__/
 *.py[cod]
 *$py.class
 venv/
 .venv/
 env/
+.env/
 *.egg-info/
 dist/
 build/
+.pytest_cache/
+.mypy_cache/
+.coverage
 
-# =================================================================
-# NODE.JS
-# =================================================================
+# --- Node.js ---
 node_modules/
 npm-debug.log
 yarn-error.log
 .npm/
+package-lock.json
 
-# =================================================================
-# REPORTES Y AUDITORÍAS (Se regeneran)
-# =================================================================
-*.report.html
-*.report.json
-coverage/
-.pytest_cache/
-
-# =================================================================
-# SISTEMA OPERATIVO
-# =================================================================
-.DS_Store
-Thumbs.db
+# --- Reportes y Logs ---
 *.log
 *.tmp
+*.temp
+reports/
+audit/
+*.report.html
+*.report.json
+
+# --- Sistema Operativo ---
+.DS_Store
+Thumbs.db
+desktop.ini
 .vscode/
 .idea/
 
-# =================================================================
-# DISEÑO (Archivos pesados)
-# =================================================================
+# --- Diseño y Pesados ---
 *.psd
 *.ai
 *.fig
 *.sketch
 design_assets/
 raw_images/
+*.png
+*.jpg
+*.jpeg
+*.gif
+! docs/images/
 
-# =================================================================
-# BRAIN (Antigravity Artifacts)
-# =================================================================
+# --- Brain (Antigravity Artifacts) ---
 brain/

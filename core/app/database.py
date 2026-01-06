@@ -104,26 +104,50 @@ class SQLiteCursorWrapper:
         self.cursor.close()
 
 def init_tables():
-    """Crea tablas si no existen"""
+    """Crea tablas si no existen, sincronizado con init_crm_master_clean.sql v2.0"""
     try:
         with get_cursor() as cur:
             if not cur: return False
             
-            # Syntax compatible (Postgres / SQLite)
-            # SERIAL vs AUTOINCREMENT es la diferencia principal
-            # Usaremos sintaxis condicional
-            
+            # --- Configuración de Tipos y Defaults ---
             if BACKEND == "postgres":
-                id_type = "SERIAL PRIMARY KEY"
+                id_type_uuid = "UUID PRIMARY KEY DEFAULT gen_random_uuid()"
+                id_type_serial = "SERIAL PRIMARY KEY"
                 timestamp_default = "CURRENT_TIMESTAMP"
+                # Crear Enum en Postgres si no existe
+                cur.execute("""
+                    DO $$ BEGIN
+                        CREATE TYPE lead_status AS ENUM (
+                            'new', 'interested', 'nurturing', 'ghost', 'booked', 
+                            'client_active', 'client_loyal', 'archived'
+                        );
+                    EXCEPTION WHEN duplicate_object THEN null; END $$;
+                """)
+                status_type = "lead_status DEFAULT 'new'"
             else:
-                id_type = "INTEGER PRIMARY KEY AUTOINCREMENT"
+                id_type_uuid = "TEXT PRIMARY KEY" # SQLite no tiene gen_random_uuid nativo
+                id_type_serial = "INTEGER PRIMARY KEY AUTOINCREMENT"
                 timestamp_default = "CURRENT_TIMESTAMP"
-            
-            sql = f'''
+                status_type = "TEXT DEFAULT 'new'"
+
+            # --- Tabla BUSINESS_KNOWLEDGE (Facts) ---
+            sql_knowledge = f'''
+                CREATE TABLE IF NOT EXISTS business_knowledge (
+                    id {id_type_serial},
+                    slug TEXT UNIQUE NOT NULL,
+                    category TEXT NOT NULL, -- 'pricing', 'bio', 'location', 'policy'
+                    content TEXT NOT NULL,
+                    updated_at TIMESTAMP DEFAULT {timestamp_default}
+                );
+            '''
+            cur.execute(sql_knowledge)
+            cur.execute('CREATE INDEX IF NOT EXISTS idx_knowledge_slug ON business_knowledge(slug);')
+
+            # --- Tabla VISITORS (Anon Tracking) ---
+            cur.execute(f'''
                 CREATE TABLE IF NOT EXISTS visitors (
-                    id {id_type},
-                    external_id TEXT NOT NULL,
+                    id {id_type_serial},
+                    external_id TEXT,
                     fbclid TEXT,
                     ip_address TEXT,
                     user_agent TEXT,
@@ -135,52 +159,111 @@ def init_tables():
                     utm_content TEXT,
                     timestamp TIMESTAMP DEFAULT {timestamp_default}
                 );
-            '''
-            cur.execute(sql)
-            
-            # Indices
+            ''')
             cur.execute('CREATE INDEX IF NOT EXISTS idx_visitors_external_id ON visitors(external_id);')
-            cur.execute('CREATE INDEX IF NOT EXISTS idx_visitors_fbclid ON visitors(fbclid);')
 
-            # --- CONTACTS (Leads) ---
-            sql_contacts = '''
+            # --- Tabla CONTACTS (CRM Master) ---
+            # Nota: En SQLite usamos TEXT para UUID y manejamos la lógica en Python si es necesario
+            sql_contacts = f'''
                 CREATE TABLE IF NOT EXISTS contacts (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    id {id_type_uuid if BACKEND == "postgres" else id_type_serial},
                     whatsapp_number TEXT UNIQUE NOT NULL,
                     full_name TEXT,
+                    profile_pic_url TEXT,
+                    
                     fb_click_id TEXT,
+                    fb_browser_id TEXT,
                     utm_source TEXT,
                     utm_medium TEXT,
                     utm_campaign TEXT,
-                    last_interaction TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    web_visit_count INTEGER DEFAULT 1
+                    utm_term TEXT,
+                    utm_content TEXT,
+                    web_visit_count INTEGER DEFAULT 1,
+                    conversion_sent_to_meta BOOLEAN DEFAULT FALSE,
+                    
+                    status {status_type},
+                    lead_score INTEGER DEFAULT 50,
+                    pain_point TEXT,
+                    service_interest TEXT,
+                    service_booked_date TIMESTAMP,
+                    appointment_count INTEGER DEFAULT 0,
+                    
+                    created_at TIMESTAMP DEFAULT {timestamp_default},
+                    updated_at TIMESTAMP,
+                    last_interaction TIMESTAMP DEFAULT {timestamp_default}
                 );
             '''
-            # Adapt schema for Postgres if needed (already handled by dynamic id_type above if we split properly,
-            # but here we wrote raw SQL. Let's make it robust)
-            
-            if BACKEND == "postgres":
-                 sql_contacts = '''
-                    CREATE TABLE IF NOT EXISTS contacts (
-                        id SERIAL PRIMARY KEY,
-                        whatsapp_number TEXT UNIQUE NOT NULL,
-                        full_name TEXT,
-                        fb_click_id TEXT,
-                        utm_source TEXT,
-                        utm_medium TEXT,
-                        utm_campaign TEXT,
-                        last_interaction TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                        web_visit_count INTEGER DEFAULT 1
-                    );
-                '''
-            
             cur.execute(sql_contacts)
-            cur.execute('CREATE INDEX IF NOT EXISTS idx_contacts_whatsapp ON contacts(whatsapp_number);')
             
-        logger.info(f"✅ Tablas inicializadas ({BACKEND})")
+            # --- Migración de Columnas (Si ya existe la tabla) ---
+            new_columns = [
+                ("profile_pic_url", "TEXT"),
+                ("fb_browser_id", "TEXT"),
+                ("utm_term", "TEXT"),
+                ("utm_content", "TEXT"),
+                ("status", status_type),
+                ("lead_score", "INTEGER DEFAULT 50"),
+                ("pain_point", "TEXT"),
+                ("service_interest", "TEXT"),
+                ("service_booked_date", "TIMESTAMP"),
+                ("appointment_count", "INTEGER DEFAULT 0"),
+                ("updated_at", "TIMESTAMP"),
+                ("onboarding_step", "TEXT"), # Step de la entrevista (null, 'pricing', 'bio', etc)
+                ("is_admin", "BOOLEAN DEFAULT FALSE")
+            ]
+            
+            for col_name, col_type in new_columns:
+                try:
+                    if BACKEND == "postgres":
+                        cur.execute(f"ALTER TABLE contacts ADD COLUMN IF NOT EXISTS {col_name} {col_type};")
+                    else:
+                        # SQLite no soporta IF NOT EXISTS en ALTER TABLE
+                        # Debemos verificar si existe
+                        cur.execute(f"PRAGMA table_info(contacts);")
+                        cols = [c[1] for c in cur.fetchall()]
+                        if col_name not in cols:
+                            cur.execute(f"ALTER TABLE contacts ADD COLUMN {col_name} {col_type};")
+                except Exception as e:
+                    logger.warning(f"⚠️ Nota: Al intentar añadir {col_name}: {e}")
+
+            cur.execute('CREATE INDEX IF NOT EXISTS idx_contacts_whatsapp ON contacts(whatsapp_number);')
+            cur.execute('CREATE INDEX IF NOT EXISTS idx_contacts_status ON contacts(status);')
+
+            # --- Tabla MESSAGES (AI Memory) ---
+            # Forzado a INTEGER para contact_id para coincidir con SERIAL en contacts
+            sql_messages = f'''
+                CREATE TABLE IF NOT EXISTS messages (
+                    id {id_type_uuid if BACKEND == "postgres" else id_type_serial},
+                    contact_id INTEGER,
+                    role TEXT CHECK (role IN ('user', 'assistant', 'system', 'tool')),
+                    content TEXT,
+                    created_at TIMESTAMP DEFAULT {timestamp_default},
+                    FOREIGN KEY (contact_id) REFERENCES contacts(id) ON DELETE CASCADE
+                );
+            '''
+            cur.execute(sql_messages)
+            cur.execute('CREATE INDEX IF NOT EXISTS idx_messages_contact_id ON messages(contact_id);')
+
+            # --- Tabla APPOINTMENTS (Agendamiento) ---
+            sql_appointments = f'''
+                CREATE TABLE IF NOT EXISTS appointments (
+                    id {id_type_serial},
+                    contact_id INTEGER,
+                    appointment_date TIMESTAMP NOT NULL,
+                    service_type TEXT,
+                    status TEXT DEFAULT 'pending',
+                    created_at TIMESTAMP DEFAULT {timestamp_default},
+                    FOREIGN KEY (contact_id) REFERENCES contacts(id)
+                );
+            '''
+            cur.execute(sql_appointments)
+            
+        logger.info(f"✅ Tablas sincronizadas con Schema Natalia v2.0 ({BACKEND})")
         return True
     except Exception as e:
-        logger.error(f"❌ Error creando tablas: {e}")
+        logger.error(f"❌ Error sincronizando tablas: {e}")
+        import traceback
+        logger.error(traceback.format_exc())
         return False
 
 # =================================================================
@@ -214,54 +297,128 @@ def save_visitor(external_id, fbclid, ip_address, user_agent, source="pageview",
                 )
             )
 
-def upsert_contact(contact_data: Dict[str, Any]):
+def upsert_contact_advanced(contact_data: Dict[str, Any]):
     """
-    Inserta o actualiza un contacto en la tabla 'contacts' (PostgreSQL).
-    Usa whatsapp_number como clave de unicidad.
+    Upsert avanzado estilo CRM Natalia. Sincroniza marketing y ventas.
     """
     if BACKEND != "postgres":
-        logger.warning("⚠️ upsert_contact solo disponible en PostgreSQL")
+        # Implementación parcial para SQLite para no romper dev
+        with get_cursor() as cur:
+            if cur:
+                cur.execute("""
+                    INSERT INTO contacts (whatsapp_number, full_name, utm_source, status)
+                    VALUES (%s, %s, %s, %s)
+                    ON CONFLICT(whatsapp_number) DO UPDATE SET
+                        full_name = EXCLUDED.full_name,
+                        utm_source = COALESCE(EXCLUDED.utm_source, contacts.utm_source),
+                        last_interaction = CURRENT_TIMESTAMP
+                """, (
+                    contact_data.get('phone'), 
+                    contact_data.get('name'), 
+                    contact_data.get('utm_source'),
+                    contact_data.get('status', 'new')
+                ))
         return
 
     sql = """
     INSERT INTO contacts (
-        whatsapp_number, full_name, 
-        fb_click_id, 
-        utm_source, utm_medium, utm_campaign,
+        whatsapp_number, full_name, profile_pic_url,
+        fb_click_id, fb_browser_id,
+        utm_source, utm_medium, utm_campaign, utm_term, utm_content,
+        status, lead_score, pain_point, service_interest,
         last_interaction
-    ) VALUES (%s, %s, %s, %s, %s, %s, NOW())
+    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
     ON CONFLICT (whatsapp_number) 
     DO UPDATE SET 
-        full_name = EXCLUDED.full_name,
+        full_name = COALESCE(EXCLUDED.full_name, contacts.full_name),
+        profile_pic_url = COALESCE(EXCLUDED.profile_pic_url, contacts.profile_pic_url),
         fb_click_id = COALESCE(EXCLUDED.fb_click_id, contacts.fb_click_id),
         utm_source = COALESCE(EXCLUDED.utm_source, contacts.utm_source),
-        utm_medium = COALESCE(EXCLUDED.utm_medium, contacts.utm_medium),
-        utm_campaign = COALESCE(EXCLUDED.utm_campaign, contacts.utm_campaign),
+        status = COALESCE(EXCLUDED.status, contacts.status),
+        lead_score = COALESCE(EXCLUDED.lead_score, contacts.lead_score),
+        pain_point = COALESCE(EXCLUDED.pain_point, contacts.pain_point),
+        service_interest = COALESCE(EXCLUDED.service_interest, contacts.service_interest),
         last_interaction = NOW(),
-        web_visit_count = contacts.web_visit_count + 1;
+        web_visit_count = contacts.web_visit_count + 1,
+        updated_at = NOW();
     """
     
-    # Extraer datos seguros
-    phone = contact_data.get('phone')
-    if not phone:
-        return # No se puede guardar sin teléfono
-
     params = (
-        phone,
+        contact_data.get('phone'),
         contact_data.get('name'),
+        contact_data.get('profile_pic_url'),
         contact_data.get('fbclid'),
+        contact_data.get('fbp'),
         contact_data.get('utm_source'),
         contact_data.get('utm_medium'),
-        contact_data.get('utm_campaign')
+        contact_data.get('utm_campaign'),
+        contact_data.get('utm_term'),
+        contact_data.get('utm_content'),
+        contact_data.get('status', 'new'),
+        contact_data.get('lead_score', 50),
+        contact_data.get('pain_point'),
+        contact_data.get('service_interest')
     )
 
     try:
         with get_cursor() as cur:
             if cur:
                 cur.execute(sql, params)
-                logger.info(f"✅ Contact Upsert Success: {phone}")
+                logger.info(f"🚀 Natalia Sync Success: {contact_data.get('phone')}")
     except Exception as e:
-        logger.error(f"❌ Contact Upsert Error: {e}")
+        logger.error(f"❌ Natalia Sync Error: {e}")
+
+# Backward compatibility alias
+upsert_contact = upsert_contact_advanced
+
+def save_message(whatsapp_number: str, role: str, content: str):
+    """Guarda un mensaje en el historial para memoria de Natalia"""
+    try:
+        with get_cursor() as cur:
+            if not cur: return
+            
+            # 1. Obtener contact_id
+            cur.execute("SELECT id FROM contacts WHERE whatsapp_number = %s", (whatsapp_number,))
+            row = cur.fetchone()
+            if not row:
+                # Si no existe, lo creamos mínimo
+                upsert_contact_advanced({'phone': whatsapp_number, 'status': 'new'})
+                cur.execute("SELECT id FROM contacts WHERE whatsapp_number = %s", (whatsapp_number,))
+                row = cur.fetchone()
+            
+            contact_id = row[0]
+            
+            # 2. Insertar mensaje
+            if BACKEND == "postgres":
+                sql = "INSERT INTO messages (contact_id, role, content) VALUES (%s, %s, %s)"
+            else:
+                sql = "INSERT INTO messages (contact_id, role, content) VALUES (%s, %s, %s)"
+                
+            cur.execute(sql, (contact_id, role, content))
+    except Exception as e:
+        logger.error(f"❌ Error guardando mensaje: {e}")
+
+def get_chat_history(whatsapp_number: str, limit: int = 10):
+    """Obtiene los últimos N mensajes para contexto de la IA"""
+    history = []
+    try:
+        with get_cursor() as cur:
+            if not cur: return []
+            cur.execute("""
+                SELECT m.role, m.content 
+                FROM messages m
+                JOIN contacts c ON m.contact_id = c.id
+                WHERE c.whatsapp_number = %s
+                ORDER BY m.created_at DESC
+                LIMIT %s
+            """, (whatsapp_number, limit))
+            rows = cur.fetchall()
+            # Invertir para que sea cronológico
+            for row in reversed(rows):
+                history.append({"role": row[0], "content": row[1]})
+    except Exception as e:
+        logger.error(f"❌ Error obteniendo historial: {e}")
+    return history
 
 
 def get_visitor_fbclid(external_id):
@@ -324,6 +481,75 @@ def get_visitor_by_id(visitor_id: int) -> Optional[Dict[str, Any]]:
                     }
     except Exception as e:
         logger.error(f"❌ Error buscando visitor {visitor_id}: {e}")
+    return None
+
+
+# =================================================================
+# NATALIA KNOWLEDGE BASE
+# =================================================================
+
+def save_knowledge_fact(slug: str, category: str, content: str):
+    """Guarda o actualiza un hecho en la base de conocimiento"""
+    try:
+        with get_cursor() as cur:
+            if not cur: return False
+            
+            if BACKEND == "postgres":
+                sql = """
+                    INSERT INTO business_knowledge (slug, category, content, updated_at)
+                    VALUES (%s, %s, %s, NOW())
+                    ON CONFLICT (slug) DO UPDATE SET
+                        content = EXCLUDED.content,
+                        category = EXCLUDED.category,
+                        updated_at = NOW();
+                """
+            else:
+                sql = """
+                    INSERT INTO business_knowledge (slug, category, content)
+                    VALUES (%s, %s, %s)
+                    ON CONFLICT (slug) DO UPDATE SET
+                        content = EXCLUDED.content,
+                        category = EXCLUDED.category;
+                """
+            cur.execute(sql, (slug, category, content))
+            logger.info(f"🧠 Natalia Learned: {slug} ({category})")
+            return True
+    except Exception as e:
+        logger.error(f"❌ Error guardando conocimiento: {e}")
+        return False
+
+def get_knowledge_base(category: Optional[str] = None) -> List[Dict[str, Any]]:
+    """Obtiene el conocimiento del negocio, opcionalmente por categoría"""
+    facts = []
+    try:
+        with get_cursor() as cur:
+            if not cur: return []
+            
+            if category:
+                sql = "SELECT slug, category, content FROM business_knowledge WHERE category = %s"
+                params = (category,)
+            else:
+                sql = "SELECT slug, category, content FROM business_knowledge"
+                params = None
+                
+            cur.execute(sql, params)
+            rows = cur.fetchall()
+            for row in rows:
+                facts.append({"slug": row[0], "category": row[1], "content": row[2]})
+    except Exception as e:
+        logger.error(f"❌ Error obteniendo conocimiento: {e}")
+    return facts
+
+def get_knowledge_value(slug: str) -> Optional[str]:
+    """Obtiene un valor específico del conocimiento"""
+    try:
+        with get_cursor() as cur:
+            if not cur: return None
+            cur.execute("SELECT content FROM business_knowledge WHERE slug = %s", (slug,))
+            row = cur.fetchone()
+            return row[0] if row else None
+    except Exception as e:
+        logger.error(f"❌ Error obteniendo valor de conocimiento: {e}")
     return None
 
 def check_connection() -> bool:

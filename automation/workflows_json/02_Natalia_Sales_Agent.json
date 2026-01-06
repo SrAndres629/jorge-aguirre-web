@@ -1,0 +1,186 @@
+{
+    "name": "02_Natalia_Sales_Agent",
+    "nodes": [
+        {
+            "parameters": {
+                "httpMethod": "POST",
+                "path": "natalia-agent-trigger",
+                "responseMode": "lastNode",
+                "options": {}
+            },
+            "name": "Webhook Trigger",
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 1,
+            "position": [
+                100,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "model": "gpt-4o",
+                "options": {
+                    "temperature": 0.7
+                }
+            },
+            "name": "OpenAI Chat Model",
+            "type": "n8n-nodes-base.openAiChatModel",
+            "typeVersion": 1,
+            "position": [
+                400,
+                500
+            ],
+            "credentials": {
+                "openAiApi": {
+                    "id": "openai_cred",
+                    "name": "OpenAI Account"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "systemMessage": "=Eres Natalia, Asesora Estética Senior en Jorge Aguirre PMU. \nTu tono es cálido, profesional y empático.\n\nCONTEXTO:\n- Lead: {{ $node[\"Webhook Trigger\"].json[\"full_name\"] }}\n- Interés: {{ $node[\"Webhook Trigger\"].json[\"service_interest\"] }}\n- UTM Source: {{ $node[\"Webhook Trigger\"].json[\"utm_source\"] }}\n\nREGLAS:\n1. Respuestas cortas (máximo 2 párrafos).\n2. Siempre termina con una pregunta.\n3. Tu objetivo es agendar una cita de valoración.\n4. Si preguntan por 'Trabajo Previo', pide una foto clara de la zona.\n\nHISTORIAL RECIENTE:\n{{ $node[\"Get History\"].json[\"history\"] }}",
+                "options": {}
+            },
+            "name": "Natalia AI Agent",
+            "type": "n8n-nodes-base.aiAgent",
+            "typeVersion": 1,
+            "position": [
+                600,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "resource": "chat",
+                "operation": "getHistory",
+                "contactId": "={{ $node[\"Webhook Trigger\"].json[\"id\"] }}",
+                "limit": 10
+            },
+            "name": "Get History",
+            "type": "n8n-nodes-base.postgres",
+            "typeVersion": 1,
+            "position": [
+                350,
+                300
+            ],
+            "credentials": {
+                "postgres": {
+                    "id": "postgres_cred",
+                    "name": "Local Postgres"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "={{ $env.EVOLUTION_API_URL }}/message/sendText/{{ $env.EVOLUTION_INSTANCE }}",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "apikey",
+                            "value": "={{ $env.EVOLUTION_API_KEY }}"
+                        }
+                    ]
+                },
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "number",
+                            "value": "={{ $node[\"Webhook Trigger\"].json[\"whatsapp_number\"] }}"
+                        },
+                        {
+                            "name": "text",
+                            "value": "={{ $json.output }}"
+                        }
+                    ]
+                }
+            },
+            "name": "Send WhatsApp",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 1,
+            "position": [
+                850,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "operation": "executeQuery",
+                "query": "SELECT category, content FROM business_knowledge;",
+                "options": {}
+            },
+            "name": "Search Knowledge",
+            "type": "n8n-nodes-base.postgres",
+            "typeVersion": 1,
+            "position": [
+                800,
+                500
+            ],
+            "credentials": {
+                "postgres": {
+                    "id": "postgres_cred",
+                    "name": "Local Postgres"
+                }
+            }
+        }
+    ],
+    "connections": {
+        "Search Knowledge": {
+            "ai_tool": [
+                [
+                    {
+                        "node": "Natalia AI Agent",
+                        "type": "ai_tool",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Webhook Trigger": {
+            "main": [
+                [
+                    {
+                        "node": "Get History",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Get History": {
+            "main": [
+                [
+                    {
+                        "node": "Natalia AI Agent",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "OpenAI Chat Model": {
+            "ai_languageModel": [
+                [
+                    {
+                        "node": "Natalia AI Agent",
+                        "type": "ai_languageModel",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Natalia AI Agent": {
+            "main": [
+                [
+                    {
+                        "node": "Send WhatsApp",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}

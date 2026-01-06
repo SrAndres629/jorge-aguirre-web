@@ -86,6 +86,66 @@
                 1120,
                 300
             ]
+        },
+        {
+            "parameters": {
+                "workflowId": "02_Natalia_Sales_Agent",
+                "options": {}
+            },
+            "name": "Call Natalia",
+            "type": "n8n-nodes-base.executeWorkflow",
+            "typeVersion": 1,
+            "position": [
+                1350,
+                200
+            ]
+        },
+        {
+            "parameters": {
+                "options": {}
+            },
+            "name": "Human/Admin Attention",
+            "type": "n8n-nodes-base.noOp",
+            "typeVersion": 1,
+            "position": [
+                1350,
+                400
+            ]
+        },
+        {
+            "parameters": {
+                "dataType": "string",
+                "value1": "={{ $json.whatsapp_number }}",
+                "rules": {
+                    "rules": [
+                        {
+                            "value2": "59176863944@s.whatsapp.net",
+                            "output": 1,
+                            "operation": "contains"
+                        }
+                    ]
+                }
+            },
+            "name": "Is Jorge?",
+            "type": "n8n-nodes-base.switch",
+            "typeVersion": 1,
+            "position": [
+                850,
+                150
+            ]
+        },
+        {
+            "parameters": {
+                "workflowId": "03_Natalia_Admin_Loop",
+                "options": {}
+            },
+            "name": "Call Natalia Admin",
+            "type": "n8n-nodes-base.executeWorkflow",
+            "typeVersion": 1,
+            "position": [
+                1100,
+                50
+            ]
         }
     ],
     "connections": {
@@ -104,7 +164,25 @@
             "main": [
                 [
                     {
+                        "node": "Is Jorge?",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Is Jorge?": {
+            "main": [
+                [
+                    {
                         "node": "Get History",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Call Natalia Admin",
                         "type": "main",
                         "index": 0
                     }
@@ -116,6 +194,24 @@
                 [
                     {
                         "node": "Router",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Router": {
+            "main": [
+                [
+                    {
+                        "node": "Call Natalia",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Human/Admin Attention",
                         "type": "main",
                         "index": 0
                     }
