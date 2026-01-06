@@ -3,7 +3,7 @@ import httpx
 import asyncio
 from typing import Dict, Any, Optional
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
-from .config import settings, get_logger
+from config import settings, get_logger
 
 logger = get_logger("Client")
 

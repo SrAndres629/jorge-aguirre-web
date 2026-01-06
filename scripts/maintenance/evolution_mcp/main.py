@@ -92,5 +92,14 @@ async def configure_webhook(url: str, instance: str = "JorgeMain") -> str:
     res = await webhooks.set_webhook(url, True, events, instance)
     return str(res)
 
+
 if __name__ == "__main__":
-    mcp.run()
+    import logging
+    logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger("Evolution MCP")
+    logger.info("Starting Evolution MCP Server...")
+    logger.info(f"Registered {len(mcp._tools)} tools")
+    try:
+        mcp.run()
+    except KeyboardInterrupt:
+        logger.info("Shutting down Evolution MCP Server")

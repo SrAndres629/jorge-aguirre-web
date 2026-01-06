@@ -1,5 +1,5 @@
 
-from ..client import EvolutionClient
+from client import EvolutionClient
 
 client = EvolutionClient()
 

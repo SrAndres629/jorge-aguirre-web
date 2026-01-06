@@ -26,6 +26,47 @@ services:
       timeout: 10s
       retries: 3
 
+  # =================================================================
+  # WORKER: Procesamiento Asíncrono (Meta CAPI, DB, n8n)
+  # =================================================================
+  worker:
+    build:
+      context: ./core
+      dockerfile: Dockerfile
+    container_name: jorge-web-worker
+    # Usamos el usuario 'jorgeuser' definido en el Dockerfile
+    command: celery -A app.celery_app worker --loglevel=info
+    env_file:
+      - .env
+    depends_on:
+      - redis_evolution
+      - postgres_evolution
+    volumes:
+      - ./core:/app
+    networks:
+      - app_network
+    deploy:
+      resources:
+        limits:
+          memory: 384M
+    restart: always
+
+  # =================================================================
+  # FLOWER: Dashboard de Monitoreo para Celery (http://localhost:5555)
+  # =================================================================
+  celery_flower:
+    image: mher/flower
+    container_name: jorge-web-monitor
+    ports:
+      - "5555:5555"
+    environment:
+      - CELERY_BROKER_URL=redis://redis_evolution:6379/1
+    networks:
+      - app_network
+    depends_on:
+      - redis_evolution
+
+
   postgres_evolution:
     image: postgres:15-alpine
     container_name: postgres_evolution
@@ -131,11 +172,12 @@ services:
     container_name: evolution_mcp_server
     restart: always
     ports:
-      - "8005:8001"
+      - "8002:8001"
     env_file:
       - .env
     environment:
       - EVOLUTION_API_URL=http://evolution_api:8080
+      - EVOLUTION_API_KEY=${EVOLUTION_API_KEY}
     depends_on:
       evolution_api:
         condition: service_started
