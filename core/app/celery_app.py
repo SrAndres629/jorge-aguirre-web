@@ -2,6 +2,9 @@
 # CELERY APP CONFIGURATION
 # Jorge Aguirre Flores Web
 # =================================================================
+from celery import Celery
+from app.config import settings
+
 CELERY_BROKER_URL = settings.CELERY_BROKER_URL
 CELERY_RESULT_BACKEND = settings.CELERY_RESULT_BACKEND
 

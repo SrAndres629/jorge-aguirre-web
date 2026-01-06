@@ -3,6 +3,13 @@ from pydantic import BaseModel
 from typing import Optional, Dict, Any
 import time
 from app.config import settings
+import logging
+
+# Logger
+logger = logging.getLogger(__name__)
+
+# Router
+router = APIRouter()
 
 # Meta CAPI Configuration (From Central Settings)
 PIXEL_ID = settings.META_PIXEL_ID
