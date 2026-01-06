@@ -31,13 +31,41 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # =================================================================
+# EVENTOS DE CICLO DE VIDA
+# =================================================================
+
+from contextlib import asynccontextmanager
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Ciclo de vida de la aplicación con manejo de contexto"""
+    # Startup
+    logger.info("🚀 Iniciando Jorge Aguirre Flores Web v2.0")
+    
+    # Inicializar base de datos
+    if database.initialize():
+        logger.info("✅ Base de datos PostgreSQL conectada")
+    else:
+        logger.info("ℹ️ Ejecutando sin base de datos")
+    
+    logger.info(f"📊 Meta Pixel ID: {settings.META_PIXEL_ID}")
+    logger.info(f"🌐 Servidor listo en http://{settings.HOST}:{settings.PORT}")
+    
+    yield
+    
+    # Shutdown
+    logger.info("🛑 Deteniendo servidor...")
+
+
+# =================================================================
 # APLICACIÓN FASTAPI
 # =================================================================
 
 app = FastAPI(
     title="Jorge Aguirre Flores Web",
     description="Sitio web profesional con tracking Meta CAPI",
-    version="2.0.0"
+    version="2.0.0",
+    lifespan=lifespan
 )
 
 # Middleware GZip para compresión (5x más rápido en móviles)
@@ -127,29 +155,11 @@ app.include_router(admin.router)
 app.include_router(health.router)
 
 
+
 # =================================================================
-# EVENTOS DE CICLO DE VIDA
+# EVENTOS DE CICLO DE VIDA (Movido arriba para lifespan)
 # =================================================================
 
-@app.on_event("startup")
-async def startup_event():
-    """Inicialización al arrancar el servidor"""
-    logger.info("🚀 Iniciando Jorge Aguirre Flores Web v2.0")
-    
-    # Inicializar base de datos
-    if database.initialize():
-        logger.info("✅ Base de datos PostgreSQL conectada")
-    else:
-        logger.info("ℹ️ Ejecutando sin base de datos")
-    
-    logger.info(f"📊 Meta Pixel ID: {settings.META_PIXEL_ID}")
-    logger.info(f"🌐 Servidor listo en http://{settings.HOST}:{settings.PORT}")
-
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    """Limpieza al detener el servidor"""
-    logger.info("🛑 Deteniendo servidor...")
 
 
 # =================================================================
