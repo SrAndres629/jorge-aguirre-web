@@ -141,6 +141,41 @@ def init_tables():
             # Indices
             cur.execute('CREATE INDEX IF NOT EXISTS idx_visitors_external_id ON visitors(external_id);')
             cur.execute('CREATE INDEX IF NOT EXISTS idx_visitors_fbclid ON visitors(fbclid);')
+
+            # --- CONTACTS (Leads) ---
+            sql_contacts = '''
+                CREATE TABLE IF NOT EXISTS contacts (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    whatsapp_number TEXT UNIQUE NOT NULL,
+                    full_name TEXT,
+                    fb_click_id TEXT,
+                    utm_source TEXT,
+                    utm_medium TEXT,
+                    utm_campaign TEXT,
+                    last_interaction TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    web_visit_count INTEGER DEFAULT 1
+                );
+            '''
+            # Adapt schema for Postgres if needed (already handled by dynamic id_type above if we split properly,
+            # but here we wrote raw SQL. Let's make it robust)
+            
+            if BACKEND == "postgres":
+                 sql_contacts = '''
+                    CREATE TABLE IF NOT EXISTS contacts (
+                        id SERIAL PRIMARY KEY,
+                        whatsapp_number TEXT UNIQUE NOT NULL,
+                        full_name TEXT,
+                        fb_click_id TEXT,
+                        utm_source TEXT,
+                        utm_medium TEXT,
+                        utm_campaign TEXT,
+                        last_interaction TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        web_visit_count INTEGER DEFAULT 1
+                    );
+                '''
+            
+            cur.execute(sql_contacts)
+            cur.execute('CREATE INDEX IF NOT EXISTS idx_contacts_whatsapp ON contacts(whatsapp_number);')
             
         logger.info(f"✅ Tablas inicializadas ({BACKEND})")
         return True

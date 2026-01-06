@@ -6,6 +6,7 @@
 const TrackingEngine = {
     initialized: false,
     viewedSections: new Set(),
+    debugMode: false,
 
     config: {
         services: window.SERVICES_CONFIG || {},
@@ -16,32 +17,56 @@ const TrackingEngine = {
         if (this.initialized) return;
         this.initialized = true;
 
+        // Auto-enable debug if specific parameter exists
+        if (new URLSearchParams(window.location.search).has('debug_pixel')) {
+            this.debugMode = true;
+            this.log('🐛 Debug Mode Enabled');
+        }
+
         this.persistUTMs(); // Priority: Capture campaign data immediately
         this.setupPixel();
         this.setupViewContentObserver();
         this.setupSliderListeners();
 
-        console.log('📊 [Senior Architecture] Tracking Engine Active (Pixel + CAPI + UTMs)');
+        this.log('📊 [Senior Architecture] Tracking Engine Active (Pixel + CAPI + UTMs)');
+    },
+
+    /**
+     * UTILITY: Internal Logger
+     */
+    log(message, data = null) {
+        if (!this.debugMode) return;
+        if (data) console.log(message, data);
+        else console.log(message);
+    },
+
+    warn(message) {
+        if (!this.debugMode) return;
+        console.warn(message);
     },
 
     /**
      * 0. DATA PERSISTENCE LAYER (UTMs)
      */
     persistUTMs() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const utmFields = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'];
+        try {
+            const urlParams = new URLSearchParams(window.location.search);
+            const utmFields = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'fbclid'];
 
-        // Capture and store if present in URL
-        utmFields.forEach(field => {
-            const value = urlParams.get(field);
-            if (value) {
-                sessionStorage.setItem(`tracking_${field}`, value);
-            }
-        });
+            // Capture and store if present in URL
+            utmFields.forEach(field => {
+                const value = urlParams.get(field);
+                if (value) {
+                    sessionStorage.setItem(`tracking_${field}`, value);
+                }
+            });
 
-        // Debug Log
-        const source = this.getUTM('utm_source') || 'direct';
-        console.log(`📡 Traffic Source Identified: ${source}`);
+            // Debug Log
+            const source = this.getUTM('utm_source') || 'direct';
+            this.log(`📡 Traffic Source Identified: ${source}`);
+        } catch (e) {
+            this.warn('Error persisting UTMs');
+        }
     },
 
     getUTM(field) {
@@ -74,14 +99,33 @@ const TrackingEngine = {
      * 2. VIEWCONTENT OBSERVER (Specific Interest)
      */
     setupViewContentObserver() {
+        // Only run if IntersectionObserver is supported
+        if (!('IntersectionObserver' in window)) return;
+
         const observerOptions = { threshold: 0.6 };
+        this.viewTimers = {}; // Store timers for dwell time
+
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
+                const sectionId = entry.target.dataset.serviceCategory || entry.target.dataset.trackingId;
+                if (!sectionId) return;
+
                 if (entry.isIntersecting) {
-                    const sectionId = entry.target.dataset.serviceCategory || entry.target.dataset.trackingId;
-                    if (sectionId && !this.viewedSections.has(sectionId)) {
-                        this.viewedSections.add(sectionId);
-                        this.trackIndividualView(sectionId);
+                    // Start 3-second timer (Dwell Time)
+                    if (!this.viewedSections.has(sectionId) && !this.viewTimers[sectionId]) {
+                        this.log(`⏳ Section visible: ${sectionId}. Waiting 3s for valid signal...`);
+                        this.viewTimers[sectionId] = setTimeout(() => {
+                            this.viewedSections.add(sectionId);
+                            this.trackIndividualView(sectionId);
+                            delete this.viewTimers[sectionId]; // Cleanup
+                        }, 3000); // 3 Seconds Dwell Time
+                    }
+                } else {
+                    // User scrolled away - Cancel timer
+                    if (this.viewTimers[sectionId]) {
+                        this.log(`❌ Scrolled away too fast: ${sectionId}. Signal cancelled.`);
+                        clearTimeout(this.viewTimers[sectionId]);
+                        delete this.viewTimers[sectionId];
                     }
                 }
             });
@@ -199,7 +243,7 @@ const TrackingEngine = {
             });
         }
 
-        // WhatsApp Redirect
+        // WhatsApp Redirect implementation
         let message = `Hola Jorge 👋`;
         if (source === 'Floating Button') {
             message = "Hola Jorge, estoy visitando tu web y me interesa una valoración para maquillaje permanente. ¿Podrían asesorarme?";
@@ -211,14 +255,20 @@ const TrackingEngine = {
             message += ` Quisiera información sobre sus servicios de maquillaje permanente.`;
         }
 
-        window.open(`https://wa.me/${this.config.phone}?text=${encodeURIComponent(message)}`, '_blank');
+        const whatsappUrl = `https://wa.me/${this.config.phone}?text=${encodeURIComponent(message)}`;
+
+        // Use timeout to ensure tracking fires before redirect, but don't block too long
+        // 300ms is usually enough for asynchronous fires to be queued by browser
+        setTimeout(() => {
+            window.open(whatsappUrl, '_blank');
+        }, 300);
     },
 
     /**
      * 5. CAPI HELPER
      */
     async sendToCAPI(eventName, customData) {
-        const fbclid = new URLSearchParams(window.location.search).get('fbclid') || this.getUTM('fbclid'); // Fallback to other sources if needed
+        const fbclid = new URLSearchParams(window.location.search).get('fbclid') || this.getUTM('fbclid');
 
         // Enriched Payload with UTMs
         const payload = {
@@ -229,8 +279,8 @@ const TrackingEngine = {
             action_source: "website",
             user_data: {
                 external_id: window.EXTERNAL_ID || '',
+                // If fbclid exists, adding it to fbc (creation time logic moved to backend or standardized here)
                 fbc: fbclid ? `fb.1.${Math.floor(Date.now() / 1000)}.${fbclid}` : null,
-                // Client side user agent / ip are mostly mostly handled by server, but good to have context
             },
             custom_data: {
                 ...customData,
@@ -244,14 +294,17 @@ const TrackingEngine = {
         };
 
         try {
-            await fetch('/track/event', {
+            const response = await fetch('/track/event', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
                 keepalive: true
             });
+            if (!response.ok) {
+                this.warn(`[CAPI] Server Error: ${response.status}`);
+            }
         } catch (e) {
-            console.warn(`[CAPI] Network Error for ${eventName}`);
+            this.warn(`[CAPI] Network Error for ${eventName}`, e);
         }
     }
 };
@@ -259,7 +312,7 @@ const TrackingEngine = {
 // Global Exposure for UI clicks
 window.handleConversion = (source) => TrackingEngine.handleConversion(source);
 
-// Init
+// Initialize with safe DOM check
 if (document.readyState === 'complete' || document.readyState === 'interactive') {
     TrackingEngine.init();
 } else {
