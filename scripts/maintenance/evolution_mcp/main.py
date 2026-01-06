@@ -98,7 +98,6 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     logger = logging.getLogger("Evolution MCP")
     logger.info("Starting Evolution MCP Server...")
-    logger.info(f"Registered {len(mcp._tools)} tools")
     try:
         mcp.run()
     except KeyboardInterrupt:

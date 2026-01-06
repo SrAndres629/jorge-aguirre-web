@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: jorge-aguirre-web
+    env: docker
+    region: oregon
+    plan: free
+    dockerContext: .
+    dockerfilePath: infrastructure/docker/app.Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: PORT
+        value: 8000
+      - key: PYTHON_VERSION
+        value: 3.11.0
