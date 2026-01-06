@@ -20,6 +20,10 @@ evolution_pgdata/
 evolution_redis/
 evolution_store/
 n8n_data/
+core/evolution_pgdata/
+core/evolution_redis/
+core/evolution_store/
+core/n8n_data/
 
 # =================================================================
 # PYTHON

@@ -10,10 +10,6 @@ services:
       - "8000:8000"
     volumes:
       - ./core:/app
-      - /app/evolution_pgdata
-      - /app/evolution_redis
-      - /app/evolution_store
-      - /app/n8n_data
     env_file:
       - .env
     environment:
