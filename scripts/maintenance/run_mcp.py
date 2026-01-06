@@ -9,7 +9,7 @@ from scripts.maintenance.evolution_mcp.main import mcp
 # accessible by n8n or other agents via HTTP
 
 def create_app():
-    return mcp._create_asgi_app()
+    return mcp.sse_app
 
 if __name__ == "__main__":
     print("🚀 Starting Evolution MCP Server on port 8001 (SSE)...")

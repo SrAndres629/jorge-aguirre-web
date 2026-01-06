@@ -79,7 +79,7 @@ services:
       redis_evolution:
         condition: service_healthy
     environment:
-      - AUTHENTICATION_API_KEY=B89599B2-37E4-4DCA-92D3-87F8674C7D69
+      - AUTHENTICATION_API_KEY=${EVOLUTION_API_KEY}
       - SERVER_URL=http://evolution_api:8080
       - CONFIG_SESSION_PHONE_VERSION=2.3000.1023204200
       - DATABASE_PROVIDER=postgresql
