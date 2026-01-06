@@ -62,32 +62,21 @@ print(settings.DATABASE_URL)
 
 ```text
 /jorge-aguirre-web
-├── core/                   # 🚀 CÓDIGO DE PRODUCCIÓN
-│   ├── app/               # Núcleo de la aplicación (fastAPI package)
-│   │   ├── routes/        # Endpoints (Modularizados)
-│   │   ├── config.py      # Configuración centralizada (Pydantic)
-│   │   ├── database.py    # Gestión Híbrida Postgres/SQLite
-│   │   ├── tasks.py       # Tareas asíncronas de Celery
-│   │   └── tracking.py    # Lógica de Meta CAPI
-│   ├── static/            # Assets optimizados (CSS, JS, WebP)
-│   ├── templates/         # UI Components (Jinja2)
-│   └── main.py           # Punto de entrada (Uvicorn)
+├── core/                   # 🚀 CÓDIGO DE PRODUCCIÓN (FastAPI Package)
+│   ├── main.py            # Entry point de la aplicación FastAPI
+│   ├── app/               # Lógica de negocio (routes, models, services)
+│   ├── static/            # Assets estáticos (optimización en build)
+│   └── templates/         # UI Components (Jinja2)
 │
-├── data/                  # 📊 PERSISTENCIA (Base de Datos & Logs)
-│   ├── redis/            # Datos de Redis
-│   ├── n8n_data/         # Volúmenes de n8n
-│   └── evolution_store/  # Sesiones de WhatsApp
+├── data/                  # 📊 PERSISTENCIA (Docker Volumes)
 │
-├── infrastructure/        # 🐳 DOCKER & DEPLOYMENT
-│   └── docker/           # Dockerfiles especializados
+├── docs/                  # 📚 DOCUMENTACIÓN & AUDITORÍAS
 │
-├── scripts/               # 🔧 HERRAMIENTAS & MANTENIMIENTO
-│   ├── maintenance/      # Auditorías y Saneamiento
-│   └── cleanup.bat       # Script de limpieza automática
+├── archive/               # 📂 ARCHIVO (Logs y Auditorías históricas)
 │
-├── .env.example          # Plantilla de variables
-├── .gitignore            # Blindaje de secretos y datos
-└── docker-compose.yml    # Orquestación de servicios
+├── Dockerfile             # 🐳 BUILD PRODUCTION (Optimizado Multi-stage)
+├── docker-compose.yml     # 🛠️ ORQUESTACIÓN LOCAL & DEV
+├── render.yaml            # ☁️ BLUEPRINT DE DESPLIEGUE (Render.com)
 ```
 
 ---
@@ -104,12 +93,11 @@ Para mantener la integridad del sistema, seguimos este ciclo:
 
 ## ☁️ Despliegue en Render
 
-1. **Root Directory**: `core`
-2. **Build Command**: `pip install -r requirements.txt`
-3. **Environment**: Configurar el archivo `.env` en el panel de Render.
-4. **Auto-healing**: Configurar health checks a `/health`.
-
----
+El proyecto está configurado para despliegue automático vía **Docker**.
+1. **Zero-Config**: Render detectará el `Dockerfile` en el root automáticamente.
+2. **Environment**: Configurar el archivo `.env` en el panel de Render o mediante `render.yaml`.
+3. **Health Checks**: Endpoint `/health` expuesto en el puerto `8000`.
+4. **Infrastructure as Code**: El archivo `render.yaml` sirve como blueprint para la infraestructura.
 
 ## 📝 Licencia
 
