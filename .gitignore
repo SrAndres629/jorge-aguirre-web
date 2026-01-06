@@ -1,13 +1,13 @@
 # =================================================================
-# DATOS SENSIBLES (NUNCA SUBIR)
+# DATOS SENSIBLES (NUNCA SUBIR -> TEMPORALMENTE PERMITIDO PARA RESPALDO)
 # =================================================================
-.env
-.env.local
-.env.production
-.env.test
-*.key
-*.pem
-CREDENTIALS_AND_SECRETS.md
+# .env
+# .env.local
+# .env.production
+# .env.test
+# *.key
+# *.pem
+# CREDENTIALS_AND_SECRETS.md
 
 # =================================================================
 # BASES DE DATOS (Datos en Runtime)
