@@ -2,6 +2,7 @@
 import httpx
 import asyncio
 from typing import Dict, Any, Optional
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 from .config import settings, get_logger
 
 logger = get_logger("Client")
@@ -18,6 +19,12 @@ class EvolutionClient:
         }
         # Singleton http client could be managed here or per request depending on usage
     
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1, min=2, max=10),
+        retry=retry_if_exception_type((httpx.ConnectTimeout, httpx.ReadTimeout, httpx.ConnectError)),
+        reraise=True
+    )
     async def _request(self, method: str, endpoint: str, payload: Optional[Dict] = None) -> Dict[str, Any]:
         """
         Ejecuta una petición HTTP con manejo centralizado de excepciones y códigos de estado.
@@ -56,15 +63,20 @@ class EvolutionClient:
             elif status == 404:
                 return {"error": True, "code": 404, "message": "Endpoint or Resource Not Found"}
             
+            # Para errores de servidor (5xx), podríamos querer que el retry lo capture si quitamos el return aquí
+            # pero tenacity funciona sobre excepciones. Si queremos retry en 503, debemos lanzar excepción.
+            if status in [500, 502, 503, 504]:
+                 raise e # Dejar que tenacity capture
+            
             return {"error": True, "code": status, "message": error_text}
             
         except httpx.RequestError as e:
-            # Errores de red, DNS, Timeout
-            logger.error(f"Network Error: {str(e)}")
-            return {"error": True, "code": 0, "message": f"Network Error: {str(e)}"}
+            # Errores de red, DNS, Timeout -> Tenacity los capturará
+            logger.warning(f"Network Error (Retrying...): {str(e)}")
+            raise e
             
         except Exception as e:
-            # Errores inesperados
+            # Errores inesperados NO se reintentan por defecto salvo config
             logger.exception("Unexpected internal error")
             return {"error": True, "code": -1, "message": str(e)}
 

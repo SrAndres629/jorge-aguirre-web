@@ -124,6 +124,28 @@ services:
         limits:
           memory: 1024M
 
+  evolution_mcp:
+    build:
+      context: .
+      dockerfile: scripts/maintenance/mcp.Dockerfile
+    container_name: evolution_mcp_server
+    restart: always
+    ports:
+      - "8005:8001"
+    env_file:
+      - .env
+    environment:
+      - EVOLUTION_API_URL=http://evolution_api:8080
+    depends_on:
+      evolution_api:
+        condition: service_started
+    networks:
+      - app_network
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
 
 networks:
   app_network:
