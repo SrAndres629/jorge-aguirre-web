@@ -2,7 +2,6 @@
 # DATABASE.PY - Gestión Híbrida PostgreSQL / SQLite
 # Jorge Aguirre Flores Web
 # =================================================================
-import os
 import logging
 import sqlite3
 from typing import Optional, List, Dict, Any
@@ -63,7 +62,7 @@ def get_cursor():
             conn.commit()
         else:
             # SQLite Mode
-            conn = sqlite3.connect("local_fallback.db")
+            conn = sqlite3.connect("database/local_fallback.db")
             # Emular placeholder %s de Postgres
             # SQLite usa ?, así que reemplazamos al vuelo en execute?
             # Mejor: Usamos un wrapper simple

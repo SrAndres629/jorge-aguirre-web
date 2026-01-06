@@ -8,8 +8,9 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
 from app.config import settings
-from app.database import save_visitor, get_visitor_fbclid
-from app.tracking import generate_external_id, generate_fbc, track_pageview
+from app.database import get_visitor_fbclid
+from app.tracking import generate_external_id, generate_fbc
+from app.tasks import save_visitor_task, send_meta_event_task
 from app.services import SERVICES_CONFIG, CONTACT_CONFIG
 
 router = APIRouter()
@@ -25,8 +26,7 @@ async def head_root():
 @router.get("/", response_class=HTMLResponse)
 async def read_root(
     request: Request, 
-    response: Response, 
-    background_tasks: BackgroundTasks
+    response: Response
 ):
     """
     PÁGINA DE INICIO
@@ -61,25 +61,26 @@ async def read_root(
             httponly=True, 
             samesite="lax"
         )
-        # Guardar en DB (task en background)
-        background_tasks.add_task(
-            save_visitor, 
-            external_id, 
-            fbclid, 
-            client_ip, 
-            user_agent, 
-            "pageview"
+        # Guardar en DB (Celery)
+        save_visitor_task.delay(
+            external_id=external_id, 
+            fbclid=fbclid, 
+            client_ip=client_ip, 
+            user_agent=user_agent, 
+            source="pageview",
+            utm_data={} # UTMs should be extracted if needed, but for now empty
         )
     
-    # Enviar PageView a Meta CAPI (task en background)
-    background_tasks.add_task(
-        track_pageview,
-        current_url,
-        client_ip,
-        user_agent,
-        event_id,
-        fbclid,
-        external_id
+    # Enviar PageView a Meta CAPI (Celery)
+    send_meta_event_task.delay(
+        event_name="PageView",
+        event_source_url=current_url,
+        client_ip=client_ip,
+        user_agent=user_agent,
+        event_id=event_id,
+        fbclid=fbclid,
+        external_id=external_id,
+        custom_data={}
     )
     
     return templates.TemplateResponse("index.html", {

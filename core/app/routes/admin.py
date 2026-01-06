@@ -9,7 +9,7 @@ from fastapi.templating import Jinja2Templates
 from app.config import settings
 from app.models import ConfirmSaleResponse, ErrorResponse
 from app.database import get_all_visitors, get_visitor_by_id
-from app.tracking import track_purchase
+from app.tasks import send_meta_event_task
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
 templates = Jinja2Templates(directory="templates")
@@ -69,23 +69,23 @@ async def confirm_sale(visitor_id: int, key: str = ""):
             status_code=404
         )
     
-    # Enviar Purchase a Meta CAPI
-    success = track_purchase(
-        external_id=visitor.get("external_id"),
+    # Enviar Purchase a Meta CAPI (Background)
+    send_meta_event_task.delay(
+        event_name="Purchase",
+        event_source_url=f"{settings.HOST}/admin",
+        client_ip="127.0.0.1",
+        user_agent="Admin Dashboard",
+        event_id=f"purchase_{visitor_id}_{int(time.time())}",
         fbclid=visitor.get("fbclid"),
-        value=350.00,
-        currency="USD"
+        external_id=visitor.get("external_id"),
+        custom_data={
+            "value": 350.00,
+            "currency": "USD"
+        }
     )
     
-    if success:
-        return JSONResponse({
-            "status": "success",
-            "visitor_id": visitor_id,
-            "value": 350,
-            "event_id": f"purchase_{visitor_id}"
-        })
-    else:
-        return JSONResponse(
-            {"status": "error", "error": "Error enviando a Meta CAPI"},
-            status_code=500
-        )
+    return JSONResponse({
+        "status": "success",
+        "visitor_id": visitor_id,
+        "message": "Evento Purchase encolado correctamente"
+    })
