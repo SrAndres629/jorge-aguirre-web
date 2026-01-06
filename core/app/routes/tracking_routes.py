@@ -55,20 +55,19 @@ async def process_tracking_event(event: TrackingEvent, request: Request, backgro
     }
     
     # 1. PERSISTENCE (Anonymous Visitors Table)
-    try:
-        save_visitor(
-            external_id=external_id or "anon",
-            fbclid=fbclid,
-            ip_address=client_ip,
-            user_agent=user_agent,
-            source=event.event_name,
-            utm_data=utm_data
-        )
-    except Exception as e:
-        logger.error(f"❌ DB Save Error: {e}")
+    from app.tasks import save_visitor_task, upsert_contact_task, send_meta_event_task, send_n8n_webhook_task
+
+    # Enqueue Visitor Save (Non-blocking)
+    save_visitor_task.delay(
+        external_id=external_id or "anon",
+        fbclid=fbclid,
+        client_ip=client_ip,
+        user_agent=user_agent,
+        source=event.event_name,
+        utm_data=utm_data
+    )
 
     # 2. LEAD PERSISTENCE (Contacts Table - CRM)
-    # If we have a phone number (e.g. from a form or external_id matching system)
     phone = custom_data.get('phone') or event.user_data.get('phone')
     if event.event_name == 'Lead' and phone:
         contact_payload = {
@@ -77,11 +76,10 @@ async def process_tracking_event(event: TrackingEvent, request: Request, backgro
             'fbclid': fbclid,
             **utm_data
         }
-        background_tasks.add_task(upsert_contact, contact_payload)
+        upsert_contact_task.delay(contact_payload)
 
-    # 3. CAPI (Background)
-    background_tasks.add_task(
-        send_event,
+    # 3. CAPI (Background via Worker)
+    send_meta_event_task.delay(
         event_name=event.event_name,
         event_source_url=event.event_source_url,
         client_ip=client_ip,
@@ -92,12 +90,12 @@ async def process_tracking_event(event: TrackingEvent, request: Request, backgro
         custom_data=event.custom_data
     )
     
-    # 4. ORCHESTRATION (n8n Webhook)
+    # 4. ORCHESTRATION (n8n Webhook via Worker)
     IMPORTANT_EVENTS = ['Lead', 'Purchase', 'SliderInteraction']
     if event.event_name in IMPORTANT_EVENTS:
-        webhook_payload = event.dict()
+        webhook_payload = event.model_dump() # Pydantic v2 uses model_dump(), previously dict()
         webhook_payload['utm_data'] = utm_data
-        background_tasks.add_task(send_n8n_webhook, webhook_payload)
+        send_n8n_webhook_task.delay(webhook_payload)
     
     return {"status": "queued", "event_id": event.event_id}
 

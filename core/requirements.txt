@@ -10,3 +10,8 @@ pydantic==2.6.0
 pydantic-settings==2.1.0
 itsdangerous==2.1.2
 requests==2.31.0
+# Observability
+sentry-sdk[fastapi]==1.40.0
+# Async Worker
+celery==5.3.6
+redis==5.0.1
