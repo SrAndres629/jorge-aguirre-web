@@ -5,7 +5,7 @@ services:
     region: oregon
     plan: free
     dockerContext: .
-    dockerfilePath: infrastructure/docker/app.Dockerfile
+    dockerfilePath: Dockerfile
     healthCheckPath: /health
     envVars:
       - key: PORT
