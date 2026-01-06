@@ -33,16 +33,34 @@ services:
       - ./evolution_pgdata:/var/lib/postgresql/data
     networks:
       - app_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U evolution"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 512M
 
   redis_evolution:
     image: redis:alpine
     container_name: redis_evolution
-    command: redis-server --appendonly yes
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
     restart: always
     volumes:
       - ./evolution_redis:/data
     networks:
       - app_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 256M
 
   evolution_api:
     container_name: evolution_api
@@ -51,8 +69,10 @@ services:
     ports:
       - "8081:8080"
     depends_on:
-      - postgres_evolution
-      - redis_evolution
+      postgres_evolution:
+        condition: service_healthy
+      redis_evolution:
+        condition: service_healthy
     environment:
       - AUTHENTICATION_API_KEY=B89599B2-37E4-4DCA-92D3-87F8674C7D69
       - SERVER_URL=http://evolution_api:8080
@@ -63,10 +83,15 @@ services:
       - CACHE_REDIS_ENABLED=true
       - CACHE_REDIS_URI=redis://redis_evolution:6379/0
       - CACHE_LOCAL_ENABLED=false
+      - DEL_INSTANCE=false
     volumes:
       - ./evolution_store:/evolution_store
     networks:
       - app_network
+    deploy:
+      resources:
+        limits:
+          memory: 512M
 
   n8n:
     image: n8nio/n8n:latest
@@ -81,6 +106,7 @@ services:
       - NODE_ENV=production
       - WEBHOOK_URL=http://n8n:5678/
       - GENERIC_TIMEZONE=America/La_Paz
+      - N8N_PAYLOAD_SIZE_MAX=16
     dns:
       - 8.8.8.8
       - 1.1.1.1
@@ -88,6 +114,10 @@ services:
       - ./n8n_data:/home/node/.n8n
     networks:
       - app_network
+    deploy:
+      resources:
+        limits:
+          memory: 1024M
 
 
 networks:
