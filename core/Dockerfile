@@ -41,6 +41,6 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
     CMD curl -f http://localhost:$PORT/ || exit 1
 
 # Comando de inicio predeterminado (Producción)
-# Nota: docker-compose.yml sobrescribe esto en desarrollo para habilitar --reload
-CMD sh -c "gunicorn -w 4 -k uvicorn.workers.UvicornWorker main:app --bind 0.0.0.0:$PORT"
+# Nota: Reducimos workers a 2 y aumentamos timeout a 90s para evitar OOM/Timeout en Render Free
+CMD gunicorn -w 2 -k uvicorn.workers.UvicornWorker main:app --bind 0.0.0.0:$PORT --timeout 90
 
