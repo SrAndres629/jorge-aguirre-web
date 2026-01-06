@@ -21,14 +21,14 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
+        pip install -r core/requirements.txt
         pip install pylint pytest httpx
         
     - name: Lint with Pylint
       run: |
-        # Run pylint on app folder, failing on errors only
-        pylint --disable=C,R,W app/ || true 
+        # Run pylint on core/app folder, failing on errors only
+        pylint --disable=C,R,W core/app/ || true 
         
     - name: Test Docker Build
       run: |
-        docker build . --file Dockerfile --tag jorge-web:latest
+        docker build ./core --file core/Dockerfile --tag jorge-web:latest
