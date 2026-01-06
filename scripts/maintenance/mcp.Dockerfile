@@ -11,7 +11,6 @@ RUN pip install --no-cache-dir --upgrade pip
 
 # Copy only the MCP package and dependencies logic first (caching)
 COPY scripts/maintenance/evolution_mcp /app/scripts/maintenance/evolution_mcp
-COPY scripts/maintenance/run_mcp.py /app/run.py
 
 # Install dependencies
 # We list them explicitly here to avoid copying full requirements.txt which might have heavy web deps
@@ -27,4 +26,4 @@ RUN pip install --no-cache-dir \
 EXPOSE 8001
 
 # Run the SSE server
-CMD ["python", "run.py"]
+CMD ["python", "scripts/maintenance/evolution_mcp/main.py"]
