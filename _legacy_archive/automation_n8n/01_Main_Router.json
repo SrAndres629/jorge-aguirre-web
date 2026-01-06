@@ -1,0 +1,126 @@
+{
+    "name": "01_Main_Router",
+    "nodes": [
+        {
+            "parameters": {
+                "httpMethod": "POST",
+                "path": "whatsapp-inbound",
+                "responseMode": "lastNode",
+                "options": {}
+            },
+            "name": "Webhook",
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 1,
+            "position": [
+                460,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "operation": "executeQuery",
+                "query": "INSERT INTO contacts (whatsapp_number, last_interaction)\nVALUES ($1, NOW())\nON CONFLICT (whatsapp_number)\nDO UPDATE SET last_interaction = NOW()\nRETURNING id, full_name, status, lead_score, pain_point;",
+                "additionalFields": {
+                    "queryParams": "={{ $json.body.data.key.remoteJid || $json.body.from }}"
+                }
+            },
+            "name": "Upsert Contact",
+            "type": "n8n-nodes-base.postgres",
+            "typeVersion": 1,
+            "position": [
+                680,
+                300
+            ],
+            "credentials": {
+                "postgres": {
+                    "id": "postgres_cred",
+                    "name": "Local Postgres"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "operation": "executeQuery",
+                "query": "SELECT role, content FROM messages WHERE contact_id = $1 ORDER BY created_at DESC LIMIT 10;",
+                "additionalFields": {
+                    "queryParams": "={{ $json.id }}"
+                }
+            },
+            "name": "Get History",
+            "type": "n8n-nodes-base.postgres",
+            "typeVersion": 1,
+            "position": [
+                900,
+                300
+            ],
+            "credentials": {
+                "postgres": {
+                    "id": "postgres_cred",
+                    "name": "Local Postgres"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "dataType": "string",
+                "value1": "={{ $json.status }}",
+                "rules": {
+                    "rules": [
+                        {
+                            "value2": "new,interested,nurturing,ghost,archived",
+                            "output": 0,
+                            "operation": "contains"
+                        },
+                        {
+                            "value2": "booked,client_active,client_loyal",
+                            "output": 1,
+                            "operation": "contains"
+                        }
+                    ]
+                }
+            },
+            "name": "Router",
+            "type": "n8n-nodes-base.switch",
+            "typeVersion": 1,
+            "position": [
+                1120,
+                300
+            ]
+        }
+    ],
+    "connections": {
+        "Webhook": {
+            "main": [
+                [
+                    {
+                        "node": "Upsert Contact",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Upsert Contact": {
+            "main": [
+                [
+                    {
+                        "node": "Get History",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Get History": {
+            "main": [
+                [
+                    {
+                        "node": "Router",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}

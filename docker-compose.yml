@@ -3,13 +3,17 @@ version: '3.8'
 services:
   web:
     build:
-      context: .
+      context: ./core
       dockerfile: Dockerfile
     container_name: jorge-web-dev
     ports:
       - "8000:8000"
     volumes:
-      - .:/app
+      - ./core:/app
+      - /app/evolution_pgdata
+      - /app/evolution_redis
+      - /app/evolution_store
+      - /app/n8n_data
     env_file:
       - .env
     environment:
@@ -20,6 +24,75 @@ services:
     networks:
       - app_network
     restart: unless-stopped
+    
+  postgres_evolution:
+    image: postgres:15-alpine
+    container_name: postgres_evolution
+    restart: always
+    environment:
+      POSTGRES_USER: evolution
+      POSTGRES_PASSWORD: evolution_password
+      POSTGRES_DB: evolution
+    volumes:
+      - ./evolution_pgdata:/var/lib/postgresql/data
+    networks:
+      - app_network
+
+  redis_evolution:
+    image: redis:alpine
+    container_name: redis_evolution
+    command: redis-server --appendonly yes
+    restart: always
+    volumes:
+      - ./evolution_redis:/data
+    networks:
+      - app_network
+
+  evolution_api:
+    container_name: evolution_api
+    image: evoapicloud/evolution-api:latest
+    restart: always
+    ports:
+      - "8081:8080"
+    depends_on:
+      - postgres_evolution
+      - redis_evolution
+    environment:
+      - AUTHENTICATION_API_KEY=B89599B2-37E4-4DCA-92D3-87F8674C7D69
+      - SERVER_URL=http://evolution_api:8080
+      - CONFIG_SESSION_PHONE_VERSION=2.3000.1023204200
+      - DATABASE_PROVIDER=postgresql
+      - DATABASE_CONNECTION_URI=postgresql://evolution:evolution_password@postgres_evolution:5432/evolution
+      - DATABASE_Client=postgresql
+      - CACHE_REDIS_ENABLED=true
+      - CACHE_REDIS_URI=redis://redis_evolution:6379/0
+      - CACHE_LOCAL_ENABLED=false
+    volumes:
+      - ./evolution_store:/evolution_store
+    networks:
+      - app_network
+
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: n8n_automation
+    restart: always
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_HOST=0.0.0.0
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - NODE_ENV=production
+      - WEBHOOK_URL=http://n8n:5678/
+      - GENERIC_TIMEZONE=America/La_Paz
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    volumes:
+      - ./n8n_data:/home/node/.n8n
+    networks:
+      - app_network
+
 
 networks:
   app_network:

@@ -77,11 +77,18 @@ Visita `http://127.0.0.1:8000`
 
 ## 🐢 Desarrollo Legacy (Manual)
 
-Si no puedes usar Docker, puedes ejecutarlo manualmente (No recomendado):
-1. `python -m venv venv`
-2. `.\venv\Scripts\activate`
-3. `pip install -r requirements.txt`
-4. `uvicorn main:app --reload`
+Si no puedes usar Docker, puedes ejecutarlo manualmente desde `/core`:
+
+```bash
+cd core
+python -m venv venv
+.\venv\Scripts\activate  # Windows
+# o: source venv/bin/activate  # Linux/Mac
+pip install -r requirements.txt
+uvicorn main:app --reload
+```
+
+Visita `http://localhost:8000`
 
 ---
 
@@ -113,22 +120,114 @@ La configuración está automatizada mediante `render.yaml`.
 
 ## 📂 Estructura del Proyecto
 
+> **Nueva Arquitectura Profesional** (2026-01-06)  
+> El proyecto ha sido reestructurado para separar código de producción de activos de desarrollo.  
+> Ver [STRUCTURE.md](./STRUCTURE.md) para documentación completa.
+
 ```text
-.
-├── app/
-│   ├── routes/         # Endpoints (FastAPI)
-│   ├── services/       # Lógica de negocio y configs
-│   └── templates/      # (Legacy path, templates están en raíz)
-├── static/
-│   ├── css/            # CSS compilado (output.css)
-│   ├── js/             # Lógica Frontend (ui.js, motion.js)
-│   └── images/         # Assets optimizados (WebP)
-├── templates/          # HTML Jinja2 (index.html, robots.txt)
-├── Dockerfile          # Configuración de imagen Docker (Prod)
-├── render.yaml         # Blueprint para Render.com
-├── requirements.txt    # Dependencias Python
-└── tailwind.config.js  # Configuración del Design System
+/jorge-aguirre-web
+├── core/                   # 🚀 CÓDIGO DE PRODUCCIÓN
+│   ├── app/               # Lógica de negocio Python
+│   │   ├── routes/        # Endpoints FastAPI
+│   │   ├── config.py      # Configuración
+│   │   ├── database.py    # Conexión Supabase
+│   │   ├── models.py      # Schemas Pydantic
+│   │   └── tracking.py    # Meta CAPI
+│   ├── static/            # Assets (CSS, JS, Imágenes)
+│   ├── templates/         # HTML Jinja2
+│   ├── main.py           # Entry point
+│   ├── requirements.txt  # Dependencias
+│   ├── Dockerfile        # Build production
+│   └── Procfile          # Comando Render
+│
+├── database/              # 📊 Scripts SQL
+│   └── migrations/       # Migraciones
+│
+├── automation/            # 🤖 Workflows n8n
+│   └── workflows_json/   # Exportaciones JSON
+│
+├── scripts/               # 🔧 Utilidades
+│   ├── maintenance/      # Scripts de mantenimiento
+│   └── utils/            # Herramientas de desarrollo
+│
+├── docs/                  # 📚 Documentación
+│   └── audits/           # Reportes de rendimiento
+│
+├── .env.example          # Plantilla de variables
+├── .gitignore            # Seguridad (enterprise-grade)
+├── STRUCTURE.md          # Documentación de arquitectura
+└── docker-compose.yml    # Orquestación local
 ```
+
+---
+
+## 🔄 Git Workflow (Protocolo Jorge Aguirre)
+
+Este proyecto sigue una **estrategia de ramas** para garantizar que el código en producción esté auditado.
+
+### Ramas Principales
+
+| Rama | Propósito | Conectada a Render |
+|------|-----------|-------------------|
+| `main` | **Producción** - Solo código auditado | ✅ SÍ |
+| `develop` | **Desarrollo** - Trabajo diario | ❌ NO |
+
+### Workflow de Desarrollo
+
+1. **Trabajar en `develop`**:
+   ```bash
+   git checkout develop
+   git add .
+   git commit -m "feat: nueva funcionalidad"
+   git push origin develop
+   ```
+
+2. **Después de pasar Auditoría (Fase 2B del Protocolo)**:
+   ```bash
+   git checkout main
+   git merge develop
+   git push origin main  # ✅ Render se actualiza automáticamente
+   ```
+
+3. **Volver a desarrollo**:
+   ```bash
+   git checkout develop
+   ```
+
+---
+
+## ☁️ Configuración de Render
+
+### Settings Requeridos
+
+1. **Branch**: `main`
+2. **Root Directory**: `core` ← **CRÍTICO: Apunta solo al código de producción**
+3. **Build Command**: `pip install -r requirements.txt`
+4. **Start Command**: (Auto-detectado desde `Procfile`)
+
+### Variables de Entorno (Render Dashboard)
+
+Configura estas variables en **Render → Settings → Environment**:
+
+```bash
+# Base de datos
+DATABASE_URL=postgresql://...
+
+# Meta Marketing API
+META_PIXEL_ID=your_pixel_id
+META_ACCESS_TOKEN=your_token
+
+# WhatsApp (Evolution API)
+EVOLUTION_API_URL=https://...
+EVOLUTION_API_KEY=your_key
+
+# n8n Automation
+N8N_WEBHOOK_URL=https://...
+```
+
+> Ver `.env.example` para la lista completa de variables.
+
+---
 
 ---
 

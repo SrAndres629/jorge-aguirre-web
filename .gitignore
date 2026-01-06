@@ -1,42 +1,76 @@
-# Python
+# =================================================================
+# DATOS SENSIBLES (NUNCA SUBIR)
+# =================================================================
+.env
+.env.local
+.env.production
+.env.test
+*.key
+*.pem
+CREDENTIALS_AND_SECRETS.md
+
+# =================================================================
+# BASES DE DATOS (Datos en Runtime)
+# =================================================================
+*.db
+*.sqlite
+*.sqlite3
+local_fallback.db
+evolution_pgdata/
+evolution_redis/
+evolution_store/
+n8n_data/
+
+# =================================================================
+# PYTHON
+# =================================================================
 __pycache__/
 *.py[cod]
 *$py.class
 venv/
 .venv/
 env/
+*.egg-info/
+dist/
+build/
 
-# Environment Variables (Security)
-.env
-.env.local
-
-# Node
+# =================================================================
+# NODE.JS
+# =================================================================
 node_modules/
 npm-debug.log
+yarn-error.log
+.npm/
 
-# Private Assets (Local Only)
-design_assets/
-raw_images/
-docs/private/
-brain/
+# =================================================================
+# REPORTES Y AUDITORÍAS (Se regeneran)
+# =================================================================
+*.report.html
+*.report.json
+coverage/
+.pytest_cache/
 
-# System
+# =================================================================
+# SISTEMA OPERATIVO
+# =================================================================
 .DS_Store
 Thumbs.db
 *.log
 *.tmp
+.vscode/
+.idea/
 
-# Design Source Files (High File Size)
+# =================================================================
+# DISEÑO (Archivos pesados)
+# =================================================================
 *.psd
 *.ai
 *.fig
-*.raw
 *.sketch
-design_backups/
+design_assets/
+raw_images/
 
-# Production Secrets
-.env.production
-.env.test
-
-# Output artifacts that are built (Optional - depends on deployment strategy)
-# static/css/output.css # Mantener comentado si despliegas archivos estáticos
+# =================================================================
+# BRAIN (Antigravity Artifacts)
+# =================================================================
+brain/
