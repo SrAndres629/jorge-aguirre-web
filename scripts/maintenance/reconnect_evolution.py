@@ -74,17 +74,20 @@ async def setup():
         # 4. Configure Webhook
         print("\n4️⃣  Configuring Webhook...")
         webhook_payload = {
-            "url": WEBHOOK_URL,
-            "enabled": True,
-            "events": [
-                "MESSAGES_UPSERT",
-                "MESSAGES_UPDATE",
-                "SEND_MESSAGE",
-                "CONNECTION_UPDATE",
-                "PRESENCE_UPDATE",
-                "CHATS_SET",
-                "CHATS_UPSERT"
-            ]
+            "webhook": {
+                "url": WEBHOOK_URL,
+                "enabled": True,
+                "webhookByEvents": False,
+                "events": [
+                    "MESSAGES_UPSERT",
+                    "MESSAGES_UPDATE",
+                    "SEND_MESSAGE",
+                    "CONNECTION_UPDATE",
+                    "PRESENCE_UPDATE",
+                    "CHATS_SET",
+                    "CHATS_UPSERT"
+                ]
+            }
         }
         try:
             res = await client.post(f"{BASE_URL}/webhook/set/{INSTANCE_NAME}", json=webhook_payload)
@@ -92,8 +95,54 @@ async def setup():
         except Exception as e:
             print(f"   Failed to set webhook: {e}")
 
-    print("\n✅ Setup Complete!")
-    print("👉 Go to Evolution Manager or check logs to scan the QR Code.")
+        except Exception as e:
+            print(f"   Failed to set webhook: {e}")
+
+    # 5. Interactive Connection Loop
+    print("\n5️⃣  Checking Connection Status...")
+    qr_opened = False
+    async with httpx.AsyncClient(headers={"apikey": API_KEY}, timeout=30.0) as client:
+        while True:
+            try:
+                res = await client.get(f"{BASE_URL}/instance/connectionState/{INSTANCE_NAME}")
+                state = res.json().get('instance', {}).get('state')
+                
+                if state == 'open':
+                    print("\n✅ PHONE CONNECTED! Continuing...")
+                    break
+                
+                if state == 'close' or state == 'connecting':
+                    print(f"   Current State: {state}. Fetching QR Code...")
+                    
+                    import base64
+                    
+                    # fetch base64
+                    qr_res = await client.get(f"{BASE_URL}/instance/connect/{INSTANCE_NAME}")
+                    if qr_res.status_code == 200:
+                        data = qr_res.json()
+                        if 'base64' in data:
+                            b64 = data['base64'].replace('data:image/png;base64,', '')
+                            with open("qr_code.png", "wb") as f:
+                                f.write(base64.b64decode(b64))
+                            
+                            if not qr_opened:
+                                print("   🖥️  Opening QR Code image...")
+                                os.startfile("qr_code.png")
+                                qr_opened = True
+                        elif 'code' in data:
+                             pass
+                    
+                    print("   ⏳ Waiting for scan... (checking in 5s)")
+                    await asyncio.sleep(5)
+                else:
+                    print(f"   State: {state}...")
+                    await asyncio.sleep(2)
+
+            except Exception as e:
+                print(f"   Error checking status: {e}")
+                await asyncio.sleep(5)
+
+    print("\n✅ Setup & Connection Complete!")
 
 if __name__ == "__main__":
     asyncio.run(setup())

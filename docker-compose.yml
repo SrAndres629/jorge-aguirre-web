@@ -40,7 +40,6 @@ services:
       - .env
     depends_on:
       - redis_evolution
-      - postgres_evolution
     volumes:
       - ./core:/app
     networks:
@@ -66,28 +65,6 @@ services:
     depends_on:
       - redis_evolution
 
-
-  postgres_evolution:
-    image: postgres:15-alpine
-    container_name: postgres_evolution
-    restart: always
-    environment:
-      POSTGRES_USER: evolution
-      POSTGRES_PASSWORD: evolution_password
-      POSTGRES_DB: evolution
-    volumes:
-      - ./evolution_pgdata:/var/lib/postgresql/data
-    networks:
-      - app_network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U evolution"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-    deploy:
-      resources:
-        limits:
-          memory: 512M
 
   redis_evolution:
     image: redis:alpine
@@ -115,17 +92,17 @@ services:
     ports:
       - "8081:8080"
     depends_on:
-      postgres_evolution:
-        condition: service_healthy
       redis_evolution:
         condition: service_healthy
+    env_file:
+      - .env
     environment:
       - AUTHENTICATION_API_KEY=${EVOLUTION_API_KEY}
       - SERVER_URL=http://evolution_api:8080
       - CONFIG_SESSION_PHONE_VERSION=2.3000.1023204200
       - DATABASE_PROVIDER=postgresql
-      - DATABASE_CONNECTION_URI=postgresql://evolution:evolution_password@postgres_evolution:5432/evolution
-      - DATABASE_Client=postgresql
+      - DATABASE_CONNECTION_URI=${DATABASE_URL}
+      - DATABASE_CLIENT=postgresql
       - CACHE_REDIS_ENABLED=true
       - CACHE_REDIS_URI=redis://redis_evolution:6379/0
       - CACHE_LOCAL_ENABLED=false
