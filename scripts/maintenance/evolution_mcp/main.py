@@ -2,7 +2,7 @@
 from mcp.server.fastmcp import FastMCP
 import asyncio
 # Import tools logic
-from .tools import messaging, instances, social, webhooks
+from tools import messaging, instances, social, webhooks
 
 # Initialize Server
 mcp = FastMCP("Evolution API Manager 3.0 (Full Suite)")
