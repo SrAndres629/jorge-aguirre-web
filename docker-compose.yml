@@ -7,7 +7,7 @@ services:
   web:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: infrastructure/docker/app.Dockerfile
     container_name: jorge-web-dev
     restart: unless-stopped
     ports:
@@ -39,7 +39,7 @@ services:
   worker:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: infrastructure/docker/app.Dockerfile
     container_name: jorge-web-worker
     restart: always
     volumes:
