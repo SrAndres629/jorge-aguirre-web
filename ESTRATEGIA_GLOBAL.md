@@ -1,47 +1,33 @@
-# 🧠 ESTRATEGIA GLOBAL: Sistema Autónomo "Jorge Aguirre"
+# ESTRATEGIA_GLOBAL.md
+## 🏛️ Arquitectura de Sistema Autónomo Integral (ASAI) v1.0
 
-## 1. Visión del Sistema
-Este documento define la arquitectura de un sistema autónomo diseñado para operar, mantener y evolucionar la infraestructura digital de "Jorge Aguirre". El sistema no es una herramienta pasiva, sino un **organismo digital cooperativo** compuesto por tres agentes especializados que interactúan a través de protocolos estrictos.
+### 🎯 Visión
+Crear un ecosistema de automatización perpetua que unifique la adquisición (Meta Ads), la conversión (WhatsApp/Evolution API) y la orquestación lógica (n8n), sostenido por una inteligencia persistente (Qwen/SSH) que opera sobre una infraestructura contenerizada (Docker/Render).
 
-## 2. Arquitectura de la Triada (Los Agentes)
+### 🔄 La Triada de Agentes (Flujo de Trabajo)
+El sistema opera bajo un ciclo continuo de tres fases, gestionado por agentes especializados:
 
-El sistema se divide en tres roles funcionales. Cada rol es asumido por la IA (Gemini/Antigravity/Qwen) dependiendo del contexto de la tarea.
+1.  **🧠 Agente ALPHA (Planificación & Arquitectura):**
+    * **Rol:** Define *qué* se debe hacer. Mantiene el estado global y la coherencia de la base de datos.
+    * **Herramienta Principal:** Memoria Persistente (RAG/Archivos Markdown de Contexto).
+    * **Output:** Especificaciones técnicas en `/docs/specs`.
 
-### 🔵 [Módulo 1: PLANIFICACIÓN (El Arquitecto)](./MODULO_PLANIFICACION.md)
-*   **Responsabilidad:** Estrategia, análisis de requisitos, diseño de flujos y "Mundo Ideal".
-*   **Herramientas:** `n8n-architect`, `mcp-memory`, Análisis de Logica.
-*   **Output:** `implementation_plan.md`, Diagramas, Grafos de Decisión.
+2.  **🛠️ Agente BETA (Desarrollo & Ejecución - "Antigravity"):**
+    * **Rol:** Ejecuta el *cómo*. Escribe código, configura n8n vía API, y gestiona la conexión SSH con Qwen para ediciones complejas en `/core`.
+    * **Herramienta Principal:** SSH, MCP de Sistema de Archivos, Evolution API Client.
+    * **Output:** Código funcional y contenedores Docker.
 
-### 🔴 [Módulo 2: DESARROLLO (El Constructor)](./MODULO_DESARROLLO.md)
-*   **Responsabilidad:** Escritura de código, integración de APIs, refactorización y ejecución técnica.
-*   **Herramientas:** `aider`, `docker-exec`, `ssh`, Python, JS.
-*   **Output:** Commits, Código Funcional, Contenedores Docker activos.
+3.  **🛡️ Agente GAMMA (Auditoría & Despliegue):**
+    * **Rol:** Valida la integridad. Asegura que los volúmenes de Docker sean persistentes y que Render esté sincronizado.
+    * **Herramienta Principal:** Logs de Docker, Tests Unitarios, Monitor de Estado.
+    * **Output:** Aprobación de despliegue y Rollbacks.
 
-### 🟢 [Módulo 3: AUDITORÍA (El Guardián)](./MODULO_AUDITORIA_DESPLIEGUE.md)
-*   **Responsabilidad:** Validación, seguridad, pruebas de humo, despliegue y "Realidad Actual".
-*   **Herramientas:** `curl`, Pruebas unitarias, `sentry`, `logs`, Logs de Docker.
-*   **Output:** `walkthrough.md`, Reportes de Estado, Aprobación de Despliegue.
+### 🔗 Integración de Infraestructura
+* **Cortex (Cerebro):** Instancia Qwen accediendo a codebase vía SSH.
+* **Nervios (Transmisión):** n8n orquestando webhooks entre Meta y Evolution API.
+* **Cuerpo (Ejecución):** Docker containers en Render (Staging) con volúmenes persistentes para evitar amnesia del sistema.
 
-## 3. Flujo de Trabajo (El Ciclo Vital)
-
-Todas las tareas complejas deben seguir este ciclo:
-
-1.  **Input:** Solicitud del Usuario o Disparador Automático (Alerta, Cron).
-2.  **Fase Azul (Arquitecto):** Se analiza el impacto y se actualiza el `ESTRATEGIA_GLOBAL.md` si es necesario. Se crea un plan.
-3.  **Fase Roja (Constructor):** Se escribe el código en iteraciones cortas. El agente `antigravity` (Qwen) puede ser invocado vía SSH para tareas pesadas.
-4.  **Fase Verde (Guardián):** Se audita el código. Si falla, regresa a la Fase Roja. Si pasa, se marca como listo.
-5.  **Memoria:** Se registran los logros y lecciones aprendidas en el sistema de memoria persistente.
-
-## 4. Infraestructura Base
-
-El sistema vive sobre una infraestructura Dockerizada:
--   **Cerebro:** `antigravity_brain` (Qwen + Aider + SSH).
--   **Nervios:** `n8n` (Orquestación de webhooks y lógica).
--   **Voz:** `evolution_api` (WhatsApp).
--   **Cuerpo:** `jorge-web` (FastAPI + React/Frontend).
-
-## 5. Protocolo de Emergencia
-Si un agente se bloquea o entra en bucle:
-1.  El Guardián detecta la anomalía.
-2.  Se notifica al Usuario vía WhatsApp (Evolution).
-3.  Se revierte al último estado estable conocido (Git/Docker volume).
+### 📍 Índice de Módulos Activos
+* [01-PLAN] Modelo de Datos y Flujo de Conversación (`MODULO_PLANIFICACION.md`)
+* [02-DEV] Integración Evolution API & n8n (`MODULO_DESARROLLO.md`)
+* [03-OPS] Persistencia y Despliegue (`MODULO_AUDITORIA_DESPLIEGUE.md`)

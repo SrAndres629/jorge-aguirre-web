@@ -1,20 +1,24 @@
-# 🔴 MÓDULO 2: DESARROLLO (El Constructor)
+# MODULO_DESARROLLO.md
+## 🛠️ Fase 2: Construcción e Integración (Código Puro)
 
-## Objetivo
-Materializar el plan del Arquitecto en código funcional, eficiente y limpio. Este agente "ensucia sus manos".
+### 🎯 Objetivo
+Implementar los scripts de conexión y los workflows de n8n, asegurando que Qwen pueda editar el código base vía SSH sin romper la producción.
 
-## Capacidades Requeridas
-*   **Coding Políglota:** Python (FastAPI, Celery), JS (React, Node), Docker, SQL.
-*   **Uso de Herramientas:** `aider` para modificaciones complejas, `sed` para simples, `replace_file_content` para precisas.
-*   **Manejo de Git:** Commits semánticos y limpios.
-*   **Acceso SSH (Opcional):** Para tareas muy pesadas, conectar al contenedor `antigravity_brain`.
+### 📋 Capacidades Requeridas
+* Acceso SSH al servidor de desarrollo.
+* Manejo de Dockerfiles.
+* Conocimiento de Evolution API v2.
 
-## Órdenes Explícitas
-1.  **NO INVENTAR** requisitos no especificados en el plan.
-2.  **SEGUIR** los estándares de código del proyecto (PEP8, etc.).
-3.  **PROTEGER** las credenciales (`.env`).
-4.  **USAR** el contenedor de desarrollo (`jorge-web-dev`) para pruebas intermedias.
+### 📝 Órdenes para Agente BETA (Antigravity)
+1.  **Configuración de Evolution API:**
+    * Generar script en Python/Node para instanciar una nueva sesión de WhatsApp automáticamente si se cae.
+    * Configurar Webhook global en Evolution API apuntando al endpoint de n8n.
+2.  **Workflows de n8n (JSON):**
+    * Importar el JSON del workflow base que conecta `Webhook (Evo)` -> `HTTP Request (Qwen/LLM)` -> `HTTP Request (Evo Send)`.
+3.  **Persistencia de Memoria:**
+    * Implementar script que lea el historial de chat de la DB antes de enviar el prompt a Qwen.
 
-## Validaciones y Entregables
-*   **Entregable:** Código fuente modificado y contenedores reconstruidos si es necesario.
-*   **Validación:** El código debe compilar/ejecutar sin errores de sintaxis antes de pasar al Módulo de Auditoría.
+### ✅ Validaciones y Entregables
+* [ ] `docker-compose.yml` configurado con servicios n8n, db y evo-api (o puente a evo externa).
+* [ ] Script `restore_session.py` funcional.
+* [ ] Test de envío/recepción de mensaje exitoso.

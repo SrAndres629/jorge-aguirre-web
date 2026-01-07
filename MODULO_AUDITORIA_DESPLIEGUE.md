@@ -1,20 +1,24 @@
-# 🟢 MÓDULO 3: AUDITORÍA Y DESPLIEGUE (El Guardián)
+# MODULO_AUDITORIA_DESPLIEGUE.md
+## 🛡️ Fase 3: Validación y Puesta en Producción
 
-## Objetivo
-Asegurar que lo construido no rompa lo existente y cumpla con los estándares de calidad antes de salir a producción. Este agente "no confía, verifica".
+### 🎯 Objetivo
+Garantizar que el sistema sea resiliente. Si Render reinicia el servidor, la "memoria" (sesiones de WhatsApp y base de datos) no debe perderse.
 
-## Capacidades Requeridas
-*   **Testing Automatizado:** `pytest`, verificaciones de integridad de Docker.
-*   **Auditoría de Seguridad:** Escaneo de vulnerabilidades básicas, revisión de puertos.
-*   **Monitorización:** Verificar logs de `celery`, `n8n` y `evolution`.
-*   **Despliegue:** Gestión de reinicios en Docker Compose.
+### 📋 Capacidades Requeridas
+* Gestión de Volúmenes en Docker/Render.
+* Análisis de Logs.
 
-## Órdenes Explícitas
-1.  **BLOQUEAR** cualquier despliegue que falle las pruebas críticas ("Smoke Tests").
-2.  **DOCUMENTAR** los cambios en `walkthrough.md` o el historial de cambios.
-3.  **VERIFICAR** endpoints de salud (`/health`) después de cada cambio.
-4.  **REPORTAR** el estado final al usuario y actualizar el `task.md`.
+### 📝 Órdenes para Agente GAMMA
+1.  **Prueba de Fuego (Chaos Monkey):**
+    * Forzar reinicio del contenedor de n8n.
+    * Verificar si los workflows siguen activos.
+    * Verificar si la sesión de WhatsApp en Evolution API persiste.
+2.  **Verificación de Volúmenes:**
+    * Confirmar que `/root/.n8n` y los datos de Evolution API están montados en volúmenes persistentes (Discos mapeados en Render).
+3.  **Seguridad:**
+    * Auditar que las API KEYS de Meta y Evolution no estén hardcodeadas, sino en `.env`.
 
-## Validaciones y Entregables
-*   **Entregable:** Reporte de éxito (`walkthrough.md` actualizado) y sistema en estado "Verde".
-*   **Validación:** `curl -f http://localhost:8000/health` devuelve 200 OK.
+### ✅ Validaciones y Entregables
+* [ ] Reporte de persistencia aprobado.
+* [ ] Variables de entorno inyectadas correctamente en Render.
+* [ ] `DEPLOY_LOG.md` actualizado con la versión v1.0.
