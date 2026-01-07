@@ -109,4 +109,4 @@ El proyecto está configurado para despliegue automático vía **Docker**. Para 
 ## 📝 Licencia
 
 Este proyecto es propiedad de **Jorge Aguirre Flores**. Todos los derechos reservados.
-Desarrollado con ❤️ por el equipo de ingeniería avanzada.
+Desarrollado para mi amada Natalia. te amo mi vida. por el equipo de ingeniería avanzada.
