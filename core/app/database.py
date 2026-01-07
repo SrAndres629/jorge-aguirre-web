@@ -52,7 +52,6 @@ def init_pool() -> bool:
     return True
 
 @contextmanager
-@contextmanager
 def get_cursor():
     """Obtiene un cursor agnóstico (Postgres o SQLite)"""
     conn = None
