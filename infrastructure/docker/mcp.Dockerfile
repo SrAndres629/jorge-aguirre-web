@@ -21,7 +21,8 @@ RUN pip install --no-cache-dir \
     pydantic \
     pydantic-settings \
     tenacity \
-    textual
+    textual \
+    httpcore
 
 # Copy Scripts
 # Note: Context is Root, so we copy from scripts/

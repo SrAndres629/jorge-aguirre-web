@@ -13,10 +13,13 @@
 # =================================================================
 
 from fastapi import FastAPI
+from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import ORJSONResponse
 from fastapi.middleware.gzip import GZipMiddleware
 import uvicorn
 import logging
+import gc
 
 # Módulos internos
 from app.config import settings
@@ -55,6 +58,7 @@ async def lifespan(app: FastAPI):
     
     # Shutdown
     logger.info("🛑 Deteniendo servidor...")
+    gc.collect()  # Force garbage collection on shutdown
 
 
 # =================================================================
@@ -65,6 +69,7 @@ app = FastAPI(
     title="Jorge Aguirre Flores Web",
     description="Sitio web profesional con tracking Meta CAPI",
     version="2.0.0",
+    default_response_class=ORJSONResponse,
     lifespan=lifespan
 )
 
@@ -109,34 +114,11 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 # app.add_middleware(SlowAPIMiddleware)
 
 # =================================================================
-# ARCHIVOS ESTÁTICOS CON CACHE AGRESIVO
+# ARCHIVOS ESTÁTICOS
 # =================================================================
 
-from starlette.staticfiles import StaticFiles as StarletteStaticFiles
-from starlette.responses import Response
-import os
-
-class CachedStaticFiles(StarletteStaticFiles):
-    """StaticFiles con headers de caché agresivos para WPO"""
-    
-    async def get_response(self, path: str, scope) -> Response:
-        response = await super().get_response(path, scope)
-        
-        # Agregar Cache-Control a todos los recursos
-        ext = os.path.splitext(path)[1].lower()
-        
-        # Imágenes, CSS, JS: caché de 1 año (inmutable)
-        if ext in ['.webp', '.png', '.jpg', '.jpeg', '.gif', '.svg', 
-                   '.css', '.js', '.woff', '.woff2']:
-            response.headers['Cache-Control'] = 'public, max-age=31536000, immutable'
-        else:
-            # Otros archivos: caché más corto
-            response.headers['Cache-Control'] = 'public, max-age=86400'
-        
-        return response
-
-# Montar archivos estáticos con caché
-app.mount("/static", CachedStaticFiles(directory="static"), name="static")
+# Montar archivos estáticos (Standard StaticFiles - Render should handle caching/CDN)
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
 # =================================================================
