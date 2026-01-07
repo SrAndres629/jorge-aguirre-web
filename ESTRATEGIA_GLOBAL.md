@@ -1,33 +1,48 @@
-# ESTRATEGIA_GLOBAL.md
-## 🏛️ Arquitectura de Sistema Autónomo Integral (ASAI) v1.0
+# SYSTEM_AXIOMS.md (formerly ESTRATEGIA_GLOBAL.md)
+## 🏛️ Axiomatic Definition of the Integral Autonomous System (ASAI) $\Sigma$
 
-### 🎯 Visión
-Crear un ecosistema de automatización perpetua que unifique la adquisición (Meta Ads), la conversión (WhatsApp/Evolution API) y la orquestación lógica (n8n), sostenido por una inteligencia persistente (Qwen/SSH) que opera sobre una infraestructura contenerizada (Docker/Render).
+### 1. System Ontology $\Omega$
+The system is defined as a tuple $\Sigma = \langle \mathcal{A}, \mathcal{I}, \mathcal{M}, \Phi \rangle$ where:
+*   $\mathcal{A} = \{ \alpha, \beta, \gamma \}$: The set of autonomous operators (Agents).
+*   $\mathcal{I}$: The Infrastructure Vector Space (Docker, Network, Ports).
+*   $\mathcal{M}$: The Persistent Memory Manifold (Git, Vectors, Logs).
+*   $\Phi$: The Global State Transition Function defined as $\Phi: S_t \times I \rightarrow S_{t+1}$.
 
-### 🔄 La Triada de Agentes (Flujo de Trabajo)
-El sistema opera bajo un ciclo continuo de tres fases, gestionado por agentes especializados:
+### 2. The Operator Triad $\mathcal{A}$
+The system evolves through discrete time steps $t$ driven by the sequential application of operators:
 
-1.  **🧠 Agente ALPHA (Planificación & Arquitectura):**
-    * **Rol:** Define *qué* se debe hacer. Mantiene el estado global y la coherencia de la base de datos.
-    * **Herramienta Principal:** Memoria Persistente (RAG/Archivos Markdown de Contexto).
-    * **Output:** Especificaciones técnicas en `/docs/specs`.
+#### $\alpha$ : The Architect (Function $f_\alpha$)
+*   **Domain:** Abstract Intent $\mathbb{I}$ (User Requests, Business Logic).
+*   **Codomain:** Formal Specification $\mathbb{S}$ (Schemas, Plans, Graphs).
+*   **Axiom:** $\forall i \in \mathbb{I}, \exists s \in \mathbb{S} : f_\alpha(i) = s$.
+*   **Constraint:** Entropy reduction ($\Delta S < 0$).
 
-2.  **🛠️ Agente BETA (Desarrollo & Ejecución - "Antigravity"):**
-    * **Rol:** Ejecuta el *cómo*. Escribe código, configura n8n vía API, y gestiona la conexión SSH con Qwen para ediciones complejas en `/core`.
-    * **Herramienta Principal:** SSH, MCP de Sistema de Archivos, Evolution API Client.
-    * **Output:** Código funcional y contenedores Docker.
+#### $\beta$ : The Constructor (Function $f_\beta$)
+*   **Domain:** Specification $\mathbb{S}$.
+*   **Codomain:** Executable Binary/Code $\mathbb{B}$ (Python, JS, Containers).
+*   **Axiom:** $f_\beta(s) \rightarrow \text{Deployment}(\mathbb{B})$.
+*   **Capability:** SSH Tunneling to $\mathbb{C}_{cortex}$ (Qwen).
 
-3.  **🛡️ Agente GAMMA (Auditoría & Despliegue):**
-    * **Rol:** Valida la integridad. Asegura que los volúmenes de Docker sean persistentes y que Render esté sincronizado.
-    * **Herramienta Principal:** Logs de Docker, Tests Unitarios, Monitor de Estado.
-    * **Output:** Aprobación de despliegue y Rollbacks.
+#### $\gamma$ : The Observer (Function $f_\gamma$)
+*   **Domain:** System State $S_t$.
+*   **Codomain:** Boolean Validation $\{0, 1\}$.
+*   **Axiom:** $f_\gamma(S_t) = 1 \iff \forall c \in \text{Constraints}, c(S_t) \text{ is True}$.
+*   **Action:** If 0, initiate Rollback $R(S_t) \rightarrow S_{t-1}$.
 
-### 🔗 Integración de Infraestructura
-* **Cortex (Cerebro):** Instancia Qwen accediendo a codebase vía SSH.
-* **Nervios (Transmisión):** n8n orquestando webhooks entre Meta y Evolution API.
-* **Cuerpo (Ejecución):** Docker containers en Render (Staging) con volúmenes persistentes para evitar amnesia del sistema.
+### 3. Infrastructure Topology $\mathcal{I}$
+The physical manifestation of $\Sigma$ exists within a Dockerized Hilbert Space:
+*   **Cortex ($C$):** `antigravity_brain` (Compute/Inference).
+*   **Nerve ($N$):** `n8n_automation` (Signal Transduction/Webhooks).
+*   **Soma ($B$):** `jorge_web` (Interface/FastAPI).
+*   **Voice ($V$):** `evolution_api` (External Communication Protocol).
 
-### 📍 Índice de Módulos Activos
-* [01-PLAN] Modelo de Datos y Flujo de Conversación (`MODULO_PLANIFICACION.md`)
-* [02-DEV] Integración Evolution API & n8n (`MODULO_DESARROLLO.md`)
-* [03-OPS] Persistencia y Despliegue (`MODULO_AUDITORIA_DESPLIEGUE.md`)
+### 4. Convergence Criteria
+The system is considered stable if and only if:
+$$ \lim_{t \to \infty} \text{Error}(S_t) = 0 $$
+And the memory persistence $\mathcal{M}$ ensures:
+$$ S_{t+1} \supset S_t \quad (\text{Non-volatile Knowledge Accumulation}) $$
+
+### 5. Active Vectors (Modules)
+*   $\vec{v}_1$: [Operator $\alpha$ Definition](./MODULO_PLANIFICACION.md)
+*   $\vec{v}_2$: [Operator $\beta$ Definition](./MODULO_DESARROLLO.md)
+*   $\vec{v}_3$: [Operator $\gamma$ Definition](./MODULO_AUDITORIA_DESPLIEGUE.md)

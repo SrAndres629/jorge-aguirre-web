@@ -1,24 +1,29 @@
 # MODULO_DESARROLLO.md
-## 🛠️ Fase 2: Construcción e Integración (Código Puro)
+## Operador $\beta$: Construcción y Ejecución (The Constructor)
 
-### 🎯 Objetivo
-Implementar los scripts de conexión y los workflows de n8n, asegurando que Qwen pueda editar el código base vía SSH sin romper la producción.
+### 1. Definición Funcional
+Sea $\beta$ un operador de transformación que aplica la especificación $\mathcal{T}$ sobre el sustrato físico $\mathcal{I}$ (Código/Infraestructura).
+$$ \beta: \mathcal{T} \times \mathcal{I}_t \rightarrow \mathcal{I}_{t+1} $$
 
-### 📋 Capacidades Requeridas
-* Acceso SSH al servidor de desarrollo.
-* Manejo de Dockerfiles.
-* Conocimiento de Evolution API v2.
+### 2. Mecánica de Interacción (SSH Tunneling)
+El operador $\beta$ posee privilegios de acceso al Núcleo Computacional (Cortex / `antigravity_brain`).
+*   **Protocolo:** $\text{SSH}(u, h, p)$ donde $p=2222$.
+*   **Acción:** `exec(script)` sobre el volumen persistente $/app$.
 
-### 📝 Órdenes para Agente BETA (Antigravity)
-1.  **Configuración de Evolution API:**
-    * Generar script en Python/Node para instanciar una nueva sesión de WhatsApp automáticamente si se cae.
-    * Configurar Webhook global en Evolution API apuntando al endpoint de n8n.
-2.  **Workflows de n8n (JSON):**
-    * Importar el JSON del workflow base que conecta `Webhook (Evo)` -> `HTTP Request (Qwen/LLM)` -> `HTTP Request (Evo Send)`.
-3.  **Persistencia de Memoria:**
-    * Implementar script que lea el historial de chat de la DB antes de enviar el prompt a Qwen.
+### 3. Algoritmo de Implementación
+Para ejecutar una tarea $k$:
+1.  **Inicialización:** Instanciar el entorno $\mathbb{E}_{dev}$ (Docker Container).
+2.  **Conexión:** Establecer enlace con Evolution API ($V$).
+    *   $\text{Hook}(V) \rightarrow W_{n8n}$ (Webhook Binding).
+3.  **Codificación:** Generar/Refactorizar código fuente $C$.
+    *   Si $C$ es complejo $\implies$ invocar Qwen vía SSH.
+4.  **Integración:** Inyectar dependencias $\mathcal{D}$ en el contenedor.
 
-### ✅ Validaciones y Entregables
-* [ ] `docker-compose.yml` configurado con servicios n8n, db y evo-api (o puente a evo externa).
-* [ ] Script `restore_session.py` funcional.
-* [ ] Test de envío/recepción de mensaje exitoso.
+### 4. Funciones Críticas
+*   `RestoreSession()`: Función idempotente que garantiza la conectividad de $V$ si $\text{Status}(V) \neq \text{ONLINE}$.
+*   `MemoryRead()`: Leer historial $H$ de la DB antes de inferencia.
+
+### ✅ Vector de Validación
+*   [ ] $\text{ExitCode}(\text{Build}) == 0$.
+*   [ ] $\text{Ping}(\text{EvolutionAPI}) < 100ms$.
+*   [ ] $\exists$ flujo de datos bidireccional $User \leftrightarrow System$.

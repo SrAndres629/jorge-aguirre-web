@@ -1,24 +1,27 @@
 # MODULO_AUDITORIA_DESPLIEGUE.md
-## 🛡️ Fase 3: Validación y Puesta en Producción
+## Operador $\gamma$: Validación y Convergencia (The Guardian)
 
-### 🎯 Objetivo
-Garantizar que el sistema sea resiliente. Si Render reinicia el servidor, la "memoria" (sesiones de WhatsApp y base de datos) no debe perderse.
+### 1. Definición Funcional
+Sea $\gamma$ una función de evaluación que determina la viabilidad del estado del sistema $S_{t+1}$ antes de su confirmación como "Golden State".
+$$ \gamma(S) = \begin{cases} 1 & \text{si } \forall c \in C, c(S) \text{ es Verdadero} \\ 0 & \text{en caso contrario} \end{cases} $$
 
-### 📋 Capacidades Requeridas
-* Gestión de Volúmenes en Docker/Render.
-* Análisis de Logs.
+### 2. Vectores de Prueba (Chaos Engineering)
+La robustez se mide mediante la introducción controlada de entropía:
+*   **Prueba de Resiliencia:** $P_{restart}(x) = x$. El sistema debe retornar al estado nominal tras $x$ reinicios aleatorios.
+*   **Prueba de Amnesia:** Verificar $\mathcal{M}_{persistent}$ (Volúmenes).
+    *   Data en `/root/.n8n` $\neq \emptyset$.
 
-### 📝 Órdenes para Agente GAMMA
-1.  **Prueba de Fuego (Chaos Monkey):**
-    * Forzar reinicio del contenedor de n8n.
-    * Verificar si los workflows siguen activos.
-    * Verificar si la sesión de WhatsApp en Evolution API persiste.
-2.  **Verificación de Volúmenes:**
-    * Confirmar que `/root/.n8n` y los datos de Evolution API están montados en volúmenes persistentes (Discos mapeados en Render).
-3.  **Seguridad:**
-    * Auditar que las API KEYS de Meta y Evolution no estén hardcodeadas, sino en `.env`.
+### 3. Verificación de Seguridad $\Sigma_{sec}$
+*   **Axioma 1:** Ninguna credencial $k$ debe existir en texto plano fuera de `.env`.
+*   **Axioma 2:** Los puertos expuestos $P_{ext}$ deben ser mínimos y necesarios (Principio de Mínimo Privilegio).
 
-### ✅ Validaciones y Entregables
-* [ ] Reporte de persistencia aprobado.
-* [ ] Variables de entorno inyectadas correctamente en Render.
-* [ ] `DEPLOY_LOG.md` actualizado con la versión v1.0.
+### 4. Protocolo de Despliegue (Git Ops)
+Solo si $\gamma(S) = 1$:
+1.  **Commit:** Generar snapshot inmutable del código.
+2.  **Push:** Sincronizar con el repositorio remoto (Origin).
+3.  **Log:** Registrar el evento en `DEPLOY_LOG.md`.
+
+### ✅ Vector de Validación
+*   [ ] `ChaosMonkey(n8n) == Passed`.
+*   [ ] `VolumeCheck(Evolution) == Persistent`.
+*   [ ] `SecurityScan(.env) == Secure`.

@@ -1,23 +1,35 @@
 # MODULO_PLANIFICACION.md
-## 🧠 Fase 1: Definición de Rutas y Datos
+## Operador $\alpha$: Arquitectura y Especificación (The Architect)
 
-### 🎯 Objetivo
-Diseñar la estructura de datos que permitirá a n8n recordar el contexto de un usuario de WhatsApp a través del tiempo, vinculándolo a su origen en Meta Ads.
+### 1. Definición Funcional
+Sea $\alpha$ un operador que mapea el espacio de Intenciones del Usuario ($\mathcal{U}$) al espacio de Especificaciones Técnicas ($\mathcal{T}$).
+$$ \alpha: \mathcal{U} \rightarrow \mathcal{T} $$
 
-### 📋 Capacidades Requeridas
-* Análisis de JSON Schema.
-* Diseño de Bases de Datos (Supabase/PostgreSQL recomendado para n8n).
+### 2. Parámetros del Estado Objetivo
+El operador $\alpha$ es responsable de minimizar la ambigüedad $\epsilon$ en la definición del sistema.
 
-### 📝 Órdenes para Agente ALPHA
-1.  **Esquema de Base de Datos:**
-    * Diseñar tabla `users`: ID, teléfono, nombre, origen (Meta Ad ID), estado_funnel.
-    * Diseñar tabla `conversations`: ID, user_id, timestamp, mensaje, resumen_contextual (generado por AI).
-2.  **Mapeo de Webhooks:**
-    * Definir estructura del payload entrante de Evolution API (WhatsApp).
-    * Definir estructura del payload entrante de Meta Ads (Lead Forms).
-3.  **Lógica de Enrutamiento:**
-    * Crear diagrama de flujo: Si `mensaje` contiene "precio" -> Trigger nodo AI -> Respuesta Venta.
+#### Función de Mapeo de Datos $\Psi_{data}$
+El objetivo es establecer una biyección entre la identidad del usuario en Meta Ads ($u_{meta}$) y su sesión en WhatsApp ($u_{wa}$).
+*   **Entidad:** `User`
+*   **Métrica:** $u_{id} \in \mathbb{R}^+$
+*   **Tupla:** $\langle u_{wa}, u_{meta}, \text{timestamp}, \text{context\_vector} \rangle$
 
-### ✅ Validaciones y Entregables
-* [ ] Archivo `schema.sql` creado en `/database`.
-* [ ] Diagrama MermaidJS del flujo de n8n en `/docs/flow.mermaid`.
+#### Función de Topología de Flujo $\Phi_{flow}$
+Definir el grafo dirigido acíclico (DAG) para n8n:
+$$ G = (V, E) $$
+Donde $V$ son los nodos de procesamiento (Webhooks, AI, Filter) y $E$ son las aristas de datos JSON.
+
+### 3. Protocolo de Ejecución
+Para toda nueva solicitud $req \in \mathcal{U}$:
+1.  **Análisis:** Descomponer $req$ en primitivas atómicas.
+2.  **Síntesis:** Construir el esquema $\mathcal{S}$ (SQL/JSON).
+3.  **Persistencia:** Escribir $\mathcal{S}$ en el vector de memoria `/docs/specs`.
+
+### 4. Invariantes (Reglas Absolutas)
+*   $\forall x \in \text{Output}(\alpha)$: $x$ debe ser determinista.
+*   $\nexists$ alucinación en el esquema de base de datos.
+*   El diseño debe satisfacer $O(1)$ para la recuperación de contexto en tiempo real.
+
+### ✅ Vector de Validación
+*   [ ] $\exists$ `schema.sql` tal que `Validate(schema) == True`.
+*   [ ] $G_{n8n}$ es conexo y libre de ciclos infinitos.
