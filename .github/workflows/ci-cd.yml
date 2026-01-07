@@ -31,4 +31,4 @@ jobs:
         
     - name: Test Docker Build
       run: |
-        docker build ./core --file core/Dockerfile --tag jorge-web:latest
+        docker build . --file infrastructure/docker/app.Dockerfile --tag jorge-web:latest
