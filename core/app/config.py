@@ -33,8 +33,8 @@ class Settings(BaseSettings):
     DATABASE_URL: Optional[str] = None
     
     # Celery & Redis
-    CELERY_BROKER_URL: str = "redis://redis_evolution:6379/1"
-    CELERY_RESULT_BACKEND: str = "redis://redis_evolution:6379/1"
+    CELERY_BROKER_URL: str = os.getenv("CELERY_BROKER_URL", "redis://redis_evolution:6379/1")
+    CELERY_RESULT_BACKEND: str = os.getenv("CELERY_RESULT_BACKEND", "redis://redis_evolution:6379/1")
     
     # Admin Panel
     ADMIN_KEY: str = os.getenv("ADMIN_KEY", "Andromeda2025")

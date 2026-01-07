@@ -273,6 +273,43 @@ def init_tables():
             '''
             cur.execute(sql_appointments)
             
+            # --- Tabla LEADS (W-003 Tracking Rescue) ---
+            sql_leads = f'''
+                CREATE TABLE IF NOT EXISTS leads (
+                    id {id_type_uuid if BACKEND == "postgres" else id_type_serial}, -- Serial fallback for sqlite simple logic or text UUID
+                    whatsapp_phone TEXT UNIQUE NOT NULL,
+                    meta_lead_id TEXT,
+                    click_id TEXT, -- fbclid
+                    email TEXT,
+                    name TEXT,
+                    conversion_status TEXT DEFAULT 'NEW',
+                    created_at TIMESTAMP DEFAULT {timestamp_default},
+                    last_interaction TIMESTAMP DEFAULT {timestamp_default}
+                );
+            '''
+            # Nota: Para SQLite usaremos Logic UUID en el insert si es necesario, pero aqui definimos Schema
+            if BACKEND != "postgres":
+                 # En SQLite preferimos TEXT para ID para consistencia con lógica de python uuid
+                 sql_leads = sql_leads.replace("INTEGER PRIMARY KEY AUTOINCREMENT", "TEXT PRIMARY KEY")
+
+            cur.execute(sql_leads)
+            cur.execute('CREATE INDEX IF NOT EXISTS idx_leads_phone ON leads(whatsapp_phone);')
+            cur.execute('CREATE INDEX IF NOT EXISTS idx_leads_meta_id ON leads(meta_lead_id);')
+
+            # --- Tabla INTERACTIONS (Contexto) ---
+            sql_interactions = f'''
+                CREATE TABLE IF NOT EXISTS interactions (
+                    id {id_type_serial},
+                    lead_id { 'UUID' if BACKEND == "postgres" else 'TEXT' },
+                    role TEXT NOT NULL, -- 'user', 'system', 'assistant'
+                    content TEXT,
+                    timestamp TIMESTAMP DEFAULT {timestamp_default},
+                    FOREIGN KEY (lead_id) REFERENCES leads(id) ON DELETE CASCADE
+                );
+            '''
+            cur.execute(sql_interactions)
+            cur.execute('CREATE INDEX IF NOT EXISTS idx_interactions_lead_id ON interactions(lead_id);')
+            
         logger.info(f"✅ Tablas sincronizadas con Schema Natalia v2.0 ({BACKEND})")
         return True
     except Exception as e:
@@ -497,6 +534,108 @@ def get_visitor_by_id(visitor_id: int) -> Optional[Dict[str, Any]]:
     except Exception as e:
         logger.error(f"❌ Error buscando visitor {visitor_id}: {e}")
     return None
+
+
+
+# =================================================================
+# W-003 TRACKING OPERATIONS (Tracking Rescue)
+# =================================================================
+
+def get_or_create_lead(whatsapp_phone: str, meta_data: Optional[dict] = None) -> Optional[str]:
+    """
+    Obtiene o crea un Lead basado en el teléfono.
+    Vincula datos de Meta (Click ID, Lead ID) si se proveen.
+    Retorna el ID del Lead (UUID string o int string).
+    """
+    if meta_data is None:
+        meta_data = {}
+
+    try:
+        with get_cursor() as cur:
+            if not cur: return None
+
+            # 1. Buscar Lead existente
+            cur.execute("SELECT id FROM leads WHERE whatsapp_phone = %s", (whatsapp_phone,))
+            row = cur.fetchone()
+
+            if row:
+                lead_id = row[0]
+                # Update si hay nuevos datos de Meta
+                if meta_data:
+                    sql_update = """
+                        UPDATE leads SET 
+                            meta_lead_id = COALESCE(%s, meta_lead_id),
+                            click_id = COALESCE(%s, click_id),
+                            email = COALESCE(%s, email),
+                            name = COALESCE(%s, name),
+                            last_interaction = CURRENT_TIMESTAMP
+                        WHERE id = %s
+                    """
+                    cur.execute(sql_update, (
+                        meta_data.get('meta_lead_id'),
+                        meta_data.get('click_id'),
+                        meta_data.get('email'),
+                        meta_data.get('name'),
+                        lead_id
+                    ))
+                return str(lead_id)
+
+            # 2. Crear Nuevo Lead
+            logger.info(f"✨ Creando Nuevo Lead: {whatsapp_phone}")
+            if BACKEND == "postgres":
+                sql_insert = """
+                    INSERT INTO leads (whatsapp_phone, meta_lead_id, click_id, email, name)
+                    VALUES (%s, %s, %s, %s, %s)
+                    RETURNING id
+                """
+                cur.execute(sql_insert, (
+                    whatsapp_phone,
+                    meta_data.get('meta_lead_id'),
+                    meta_data.get('click_id'),
+                    meta_data.get('email'),
+                    meta_data.get('name')
+                ))
+                lead_id = cur.fetchone()[0]
+                return str(lead_id)
+            else:
+                # SQLite Logic
+                import uuid
+                new_id = str(uuid.uuid4())
+                sql_insert = """
+                    INSERT INTO leads (id, whatsapp_phone, meta_lead_id, click_id, email, name)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                """
+                cur.execute(sql_insert, (
+                    new_id,
+                    whatsapp_phone,
+                    meta_data.get('meta_lead_id'),
+                    meta_data.get('click_id'),
+                    meta_data.get('email'),
+                    meta_data.get('name')
+                ))
+                return new_id
+
+    except Exception as e:
+        logger.error(f"❌ Error en get_or_create_lead: {e}")
+        return None
+
+def log_interaction(lead_id: str, role: str, content: str) -> bool:
+    """Registra una interacción (mensaje) para el Lead"""
+    try:
+        with get_cursor() as cur:
+            if not cur: return False
+            
+            if BACKEND == "postgres":
+                 # Postgres casteo automático si definimos UUID en tabla
+                sql = "INSERT INTO interactions (lead_id, role, content) VALUES (%s, %s, %s)"
+            else:
+                sql = "INSERT INTO interactions (lead_id, role, content) VALUES (%s, %s, %s)"
+
+            cur.execute(sql, (lead_id, role, content))
+            return True
+    except Exception as e:
+        logger.error(f"❌ Error en log_interaction: {e}")
+        return False
 
 
 # =================================================================

@@ -91,6 +91,22 @@ class ConfirmSaleResponse(BaseModel):
     event_id: str
 
 
+
+class LeadCreate(BaseModel):
+    """Schema para crear/actualizar un Lead"""
+    whatsapp_phone: str
+    meta_lead_id: Optional[str] = None
+    click_id: Optional[str] = None  # fbclid
+    email: Optional[str] = None
+    name: Optional[str] = None
+    extra_data: Optional[dict] = None
+
+class InteractionCreate(BaseModel):
+    """Schema para registrar una interacción"""
+    lead_id: str
+    role: str = Field(..., description="'user', 'assistant', 'system'")
+    content: str
+    
 class ErrorResponse(BaseModel):
     """Response para errores"""
     status: str = "error"

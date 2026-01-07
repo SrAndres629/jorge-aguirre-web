@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Request, BackgroundTasks
+from fastapi import APIRouter, Request, BackgroundTasks, HTTPException
 from pydantic import BaseModel
 from typing import Optional, Dict, Any
 import time
 from app.config import settings
 import logging
+from app.models import TrackResponse, LeadCreate, InteractionCreate
 
 # Logger
 logger = logging.getLogger(__name__)
@@ -17,7 +18,8 @@ ACCESS_TOKEN = settings.META_ACCESS_TOKEN
 TEST_EVENT_CODE = settings.TEST_EVENT_CODE
 
 from app.tracking import send_event, send_n8n_webhook
-from app.database import save_visitor, upsert_contact_advanced
+from app.database import save_visitor, upsert_contact_advanced, get_or_create_lead, log_interaction
+import app.database as database
 
 class TrackingEvent(BaseModel):
     event_name: str
@@ -102,3 +104,48 @@ async def process_tracking_event(event: TrackingEvent, request: Request, backgro
     return {"status": "queued", "event_id": event.event_id}
 
 
+# =================================================================
+# W-003: TRACKING RESCUE ROUTES
+# =================================================================
+
+@router.post("/track/lead", response_model=TrackResponse)
+async def track_lead_context(request: LeadCreate):
+    """
+    Endpoint para n8n/webhook.
+    Crea o actualiza un Lead vinculado a WhatsApp y Meta.
+    """
+    try:
+        data = {
+            "meta_lead_id": request.meta_lead_id,
+            "click_id": request.click_id,
+            "email": request.email,
+            "name": request.name
+        }
+        if request.extra_data:
+            data.update(request.extra_data)
+
+        lead_id = database.get_or_create_lead(request.whatsapp_phone, data)
+        
+        if lead_id:
+             return TrackResponse(status="success", event_id=str(lead_id), category="lead_generated")
+        else:
+             raise HTTPException(status_code=500, detail="Database Error creating Lead")
+
+    except Exception as e:
+        logger.error(f"❌ Error en /track/lead: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/track/interaction", response_model=TrackResponse)
+async def track_interaction(request: InteractionCreate):
+    """
+    Endpoint para registrar mensajes (User/AI).
+    """
+    try:
+        success = database.log_interaction(request.lead_id, request.role, request.content)
+        if success:
+            return TrackResponse(status="success", event_id=request.lead_id, category="interaction_logged")
+        else:
+            raise HTTPException(status_code=500, detail="Database Error logging interaction")
+    except Exception as e:
+        logger.error(f"❌ Error en /track/interaction: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
