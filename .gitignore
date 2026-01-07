@@ -20,6 +20,7 @@ archive/
 *.sqlite
 *.sqlite3
 local_fallback.db
+core/database/local_fallback.db
 evolution_pgdata/
 evolution_redis/
 evolution_store/

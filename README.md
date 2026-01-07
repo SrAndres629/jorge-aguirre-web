@@ -65,19 +65,21 @@ print(settings.DATABASE_URL)
 ├── core/                   # 🚀 CÓDIGO DE PRODUCCIÓN (FastAPI Package)
 │   ├── main.py            # Entry point de la aplicación FastAPI
 │   ├── app/               # Lógica de negocio (routes, models, services)
+│   ├── database/          # Persistencia Local & Migraciones
 │   ├── static/            # Assets estáticos (optimización en build)
 │   └── templates/         # UI Components (Jinja2)
 │
+├── automation/            # 🤖 AUTOMATIZACIÓN (n8n Workflows)
 ├── data/                  # 📊 PERSISTENCIA (Docker Volumes)
-│
 ├── docs/                  # 📚 DOCUMENTACIÓN & AUDITORÍAS
-│
-├── archive/               # 📂 ARCHIVO (Logs y Auditorías históricas)
+├── infrastructure/        # 🏗️ INFRAESTRUCTURA (Dockerfiles supporting)
+├── scripts/               # 📜 SCRIPTS DE MANTENIMIENTO
 │
 ├── Dockerfile             # 🐳 BUILD PRODUCTION (Optimizado Multi-stage)
 ├── docker-compose.yml     # 🛠️ ORQUESTACIÓN LOCAL & DEV
 ├── render.yaml            # ☁️ BLUEPRINT DE DESPLIEGUE (Render.com)
-```
+├── PROJECT_STRUCTURE_MAP.md # 🗺️ MAPA TÉCNICO COMPLETO
+└── RENDER_DEPLOY_FIX.md   # 🛠️ REPORTE DE DESPLIEGUE
 
 ---
 
@@ -91,13 +93,18 @@ Para mantener la integridad del sistema, seguimos este ciclo:
 
 ---
 
-## ☁️ Despliegue en Render
+## ☁️ Despliegue en Render (CRITICAL)
 
-El proyecto está configurado para despliegue automático vía **Docker**.
-1. **Zero-Config**: Render detectará el `Dockerfile` en el root automáticamente.
-2. **Environment**: Configurar el archivo `.env` en el panel de Render o mediante `render.yaml`.
-3. **Health Checks**: Endpoint `/health` expuesto en el puerto `8000`.
-4. **Infrastructure as Code**: El archivo `render.yaml` sirve como blueprint para la infraestructura.
+El proyecto está configurado para despliegue automático vía **Docker**. Para un despliegue exitoso, asegúrate de configurar estos campos en el Dashboard de Render (**Settings -> Build & Deploy**):
+
+1. **Root Directory**: Déjalo **VACÍO** (Borra "core" si está presente).
+2. **Dockerfile Path**: `Dockerfile`
+3. **Docker Build Context Directory**: `.` (Un punto).
+
+### 🛠️ Herramientas de Mantenimiento
+- **`cleanup.sh`**: Ejecútalo para limpiar residuos antes de un commit.
+- **`PROJECT_STRUCTURE_MAP.md`**: Consulta este mapa para entender la arquitectura detallada.
+- **`RENDER_DEPLOY_FIX.md`**: Detalles técnicos de la última resolución de fallos.
 
 ## 📝 Licencia
 

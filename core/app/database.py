@@ -60,9 +60,12 @@ def get_cursor():
             conn = _pg_pool.getconn()
             yield conn.cursor()
             conn.commit()
-        else:
             # SQLite Mode
-            conn = sqlite3.connect("database/local_fallback.db")
+            import os
+            db_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "database")
+            os.makedirs(db_dir, exist_ok=True)
+            db_path = os.path.join(db_dir, "local_fallback.db")
+            conn = sqlite3.connect(db_path)
             # Emular placeholder %s de Postgres
             # SQLite usa ?, así que reemplazamos al vuelo en execute?
             # Mejor: Usamos un wrapper simple

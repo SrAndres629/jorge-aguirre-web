@@ -47,11 +47,11 @@ COPY --from=builder /opt/venv /opt/venv
 # Setup Non-Root User
 RUN addgroup --system jorgeuser && adduser --system --group jorgeuser
 
-# Copy Application Code
+# Copy Application Code (Ensure database folder is copied)
 COPY core/ .
 
-# Set Permissions
-RUN chown -R jorgeuser:jorgeuser /app
+# Ensure database directory exists and has correct permissions
+RUN mkdir -p /app/database && chown -R jorgeuser:jorgeuser /app
 
 # Switch to User
 USER jorgeuser
