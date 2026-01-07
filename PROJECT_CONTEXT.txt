@@ -1,0 +1,581 @@
+﻿ESTRUCTURA DEL PROYECTO:
+
+Name                           FullName                                                                                                                                           
+----                           --------                                                                                                                                           
+app                            C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\core\app                                           
+database                       C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\core\database                                      
+static                         C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\core\static                                        
+templates                      C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\core\templates                                     
+main.py                        C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\core\main.py                                       
+Procfile                       C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\core\Procfile                                      
+requirements.txt               C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\core\requirements.txt                              
+routes                         C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\core\app\routes                                    
+celery_app.py                  C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\core\app\celery_app.py                             
+config.py                      C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\core\app\config.py                                 
+database.py                    C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\core\app\database.py                               
+models.py                      C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\core\app\models.py                                 
+README.md                      C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\core\app\README.md                                 
+services.py                    C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\core\app\services.py                               
+tasks.py                       C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\core\app\tasks.py                                  
+tracking.py                    C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\core\app\tracking.py                               
+__init__.py                    C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\core\app\__init__.py                               
+admin.py                       C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\core\app\routes\admin.py                           
+health.py                      C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\core\app\routes\health.py                          
+pages.py                       C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\core\app\routes\pages.py                           
+tracking_routes.py             C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\core\app\routes\tracking_routes.py                 
+__init__.py                    C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\core\app\routes\__init__.py                        
+migrations                     C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\core\database\migrations                           
+init_crm_master.sql            C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\core\database\init_crm_master.sql                  
+local_fallback.db              C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\core\database\local_fallback.db                    
+000_cleanup_duplicates.sql     C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\core\database\migrations\000_cleanup_duplicates.sql
+init_crm_master.sql            C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\core\database\migrations\init_crm_master.sql       
+init_crm_master_clean.sql      C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\core\database\migrations\init_crm_master_clean.sql 
+css                            C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\core\static\css                                    
+images                         C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\core\static\images                                 
+js                             C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\core\static\js                                     
+favicon.svg                    C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\core\static\favicon.svg                            
+input.css                      C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\core\static\css\input.css                          
+output.css                     C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\core\static\css\output.css                         
+brows_after.webp               C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\core\static\images\brows_after.webp                
+brows_after_v2.webp            C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\core\static\images\brows_after_v2.webp             
+brows_after_v3.webp            C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\core\static\images\brows_after_v3.webp             
+brows_before.webp              C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\core\static\images\brows_before.webp               
+brows_before_v2.webp           C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\core\static\images\brows_before_v2.webp            
+brows_before_v3.webp           C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\core\static\images\brows_before_v3.webp            
+brows_microblading_before.webp C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\core\static\images\brows_microblading_before.webp  
+brows_powder_after.webp        C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\core\static\images\brows_powder_after.webp         
+eyes_after.webp                C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\core\static\images\eyes_after.webp                 
+eyes_after_clean.webp          C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\core\static\images\eyes_after_clean.webp           
+eyes_after_v2.webp             C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\core\static\images\eyes_after_v2.webp              
+eyes_before.webp               C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\core\static\images\eyes_before.webp                
+eyes_before_v2.webp            C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\core\static\images\eyes_before_v2.webp             
+eyes_split_source.png          C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\core\static\images\eyes_split_source.png           
+image_ce4884.webp              C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\core\static\images\image_ce4884.webp               
+jorge_hero_new.webp            C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\core\static\images\jorge_hero_new.webp             
+lips_after.webp                C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\core\static\images\lips_after.webp                 
+lips_after_clean.webp          C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\core\static\images\lips_after_clean.webp           
+lips_after_intense.webp        C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\core\static\images\lips_after_intense.webp         
+lips_after_v2.webp             C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\core\static\images\lips_after_v2.webp              
+lips_before.webp               C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\core\static\images\lips_before.webp                
+luxury_logo.svg                C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\core\static\images\luxury_logo.svg                 
+microblading_after_v2.webp     C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\core\static\images\microblading_after_v2.webp      
+microblading_after_v3.webp     C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\core\static\images\microblading_after_v3.webp      
+microblading_before_v2.webp    C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\core\static\images\microblading_before_v2.webp     
+microblading_before_v3.webp    C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\core\static\images\microblading_before_v3.webp     
+og-image.webp                  C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\core\static\images\og-image.webp                   
+service_brows.webp             C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\core\static\images\service_brows.webp              
+service_eyes.webp              C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\core\static\images\service_eyes.webp               
+service_lips.webp              C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\core\static\images\service_lips.webp               
+testimonial_1.webp             C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\core\static\images\testimonial_1.webp              
+testimonial_2.webp             C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\core\static\images\testimonial_2.webp              
+testimonial_3.webp             C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\core\static\images\testimonial_3.webp              
+motion.js                      C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\core\static\js\motion.js                           
+tracking.js                    C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\core\static\js\tracking.js                         
+ui.js                          C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\core\static\js\ui.js                               
+admin.html                     C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\core\templates\admin.html                          
+index.html                     C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\core\templates\index.html                          
+docker                         C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\infrastructure\docker                              
+README.md                      C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\infrastructure\README.md                           
+antigravity.Dockerfile         C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\infrastructure\docker\antigravity.Dockerfile       
+app.Dockerfile                 C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\infrastructure\docker\app.Dockerfile               
+entrypoint-antigravity.sh      C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\infrastructure\docker\entrypoint-antigravity.sh    
+mcp.Dockerfile                 C:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web\infrastructure\docker\mcp.Dockerfile               
+
+
+
+
+
+CONTENIDO DE ARCHIVOS CLAVE:
+--- core/main.py ---
+# =================================================================
+# MAIN.PY - Entry Point (Thin Wrapper)
+# Jorge Aguirre Flores Web
+# =================================================================
+# 
+# Este archivo es un punto de entrada limpio que:
+# 1. Configura la aplicaciÃ³n FastAPI
+# 2. Monta los archivos estÃ¡ticos
+# 3. Incluye todos los routers modulares
+# 4. Inicializa la base de datos
+#
+# La lÃ³gica de negocio estÃ¡ en el paquete app/
+# =================================================================
+
+from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.gzip import GZipMiddleware
+import uvicorn
+import logging
+
+# MÃ³dulos internos
+from app.config import settings
+from app import database
+from app.routes import pages, tracking_routes, admin, health
+
+# Configurar logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+# =================================================================
+# EVENTOS DE CICLO DE VIDA
+# =================================================================
+
+from contextlib import asynccontextmanager
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Ciclo de vida de la aplicaciÃ³n con manejo de contexto"""
+    # Startup
+    logger.info("ðŸš€ Iniciando Jorge Aguirre Flores Web v2.0")
+    
+    # Inicializar base de datos
+    if database.initialize():
+        logger.info("âœ… Base de datos PostgreSQL conectada")
+    else:
+        logger.info("â„¹ï¸ Ejecutando sin base de datos")
+    
+    logger.info(f"ðŸ“Š Meta Pixel ID: {settings.META_PIXEL_ID}")
+    logger.info(f"ðŸŒ Servidor listo en http://{settings.HOST}:{settings.PORT}")
+    
+    yield
+    
+    # Shutdown
+    logger.info("ðŸ›‘ Deteniendo servidor...")
+
+
+# =================================================================
+# APLICACIÃ“N FASTAPI
+# =================================================================
+
+app = FastAPI(
+    title="Jorge Aguirre Flores Web",
+    description="Sitio web profesional con tracking Meta CAPI",
+    version="2.0.0",
+    lifespan=lifespan
+)
+
+# Middleware GZip para compresiÃ³n (5x mÃ¡s rÃ¡pido en mÃ³viles)
+app.add_middleware(GZipMiddleware, minimum_size=500)
+
+# Middleware para Proxy/CDN (Cloudflare/Render)
+# ConfÃ­a en headers X-Forwarded-For y X-Forwarded-Proto
+from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
+app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=["*"])
+
+# Middleware CORS (Seguridad: permitir solo dominios propios)
+from fastapi.middleware.cors import CORSMiddleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "https://jorgeaguirreflores.com", 
+        "https://www.jorgeaguirreflores.com", 
+        "http://localhost:8000",
+        "http://localhost:8081",
+        "http://localhost:5678"
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# =================================================================
+# SECURITY: RATE LIMITING
+# =================================================================
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+
+# Inicializar Linkiter
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# Aplicar lÃ­mite global (opcional, o por ruta)
+# app.add_middleware(SlowAPIMiddleware)
+
+# =================================================================
+# ARCHIVOS ESTÃTICOS CON CACHE AGRESIVO
+# =================================================================
+
+from starlette.staticfiles import StaticFiles as StarletteStaticFiles
+from starlette.responses import Response
+import os
+
+class CachedStaticFiles(StarletteStaticFiles):
+    """StaticFiles con headers de cachÃ© agresivos para WPO"""
+    
+    async def get_response(self, path: str, scope) -> Response:
+        response = await super().get_response(path, scope)
+        
+        # Agregar Cache-Control a todos los recursos
+        ext = os.path.splitext(path)[1].lower()
+        
+        # ImÃ¡genes, CSS, JS: cachÃ© de 1 aÃ±o (inmutable)
+        if ext in ['.webp', '.png', '.jpg', '.jpeg', '.gif', '.svg', 
+                   '.css', '.js', '.woff', '.woff2']:
+            response.headers['Cache-Control'] = 'public, max-age=31536000, immutable'
+        else:
+            # Otros archivos: cachÃ© mÃ¡s corto
+            response.headers['Cache-Control'] = 'public, max-age=86400'
+        
+        return response
+
+# Montar archivos estÃ¡ticos con cachÃ©
+app.mount("/static", CachedStaticFiles(directory="static"), name="static")
+
+
+# =================================================================
+# ROUTERS
+# =================================================================
+
+# PÃ¡ginas HTML
+app.include_router(pages.router)
+
+# Tracking endpoints (/track-lead, /track-viewcontent)
+app.include_router(tracking_routes.router)
+
+# Panel de administraciÃ³n (/admin/*)
+app.include_router(admin.router)
+
+# Health checks (/health, /ping)
+app.include_router(health.router)
+
+
+
+# =================================================================
+# EVENTOS DE CICLO DE VIDA (Movido arriba para lifespan)
+# =================================================================
+
+
+
+# =================================================================
+# ARRANQUE
+# =================================================================
+
+if __name__ == "__main__":
+    uvicorn.run(
+        "main:app",
+        host=settings.HOST,
+        port=settings.PORT,
+        reload=True  # Hot reload para desarrollo
+    )
+
+--- core/app/config.py ---
+# =================================================================
+# CONFIG.PY - ConfiguraciÃ³n centralizada con validaciÃ³n (Pydantic)
+# Jorge Aguirre Flores Web
+# =================================================================
+import os
+from typing import Optional
+import logging
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# Configurar logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+
+class Settings(BaseSettings):
+    """ConfiguraciÃ³n centralizada del sistema con validaciÃ³n"""
+    model_config = SettingsConfigDict(
+        env_file=".env", 
+        env_file_encoding="utf-8", 
+        extra="ignore"
+    )
+
+    # Meta Ads (Pixel + CAPI)
+    META_PIXEL_ID: str = ""
+    META_ACCESS_TOKEN: Optional[str] = None
+    META_API_VERSION: str = "v21.0"
+    TEST_EVENT_CODE: Optional[str] = None
+    
+    # Database (Supabase PostgreSQL)
+    DATABASE_URL: Optional[str] = None
+    
+    # Celery & Redis
+    CELERY_BROKER_URL: str = "redis://redis_evolution:6379/1"
+    CELERY_RESULT_BACKEND: str = "redis://redis_evolution:6379/1"
+    
+    # Admin Panel
+    ADMIN_KEY: str = "Andromeda2025"
+    
+    # Server
+    HOST: str = "0.0.0.0"
+    PORT: int = 8000
+    
+    # WhatsApp / Evolution API
+    WHATSAPP_NUMBER: str = "59164714751"
+    EVOLUTION_API_KEY: Optional[str] = None
+    EVOLUTION_API_URL: str = "http://evolution_api:8080"
+
+    # n8n Integration
+    N8N_WEBHOOK_URL: str = "http://n8n:5678/webhook/website-events"
+    
+    def validate_critical(self):
+        """Valida configuraciÃ³n crÃ­tica"""
+        if not self.META_PIXEL_ID:
+            logger.warning("âš ï¸ META_PIXEL_ID no configurado")
+        if not self.META_ACCESS_TOKEN:
+            logger.warning("âš ï¸ META_ACCESS_TOKEN no configurado")
+        if not self.DATABASE_URL:
+            logger.info("â„¹ï¸ DATABASE_URL no configurado - DB deshabilitada")
+        
+        logger.info("âœ… ConfiguraciÃ³n cargada correctamente")
+    
+    @property
+    def meta_api_url(self) -> str:
+        """URL completa para Meta CAPI"""
+        return f"https://graph.facebook.com/{self.META_API_VERSION}/{self.META_PIXEL_ID}/events"
+    
+    @property
+    def whatsapp_url(self) -> str:
+        """URL de WhatsApp con nÃºmero"""
+        return f"https://wa.me/{self.WHATSAPP_NUMBER}"
+
+
+# Singleton de configuraciÃ³n
+settings = Settings()
+settings.validate_critical()
+
+--- docker-compose.yml ---
+version: '3.8'
+
+services:
+  # =================================================================
+  # APP: Jorge Aguirre Web (FastAPI)
+  # =================================================================
+  web:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/app.Dockerfile
+    container_name: jorge-web-dev
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./core:/app
+    env_file:
+      - .env
+    environment:
+      - PORT=8000
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    networks:
+      - app_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+
+  # =================================================================
+  # WORKER: Celery (Meta CAPI, DB, n8n)
+  # =================================================================
+  worker:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/app.Dockerfile
+    container_name: jorge-web-worker
+    restart: always
+    volumes:
+      - ./core:/app
+    env_file:
+      - .env
+    command: celery -A app.celery_app worker --loglevel=info
+    depends_on:
+      redis_evolution:
+        condition: service_healthy
+    networks:
+      - app_network
+    deploy:
+      resources:
+        limits:
+          memory: 768M
+        reservations:
+          memory: 384M
+
+  # =================================================================
+  # FLOWER: Celery Monitor (http://localhost:5555)
+  # =================================================================
+  celery_flower:
+    image: mher/flower
+    container_name: jorge-web-monitor
+    restart: unless-stopped
+    ports:
+      - "5555:5555"
+    environment:
+      - CELERY_BROKER_URL=redis://redis_evolution:6379/1
+    networks:
+      - app_network
+    depends_on:
+      redis_evolution:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 128M
+
+  # =================================================================
+  # INFRASTRUCTURE: Redis (Shared)
+  # =================================================================
+  redis_evolution:
+    image: redis:alpine
+    container_name: redis_evolution
+    command: redis-server --appendonly yes --maxmemory 128mb --maxmemory-policy allkeys-lru
+    restart: always
+    volumes:
+      - ./data/redis:/data
+    networks:
+      - app_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 128M
+
+  # =================================================================
+  # EVOLUTION API (WhatsApp)
+  # =================================================================
+  evolution_api:
+    image: evoapicloud/evolution-api:latest
+    container_name: evolution_api
+    restart: always
+    ports:
+      - "8081:8080"
+    depends_on:
+      redis_evolution:
+        condition: service_healthy
+    env_file:
+      - .env
+    entrypoint: ["node", "dist/main.js"]
+    environment:
+      - AUTHENTICATION_API_KEY=${EVOLUTION_API_KEY}
+      - SERVER_URL=http://evolution_api:8080
+      - CONFIG_SESSION_PHONE_VERSION=2.3000.1023204200
+      - DATABASE_PROVIDER=postgresql
+      - DATABASE_CONNECTION_URI=${DATABASE_URL}
+      - DATABASE_CLIENT=postgresql
+      - CACHE_REDIS_ENABLED=true
+      - CACHE_REDIS_URI=redis://redis_evolution:6379/0
+      - CACHE_LOCAL_ENABLED=false
+      - DEL_INSTANCE=false
+    volumes:
+      - ./data/evolution_store:/evolution_store
+    networks:
+      - app_network
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+
+  # =================================================================
+  # N8N AUTOMATION
+  # =================================================================
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: n8n_automation
+    restart: always
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_HOST=0.0.0.0
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - NODE_ENV=production
+      - WEBHOOK_URL=http://n8n:5678/
+      - GENERIC_TIMEZONE=America/La_Paz
+      - N8N_PAYLOAD_SIZE_MAX=16
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    volumes:
+      - ./data/n8n_data:/home/node/.n8n
+    networks:
+      - app_network
+    deploy:
+      resources:
+        limits:
+          memory: 1536M
+        reservations:
+          memory: 512M
+
+  # =================================================================
+  # MCP SERVER (Evolution & Tools)
+  # =================================================================
+  evolution_mcp:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/mcp.Dockerfile
+    container_name: evolution_mcp_server
+    restart: always
+    ports:
+      - "8002:8001"
+    env_file:
+      - .env
+    environment:
+      - EVOLUTION_API_URL=http://evolution_api:8080
+      - EVOLUTION_API_KEY=${EVOLUTION_API_KEY}
+    depends_on:
+      evolution_api:
+        condition: service_started
+    networks:
+      - app_network
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+        reservations:
+          memory: 64M
+
+  # =================================================================
+  # ANTIGRAVITY: Local AI Agent (Qwen 2.5 Coder + Aider)
+  # =================================================================
+  antigravity:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/antigravity.Dockerfile
+    container_name: antigravity_brain
+    restart: unless-stopped
+    ports:
+      - "2222:22"
+    volumes:
+      - .:/app
+      - antigravity_data:/root/.ollama
+    networks:
+      - app_network
+    # Habilitar GPU si estÃ¡ disponible (Opcional)
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+
+networks:
+  app_network:
+    driver: bridge
+
+volumes:
+  antigravity_data:

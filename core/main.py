@@ -83,6 +83,7 @@ app.add_middleware(
     allow_origins=[
         "https://jorgeaguirreflores.com", 
         "https://www.jorgeaguirreflores.com", 
+        "https://jorge-aguirre-web.onrender.com",
         "http://localhost:8000",
         "http://localhost:8081",
         "http://localhost:5678"

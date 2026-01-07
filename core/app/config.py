@@ -37,7 +37,7 @@ class Settings(BaseSettings):
     CELERY_RESULT_BACKEND: str = "redis://redis_evolution:6379/1"
     
     # Admin Panel
-    ADMIN_KEY: str = "Andromeda2025"
+    ADMIN_KEY: str = os.getenv("ADMIN_KEY", "Andromeda2025")
     
     # Server
     HOST: str = "0.0.0.0"
