@@ -52,36 +52,50 @@ def init_pool() -> bool:
     return True
 
 @contextmanager
+@contextmanager
 def get_cursor():
     """Obtiene un cursor agnóstico (Postgres o SQLite)"""
     conn = None
+    is_postgres = (BACKEND == "postgres" and _pg_pool is not None)
+    
     try:
-        if BACKEND == "postgres" and _pg_pool:
+        if is_postgres:
             conn = _pg_pool.getconn()
             yield conn.cursor()
-            conn.commit()
+        else:
             # SQLite Mode
             import os
             db_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "database")
             os.makedirs(db_dir, exist_ok=True)
             db_path = os.path.join(db_dir, "local_fallback.db")
             conn = sqlite3.connect(db_path)
-            # Emular placeholder %s de Postgres
-            # SQLite usa ?, así que reemplazamos al vuelo en execute?
-            # Mejor: Usamos un wrapper simple
             yield SQLiteCursorWrapper(conn.cursor())
-            conn.commit()
+            
+        conn.commit()
             
     except Exception as e:
-        if conn:
-            conn.rollback()
         logger.error(f"❌ Error DB ({BACKEND}): {e}")
-        yield None
+        if conn:
+            try:
+                conn.rollback()
+            except Exception:
+                pass
+        # Importante: No hacer 'yield None' aquí para evitar RuntimeError en contextlib
+        # Re-lanzar la excepción para que el caller sepa que falló
+        raise
     finally:
-        if BACKEND == "postgres" and conn:
-            _pg_pool.putconn(conn)
-        elif BACKEND == "sqlite" and conn:
-            conn.close()
+        # Cleanup robusto
+        if conn:
+            if is_postgres and _pg_pool:
+                try:
+                    _pg_pool.putconn(conn)
+                except Exception as pool_e:
+                    logger.error(f"⚠️ Error devolviendo conexión al pool: {pool_e}")
+            elif not is_postgres:
+                try:
+                    conn.close()
+                except Exception:
+                    pass
 
 class SQLiteCursorWrapper:
     """Adapta sintaxis Postgres (%s) a SQLite (?)"""
