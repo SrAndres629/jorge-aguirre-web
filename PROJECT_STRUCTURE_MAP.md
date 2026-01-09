@@ -34,9 +34,9 @@ graph TD
 - **`static/`**: Frontend Assets (Images, CSS, JS).
 - **`templates/`**: Jinja2 UI.
 
-### 🟡 `automation/` (The Nervous System)
-- Contains n8n Workflow JSONs.
-- "Natalia" CRM Logic definitions.
+### 🟡 `workflows/` (The Nervous System)
+- **`n8n/`**: n8n Workflow JSONs (The "Bridge").
+- **`natalia/`**: Behavioral definitions for the AI Assistant.
 
 ### 🔴 `infrastructure/` (The Skeleton)
 - `docker/`: Dockerfiles for auxiliary services.
