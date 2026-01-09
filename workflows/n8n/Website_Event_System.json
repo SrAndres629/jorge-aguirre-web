@@ -1,0 +1,96 @@
+{
+    "name": "Website Event System (W-004)",
+    "nodes": [
+        {
+            "parameters": {
+                "httpMethod": "POST",
+                "path": "website-events",
+                "options": {}
+            },
+            "name": "Website Webhook",
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 1,
+            "position": [
+                250,
+                300
+            ],
+            "webhookId": "website-events-webhook"
+        },
+        {
+            "parameters": {
+                "conditions": {
+                    "string": [
+                        {
+                            "value1": "={{$json.body.event_name}}",
+                            "operation": "equal",
+                            "value2": "Lead"
+                        }
+                    ]
+                }
+            },
+            "name": "Is Lead?",
+            "type": "n8n-nodes-base.if",
+            "typeVersion": 1,
+            "position": [
+                500,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "http://evolution_api:8080/message/sendText/JorgeMain",
+                "sendBody": true,
+                "contentType": "json",
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "number",
+                            "value": "59164714751"
+                        },
+                        {
+                            "name": "text",
+                            "value": "🚀 *Nuevo Lead Web*\n\nNombre: {{$json.body.user_data.name}}\nTeléfono: {{$json.body.user_data.phone}}\nInterés: {{$json.body.utm_data.utm_campaign}}"
+                        },
+                        {
+                            "name": "apikey",
+                            "value": "429683C4C977415CAAFCCE10F7D57E11"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "name": "Notify Admin",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.1,
+            "position": [
+                750,
+                200
+            ]
+        }
+    ],
+    "connections": {
+        "Website Webhook": {
+            "main": [
+                [
+                    {
+                        "node": "Is Lead?",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Is Lead?": {
+            "main": [
+                [
+                    {
+                        "node": "Notify Admin",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}

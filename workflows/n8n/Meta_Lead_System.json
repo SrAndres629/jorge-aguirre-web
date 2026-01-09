@@ -1,0 +1,112 @@
+{
+    "name": "Meta Lead System (W-004)",
+    "nodes": [
+        {
+            "parameters": {
+                "httpMethod": "POST",
+                "path": "meta-lead",
+                "options": {}
+            },
+            "name": "Meta Webhook",
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 1,
+            "position": [
+                250,
+                300
+            ],
+            "webhookId": "meta-lead-webhook"
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "http://web:8000/track/lead",
+                "sendBody": true,
+                "contentType": "json",
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "whatsapp_phone",
+                            "value": "={{$json.body.entry[0].changes[0].value.form_data.phone_number}}"
+                        },
+                        {
+                            "name": "meta_lead_id",
+                            "value": "={{$json.body.entry[0].changes[0].value.leadgen_id}}"
+                        },
+                        {
+                            "name": "name",
+                            "value": "={{$json.body.entry[0].changes[0].value.form_data.full_name}}"
+                        },
+                        {
+                            "name": "email",
+                            "value": "={{$json.body.entry[0].changes[0].value.form_data.email}}"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "name": "Sync to System",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.1,
+            "position": [
+                500,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "http://evolution_api:8080/message/sendText/JorgeMain",
+                "sendBody": true,
+                "contentType": "json",
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "number",
+                            "value": "={{$json.body.entry[0].changes[0].value.form_data.phone_number}}"
+                        },
+                        {
+                            "name": "text",
+                            "value": "¡Hola {{$json.body.entry[0].changes[0].value.form_data.full_name}}! 👋\n\nGracias por tu interés en Jorge Aguirre - Maquillaje Permanente.\n\nSoy *Natalia*, tu asistente personal. ¿En qué tratamiento estás interesada hoy?\n\n1. Microblading\n2. Labios\n3. Delineado"
+                        },
+                        {
+                            "name": "apikey",
+                            "value": "429683C4C977415CAAFCCE10F7D57E11"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "name": "Send Welcome Message",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.1,
+            "position": [
+                750,
+                300
+            ]
+        }
+    ],
+    "connections": {
+        "Meta Webhook": {
+            "main": [
+                [
+                    {
+                        "node": "Sync to System",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Sync to System": {
+            "main": [
+                [
+                    {
+                        "node": "Send Welcome Message",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}

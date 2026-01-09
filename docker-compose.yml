@@ -205,27 +205,27 @@ services:
   # =================================================================
   # ANTIGRAVITY: Local AI Agent (Qwen 2.5 Coder + Aider)
   # =================================================================
-  antigravity:
-    build:
-      context: .
-      dockerfile: infrastructure/docker/antigravity.Dockerfile
-    container_name: antigravity_brain
-    restart: unless-stopped
-    ports:
-      - "2222:22"
-    volumes:
-      - .:/app
-      - antigravity_data:/root/.ollama
-    networks:
-      - app_network
-    # Habilitar GPU si está disponible (Opcional)
-    # deploy:
-    #   resources:
-    #     reservations:
-    #       devices:
-    #         - driver: nvidia
-    #           count: 1
-    #           capabilities: [gpu]
+  # antigravity:
+  #   build:
+  #     context: .
+  #     dockerfile: infrastructure/docker/antigravity.Dockerfile
+  #   container_name: antigravity_brain
+  #   restart: unless-stopped
+  #   ports:
+  #     - "2222:22"
+  #   volumes:
+  #     - .:/app
+  #     - antigravity_data:/root/.ollama
+  #   networks:
+  #     - app_network
+  #   # Habilitar GPU si está disponible (Opcional)
+  #   # deploy:
+  #   #   resources:
+  #   #     reservations:
+  #   #       devices:
+  #   #         - driver: nvidia
+  #   #           count: 1
+  #   #           capabilities: [gpu]
 
 networks:
   app_network:
