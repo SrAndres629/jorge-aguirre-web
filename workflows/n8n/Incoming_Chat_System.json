@@ -1,0 +1,95 @@
+{
+    "name": "Incoming Chat System (W-005)",
+    "nodes": [
+        {
+            "parameters": {
+                "httpMethod": "POST",
+                "path": "whatsapp-incoming",
+                "options": {}
+            },
+            "name": "Evolution Webhook",
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 1,
+            "position": [
+                250,
+                300
+            ],
+            "webhookId": "whatsapp-incoming"
+        },
+        {
+            "parameters": {
+                "conditions": {
+                    "boolean": [
+                        {
+                            "value1": "={{$json.body.data.key.fromMe}}",
+                            "value2": false
+                        }
+                    ]
+                }
+            },
+            "name": "Is from User?",
+            "type": "n8n-nodes-base.if",
+            "typeVersion": 1,
+            "position": [
+                450,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "http://web:8000/chat/incoming",
+                "sendBody": true,
+                "contentType": "json",
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "phone",
+                            "value": "={{$json.body.data.key.remoteJid.split('@')[0]}}"
+                        },
+                        {
+                            "name": "text",
+                            "value": "={{$json.body.data.message.conversation || $json.body.data.message.extendedTextMessage.text}}"
+                        },
+                        {
+                            "name": "name",
+                            "value": "={{$json.body.data.pushName}}"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "name": "Send to Brain",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.1,
+            "position": [
+                650,
+                300
+            ]
+        }
+    ],
+    "connections": {
+        "Evolution Webhook": {
+            "main": [
+                [
+                    {
+                        "node": "Is from User?",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Is from User?": {
+            "main": [
+                [
+                    {
+                        "node": "Send to Brain",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}

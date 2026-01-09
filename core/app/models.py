@@ -4,6 +4,17 @@
 # =================================================================
 from pydantic import BaseModel, Field
 from typing import Optional
+from enum import Enum
+
+class LeadStatus(str, Enum):
+    NEW = "NEW"
+    CONTACTED = "CONTACTED"
+    INTERESTED = "INTERESTED"
+    GHOST = "GHOST"
+    BOOKED = "BOOKED"
+    CLOSED = "CLOSED"
+    ARCHIVED = "ARCHIVED"
+
 
 
 class LeadTrackRequest(BaseModel):
