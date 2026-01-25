@@ -12,13 +12,16 @@ try:
     
     print(f"[-] Checking Celery Configuration...")
     is_eager = celery_app.conf.task_always_eager
-    print(f"[-] task_always_eager: {is_eager}")
+    broker_url = celery_app.conf.broker_url
     
-    if is_eager:
-        print("✅ SUCCESS: Celery is in EAGER mode (Safe for No-Redis env)")
+    print(f"[-] task_always_eager: {is_eager}")
+    print(f"[-] broker_url: {broker_url}")
+    
+    if is_eager and "memory://" in broker_url:
+        print("✅ SUCCESS: Celery is in EAGER mode AND using Memory Broker (Safe for No-Redis env)")
         sys.exit(0)
     else:
-        print("❌ FAILURE: Celery is still trying to use Redis")
+        print(f"❌ FAILURE: Mismatch. Eager={is_eager}, Broker={broker_url}")
         sys.exit(1)
         
 except Exception as e:
