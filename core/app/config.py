@@ -33,7 +33,7 @@ class Settings(BaseSettings):
     META_SANDBOX_MODE: bool = False # 🛡️ True = No enviar eventos reales a Meta
     
     # Security: CORS Origins
-    BACKEND_CORS_ORIGINS: List[str] = [
+    BACKEND_CORS_ORIGINS: Any = [
         "https://jorgeaguirreflores.com",
         "https://www.jorgeaguirreflores.com",
         "https://jorge-aguirre-web.onrender.com",
