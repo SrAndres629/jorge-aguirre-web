@@ -2,6 +2,7 @@
 import logging
 from typing import Optional, Dict, Any
 from app.database import get_or_create_lead, log_interaction, get_cursor
+from app.evolution import evolution_service
 from app.models import LeadStatus
 
 logger = logging.getLogger("NataliaBrain")
@@ -46,9 +47,24 @@ class NataliaBrain:
         if not lead_id:
             return {"error": "Failed to identify lead"}
 
-        # 2. Context Retrieval (NEW: Maintain Context)
+        # 2. Context Retrieval (NEW: Local + Remote Fallback)
         from app.database import get_chat_history
         history = get_chat_history(phone, limit=5)
+        
+        # 🛡️ Senior Fallback: If local DB is empty, fetch from Evolution (The "Socket" History)
+        if not history:
+            logger.info(f"🔗 [HISTORY SYNC] Local history empty for {phone}. Fetching from Evolution API...")
+            remote_history = evolution_service.fetch_history(phone, limit=10)
+            # Simple conversion logic (Evolution Format -> Natalia List)
+            for msg in remote_history:
+                # Evolution check: message is from me or from contact?
+                from_me = msg.get("key", {}).get("fromMe", False)
+                content = msg.get("message", {}).get("conversation", "")
+                if content:
+                    history.append({
+                        "role": "assistant" if from_me else "user",
+                        "content": content
+                    })
         
         # 3. Log User Message
         log_interaction(lead_id, "user", text)

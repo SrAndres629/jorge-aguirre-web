@@ -6,6 +6,7 @@ import httpx
 import logging
 from app.natalia import natalia
 from app.config import settings
+from app.evolution import evolution_service
 
 router = APIRouter()
 logger = logging.getLogger("ChatRoutes")
@@ -47,7 +48,7 @@ async def handle_incoming_chat(msg: IncomingMessage, background_tasks: Backgroun
             # Send via Evolution API
             # We run this in background to return 200 OK fast
             background_tasks.add_task(
-                send_whatsapp_legacy, 
+                evolution_service.send_text, 
                 phone=msg.phone, 
                 text=result["reply"]
             )
@@ -58,25 +59,7 @@ async def handle_incoming_chat(msg: IncomingMessage, background_tasks: Backgroun
         logger.error(f"❌ Chat Error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-async def send_whatsapp_legacy(phone: str, text: str):
-    """
-    Envía mensaje usando la Evolution API.
-    Nota: Usamos la instancia configurada en settings.
-    """
-    url = f"{settings.EVOLUTION_API_URL}/message/sendText/{settings.EVOLUTION_INSTANCE}"
-    headers = {"apikey": settings.EVOLUTION_API_KEY}
-    payload = {
-        "number": phone,
-        "text": text
-    }
-    
-    async with httpx.AsyncClient() as client:
-        try:
-            resp = await client.post(url, json=payload, headers=headers)
-            resp.raise_for_status()
-            logger.info(f"📤 Reply sent to {phone}")
-        except Exception as e:
-            logger.error(f"❌ Failed to send reply: {e}")
+# Removed send_whatsapp_legacy as it is now handled by evolution_service.py
 
 # =================================================================
 # PILLAR 2: THE GOLD FEEDBACK LOOP
