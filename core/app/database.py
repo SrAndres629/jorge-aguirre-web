@@ -35,7 +35,12 @@ def init_pool() -> bool:
             _pg_pool = psycopg2.pool.SimpleConnectionPool(
                 minconn=1,
                 maxconn=10,
-                dsn=settings.DATABASE_URL
+                dsn=settings.DATABASE_URL,
+                # Senior Hardening: TCP Keepalives to prevent silent drops
+                keepalives=1,
+                keepalives_idle=30,
+                keepalives_interval=10,
+                keepalives_count=5
             )
             BACKEND = "postgres"
             logger.info("✅ Conexión PostgreSQL (Cloud) ESTABLECIDA")
@@ -53,56 +58,91 @@ def init_pool() -> bool:
 
 @contextmanager
 def get_cursor():
-    """Obtiene un cursor agnóstico (Postgres o SQLite)"""
+    """
+    Obtiene un cursor con:
+    1. Auto-Reconnect: Si la conexión está muerta, pide otra.
+    2. Health Check: Ejecuta 'SELECT 1' antes de entregarla.
+    3. Retry Logic: Reintenta hasta 3 veces si falla.
+    """
     conn = None
-    is_postgres = (BACKEND == "postgres" and _pg_pool is not None)
+    max_retries = 3
+    is_postgres = (BACKEND == "postgres")
     
-    try:
-        if is_postgres:
-            conn = _pg_pool.getconn()
-            # Simple health check for the connection
-            if conn.closed != 0:
-                # Connection is dead, discard and try to get another one (or let pool create new if minconn allows, 
-                # but SimpleConnectionPool is limited. Actually, putconn with close=True might be needed if we could.
-                # Standard fix: try/except inside usage, or verify status.
-                # For SimpleConnectionPool, we can't easily "discard" and force new without accessing internal list.
-                # Better approach: check txn status.
-                pass
-            yield conn.cursor()
-        else:
-            # SQLite Mode
-            import os
-            db_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "database")
-            os.makedirs(db_dir, exist_ok=True)
-            db_path = os.path.join(db_dir, "local_fallback.db")
-            conn = sqlite3.connect(db_path)
-            yield SQLiteCursorWrapper(conn.cursor())
-            
-        conn.commit()
-            
-    except Exception as e:
-        logger.error(f"❌ Error DB ({BACKEND}): {e}")
-        if conn:
-            try:
-                conn.rollback()
-            except Exception:
-                pass
-        # Importante: No hacer 'yield None' aquí para evitar RuntimeError en contextlib
-        # Re-lanzar la excepción para que el caller sepa que falló
-        raise
-    finally:
-        # Cleanup robusto
-        if conn:
-            if is_postgres and _pg_pool:
+    last_error = None
+
+    # RETRY LOOP
+    for attempt in range(max_retries):
+        try:
+            if is_postgres:
+                if _pg_pool is None:
+                    if not init_pool():
+                        raise Exception("Postgres Pool not initialized")
+
+                # 1. Get Connection
+                conn = _pg_pool.getconn()
+                
+                # 2. Health Check (Ping)
+                is_healthy = False
+                if conn.closed == 0:
+                    try:
+                        with conn.cursor() as test_cur:
+                            test_cur.execute("SELECT 1")
+                        is_healthy = True
+                    except Exception:
+                        pass # Ping failed
+                
+                if not is_healthy:
+                    # Connection dead, discard and retry
+                    logger.warning(f"⚠️ DB Connection dead (Attempt {attempt+1}/{max_retries}). Discarding...")
+                    try:
+                        _pg_pool.putconn(conn, close=True)
+                    except: pass
+                    conn = None
+                    continue # Try next attempt (will get new conn from pool)
+
+                # 3. Yield to Caller
+                yield conn.cursor()
+                conn.commit()
+                return # Success!
+                
+            else:
+                # SQLite Mode (Simple fallback)
+                import os
+                db_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "database")
+                os.makedirs(db_dir, exist_ok=True)
+                db_path = os.path.join(db_dir, "local_fallback.db")
+                conn = sqlite3.connect(db_path)
+                yield SQLiteCursorWrapper(conn.cursor())
+                conn.commit()
+                return # Success
+
+        except Exception as e:
+            last_error = e
+            logger.error(f"❌ Error DB (Attempt {attempt+1}/{max_retries}): {e}")
+            if conn:
                 try:
-                    _pg_pool.putconn(conn)
-                except Exception as pool_e:
-                    logger.error(f"⚠️ Error devolviendo conexión al pool: {pool_e}")
-            elif not is_postgres:
-                try:
-                    conn.close()
-                except Exception:
-                    pass
+                    conn.rollback()
+                except Exception: pass
+                
+                # Return/Close bad connection
+                if is_postgres and _pg_pool:
+                    try:
+                        _pg_pool.putconn(conn, close=True) 
+                    except: pass
+                elif not is_postgres:
+                    try:
+                        conn.close()
+                    except: pass
+                conn = None
+            
+            # Don't sleep on last attempt
+            if attempt < max_retries - 1:
+                import time
+                time.sleep(0.5)
+    
+    # If we got here, all retries failed
+    logger.critical("🔥 CRITICAL: Database unreachable after retries.")
+    raise last_error
 
 class SQLiteCursorWrapper:
     """Adapta sintaxis Postgres (%s) a SQLite (?)"""
