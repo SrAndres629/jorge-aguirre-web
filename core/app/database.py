@@ -6,8 +6,10 @@ import logging
 import sqlite3
 from typing import Optional, List, Dict, Any
 from contextlib import contextmanager
+import uuid
 
 from app.config import settings
+import app.sql_queries as queries  # Importamos el repo de queries
 
 # Intentar importar psycopg2 (PostgreSQL)
 try:
@@ -177,6 +179,10 @@ def init_tables():
                 id_type_uuid = "UUID PRIMARY KEY DEFAULT gen_random_uuid()"
                 id_type_serial = "SERIAL PRIMARY KEY"
                 timestamp_default = "CURRENT_TIMESTAMP"
+                status_type = "lead_status DEFAULT 'new'"
+                lead_id_type = "UUID"
+                id_type_pk = id_type_uuid
+                
                 # Crear Enum en Postgres si no existe
                 cur.execute("""
                     DO $$ BEGIN
@@ -186,79 +192,33 @@ def init_tables():
                         );
                     EXCEPTION WHEN duplicate_object THEN null; END $$;
                 """)
-                status_type = "lead_status DEFAULT 'new'"
             else:
-                id_type_uuid = "TEXT PRIMARY KEY" # SQLite no tiene gen_random_uuid nativo
+                id_type_uuid = "TEXT PRIMARY KEY"
                 id_type_serial = "INTEGER PRIMARY KEY AUTOINCREMENT"
                 timestamp_default = "CURRENT_TIMESTAMP"
                 status_type = "TEXT DEFAULT 'new'"
+                lead_id_type = "TEXT"
+                id_type_pk = id_type_uuid
 
-            # --- Tabla BUSINESS_KNOWLEDGE (Facts) ---
-            sql_knowledge = f'''
-                CREATE TABLE IF NOT EXISTS business_knowledge (
-                    id {id_type_serial},
-                    slug TEXT UNIQUE NOT NULL,
-                    category TEXT NOT NULL, -- 'pricing', 'bio', 'location', 'policy'
-                    content TEXT NOT NULL,
-                    updated_at TIMESTAMP DEFAULT {timestamp_default}
-                );
-            '''
-            cur.execute(sql_knowledge)
-            cur.execute('CREATE INDEX IF NOT EXISTS idx_knowledge_slug ON business_knowledge(slug);')
+            # Formatear y Ejecutar DDLs
+            cur.execute(queries.CREATE_TABLE_BUSINESS_KNOWLEDGE.format(
+                id_type_serial=id_type_serial, timestamp_default=timestamp_default
+            ))
+            cur.execute(queries.CREATE_INDEX_KNOWLEDGE_SLUG)
 
-            # --- Tabla VISITORS (Anon Tracking) ---
-            cur.execute(f'''
-                CREATE TABLE IF NOT EXISTS visitors (
-                    id {id_type_serial},
-                    external_id TEXT,
-                    fbclid TEXT,
-                    ip_address TEXT,
-                    user_agent TEXT,
-                    source TEXT,
-                    utm_source TEXT,
-                    utm_medium TEXT,
-                    utm_campaign TEXT,
-                    utm_term TEXT,
-                    utm_content TEXT,
-                    timestamp TIMESTAMP DEFAULT {timestamp_default}
-                );
-            ''')
-            cur.execute('CREATE INDEX IF NOT EXISTS idx_visitors_external_id ON visitors(external_id);')
+            cur.execute(queries.CREATE_TABLE_VISITORS.format(
+                id_type_serial=id_type_serial, timestamp_default=timestamp_default
+            ))
+            cur.execute(queries.CREATE_INDEX_VISITORS_EXTERNAL_ID)
 
-            # --- Tabla CONTACTS (CRM Master) ---
-            # Nota: En SQLite usamos TEXT para UUID y manejamos la lógica en Python si es necesario
-            sql_contacts = f'''
-                CREATE TABLE IF NOT EXISTS contacts (
-                    id {id_type_uuid if BACKEND == "postgres" else id_type_serial},
-                    whatsapp_number TEXT UNIQUE NOT NULL,
-                    full_name TEXT,
-                    profile_pic_url TEXT,
-                    
-                    fb_click_id TEXT,
-                    fb_browser_id TEXT,
-                    utm_source TEXT,
-                    utm_medium TEXT,
-                    utm_campaign TEXT,
-                    utm_term TEXT,
-                    utm_content TEXT,
-                    web_visit_count INTEGER DEFAULT 1,
-                    conversion_sent_to_meta BOOLEAN DEFAULT FALSE,
-                    
-                    status {status_type},
-                    lead_score INTEGER DEFAULT 50,
-                    pain_point TEXT,
-                    service_interest TEXT,
-                    service_booked_date TIMESTAMP,
-                    appointment_count INTEGER DEFAULT 0,
-                    
-                    created_at TIMESTAMP DEFAULT {timestamp_default},
-                    updated_at TIMESTAMP,
-                    last_interaction TIMESTAMP DEFAULT {timestamp_default}
-                );
-            '''
-            cur.execute(sql_contacts)
-            
+            cur.execute(queries.CREATE_TABLE_CONTACTS.format(
+                id_type_primary_key=id_type_pk, 
+                status_type=status_type,
+                timestamp_default=timestamp_default
+            ))
+
             # --- Migración de Columnas (Si ya existe la tabla) ---
+            # Este bloque se mantiene igual por ser lógica condicional compleja, no SQL puro
             new_columns = [
                 ("profile_pic_url", "TEXT"),
                 ("fb_browser_id", "TEXT"),
@@ -271,7 +231,7 @@ def init_tables():
                 ("service_booked_date", "TIMESTAMP"),
                 ("appointment_count", "INTEGER DEFAULT 0"),
                 ("updated_at", "TIMESTAMP"),
-                ("onboarding_step", "TEXT"), # Step de la entrevista (null, 'pricing', 'bio', etc)
+                ("onboarding_step", "TEXT"), 
                 ("is_admin", "BOOLEAN DEFAULT FALSE")
             ]
             
@@ -280,8 +240,6 @@ def init_tables():
                     if BACKEND == "postgres":
                         cur.execute(f"ALTER TABLE contacts ADD COLUMN IF NOT EXISTS {col_name} {col_type};")
                     else:
-                        # SQLite no soporta IF NOT EXISTS en ALTER TABLE
-                        # Debemos verificar si existe
                         cur.execute(f"PRAGMA table_info(contacts);")
                         cols = [c[1] for c in cur.fetchall()]
                         if col_name not in cols:
@@ -289,74 +247,28 @@ def init_tables():
                 except Exception as e:
                     logger.warning(f"⚠️ Nota: Al intentar añadir {col_name}: {e}")
 
-            cur.execute('CREATE INDEX IF NOT EXISTS idx_contacts_whatsapp ON contacts(whatsapp_number);')
-            cur.execute('CREATE INDEX IF NOT EXISTS idx_contacts_status ON contacts(status);')
+            cur.execute(queries.CREATE_INDEX_CONTACTS_WHATSAPP)
+            cur.execute(queries.CREATE_INDEX_CONTACTS_STATUS)
 
-            # --- Tabla MESSAGES (AI Memory) ---
-            # Forzado a INTEGER para contact_id para coincidir con SERIAL en contacts
-            sql_messages = f'''
-                CREATE TABLE IF NOT EXISTS messages (
-                    id {id_type_uuid if BACKEND == "postgres" else id_type_serial},
-                    contact_id INTEGER,
-                    role TEXT CHECK (role IN ('user', 'assistant', 'system', 'tool')),
-                    content TEXT,
-                    created_at TIMESTAMP DEFAULT {timestamp_default},
-                    FOREIGN KEY (contact_id) REFERENCES contacts(id) ON DELETE CASCADE
-                );
-            '''
-            cur.execute(sql_messages)
-            cur.execute('CREATE INDEX IF NOT EXISTS idx_messages_contact_id ON messages(contact_id);')
+            cur.execute(queries.CREATE_TABLE_MESSAGES.format(
+                id_type_primary_key=id_type_pk, timestamp_default=timestamp_default
+            ))
+            cur.execute(queries.CREATE_INDEX_MESSAGES_CONTACT_ID)
 
-            # --- Tabla APPOINTMENTS (Agendamiento) ---
-            sql_appointments = f'''
-                CREATE TABLE IF NOT EXISTS appointments (
-                    id {id_type_serial},
-                    contact_id INTEGER,
-                    appointment_date TIMESTAMP NOT NULL,
-                    service_type TEXT,
-                    status TEXT DEFAULT 'pending',
-                    created_at TIMESTAMP DEFAULT {timestamp_default},
-                    FOREIGN KEY (contact_id) REFERENCES contacts(id)
-                );
-            '''
-            cur.execute(sql_appointments)
-            
-            # --- Tabla LEADS (W-003 Tracking Rescue) ---
-            sql_leads = f'''
-                CREATE TABLE IF NOT EXISTS leads (
-                    id {id_type_uuid if BACKEND == "postgres" else id_type_serial}, -- Serial fallback for sqlite simple logic or text UUID
-                    whatsapp_phone TEXT UNIQUE NOT NULL,
-                    meta_lead_id TEXT,
-                    click_id TEXT, -- fbclid
-                    email TEXT,
-                    name TEXT,
-                    conversion_status TEXT DEFAULT 'NEW',
-                    created_at TIMESTAMP DEFAULT {timestamp_default},
-                    last_interaction TIMESTAMP DEFAULT {timestamp_default}
-                );
-            '''
-            # Nota: Para SQLite usaremos Logic UUID en el insert si es necesario, pero aqui definimos Schema
-            if BACKEND != "postgres":
-                 # En SQLite preferimos TEXT para ID para consistencia con lógica de python uuid
-                 sql_leads = sql_leads.replace("INTEGER PRIMARY KEY AUTOINCREMENT", "TEXT PRIMARY KEY")
+            cur.execute(queries.CREATE_TABLE_APPOINTMENTS.format(
+                id_type_serial=id_type_serial, timestamp_default=timestamp_default
+            ))
 
-            cur.execute(sql_leads)
-            cur.execute('CREATE INDEX IF NOT EXISTS idx_leads_phone ON leads(whatsapp_phone);')
-            cur.execute('CREATE INDEX IF NOT EXISTS idx_leads_meta_id ON leads(meta_lead_id);')
+            cur.execute(queries.CREATE_TABLE_LEADS.format(
+                id_type_primary_key=id_type_pk, timestamp_default=timestamp_default
+            ))
+            cur.execute(queries.CREATE_INDEX_LEADS_PHONE)
+            cur.execute(queries.CREATE_INDEX_LEADS_META_ID)
 
-            # --- Tabla INTERACTIONS (Contexto) ---
-            sql_interactions = f'''
-                CREATE TABLE IF NOT EXISTS interactions (
-                    id {id_type_serial},
-                    lead_id { 'UUID' if BACKEND == "postgres" else 'TEXT' },
-                    role TEXT NOT NULL, -- 'user', 'system', 'assistant'
-                    content TEXT,
-                    timestamp TIMESTAMP DEFAULT {timestamp_default},
-                    FOREIGN KEY (lead_id) REFERENCES leads(id) ON DELETE CASCADE
-                );
-            '''
-            cur.execute(sql_interactions)
-            cur.execute('CREATE INDEX IF NOT EXISTS idx_interactions_lead_id ON interactions(lead_id);')
+            cur.execute(queries.CREATE_TABLE_INTERACTIONS.format(
+                id_type_serial=id_type_serial, lead_id_type=lead_id_type, timestamp_default=timestamp_default
+            ))
+            cur.execute(queries.CREATE_INDEX_INTERACTIONS_LEAD_ID)
             
         logger.info(f"✅ Tablas sincronizadas con Schema Natalia v2.0 ({BACKEND})")
         return True
@@ -377,12 +289,7 @@ def save_visitor(external_id, fbclid, ip_address, user_agent, source="pageview",
     with get_cursor() as cur:
         if cur:
             cur.execute(
-                """
-                INSERT INTO visitors (
-                    external_id, fbclid, ip_address, user_agent, source,
-                    utm_source, utm_medium, utm_campaign, utm_term, utm_content
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                """,
+                queries.INSERT_VISITOR,
                 (
                     external_id, 
                     fbclid, 
@@ -402,17 +309,10 @@ def upsert_contact_advanced(contact_data: Dict[str, Any]):
     Upsert avanzado estilo CRM Natalia. Sincroniza marketing y ventas.
     """
     if BACKEND != "postgres":
-        # Implementación parcial para SQLite para no romper dev
+        # Implementación parcial para SQLite
         with get_cursor() as cur:
             if cur:
-                cur.execute("""
-                    INSERT INTO contacts (whatsapp_number, full_name, utm_source, status)
-                    VALUES (%s, %s, %s, %s)
-                    ON CONFLICT(whatsapp_number) DO UPDATE SET
-                        full_name = EXCLUDED.full_name,
-                        utm_source = COALESCE(EXCLUDED.utm_source, contacts.utm_source),
-                        last_interaction = CURRENT_TIMESTAMP
-                """, (
+                cur.execute(queries.UPSERT_CONTACT_SQLITE, (
                     contact_data.get('phone'), 
                     contact_data.get('name'), 
                     contact_data.get('utm_source'),
@@ -420,29 +320,6 @@ def upsert_contact_advanced(contact_data: Dict[str, Any]):
                 ))
         return
 
-    sql = """
-    INSERT INTO contacts (
-        whatsapp_number, full_name, profile_pic_url,
-        fb_click_id, fb_browser_id,
-        utm_source, utm_medium, utm_campaign, utm_term, utm_content,
-        status, lead_score, pain_point, service_interest,
-        last_interaction
-    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
-    ON CONFLICT (whatsapp_number) 
-    DO UPDATE SET 
-        full_name = COALESCE(EXCLUDED.full_name, contacts.full_name),
-        profile_pic_url = COALESCE(EXCLUDED.profile_pic_url, contacts.profile_pic_url),
-        fb_click_id = COALESCE(EXCLUDED.fb_click_id, contacts.fb_click_id),
-        utm_source = COALESCE(EXCLUDED.utm_source, contacts.utm_source),
-        status = COALESCE(EXCLUDED.status, contacts.status),
-        lead_score = COALESCE(EXCLUDED.lead_score, contacts.lead_score),
-        pain_point = COALESCE(EXCLUDED.pain_point, contacts.pain_point),
-        service_interest = COALESCE(EXCLUDED.service_interest, contacts.service_interest),
-        last_interaction = NOW(),
-        web_visit_count = contacts.web_visit_count + 1,
-        updated_at = NOW();
-    """
-    
     params = (
         contact_data.get('phone'),
         contact_data.get('name'),
@@ -463,7 +340,7 @@ def upsert_contact_advanced(contact_data: Dict[str, Any]):
     try:
         with get_cursor() as cur:
             if cur:
-                cur.execute(sql, params)
+                cur.execute(queries.UPSERT_CONTACT_POSTGRES, params)
                 logger.info(f"🚀 Natalia Sync Success: {contact_data.get('phone')}")
     except Exception as e:
         logger.error(f"❌ Natalia Sync Error: {e}")
@@ -478,23 +355,18 @@ def save_message(whatsapp_number: str, role: str, content: str):
             if not cur: return
             
             # 1. Obtener contact_id
-            cur.execute("SELECT id FROM contacts WHERE whatsapp_number = %s", (whatsapp_number,))
+            cur.execute(queries.SELECT_CONTACT_ID_BY_PHONE, (whatsapp_number,))
             row = cur.fetchone()
             if not row:
                 # Si no existe, lo creamos mínimo
                 upsert_contact_advanced({'phone': whatsapp_number, 'status': 'new'})
-                cur.execute("SELECT id FROM contacts WHERE whatsapp_number = %s", (whatsapp_number,))
+                cur.execute(queries.SELECT_CONTACT_ID_BY_PHONE, (whatsapp_number,))
                 row = cur.fetchone()
             
             contact_id = row[0]
             
             # 2. Insertar mensaje
-            if BACKEND == "postgres":
-                sql = "INSERT INTO messages (contact_id, role, content) VALUES (%s, %s, %s)"
-            else:
-                sql = "INSERT INTO messages (contact_id, role, content) VALUES (%s, %s, %s)"
-                
-            cur.execute(sql, (contact_id, role, content))
+            cur.execute(queries.INSERT_MESSAGE, (contact_id, role, content))
     except Exception as e:
         logger.error(f"❌ Error guardando mensaje: {e}")
 
@@ -504,14 +376,7 @@ def get_chat_history(whatsapp_number: str, limit: int = 10):
     try:
         with get_cursor() as cur:
             if not cur: return []
-            cur.execute("""
-                SELECT m.role, m.content 
-                FROM messages m
-                JOIN contacts c ON m.contact_id = c.id
-                WHERE c.whatsapp_number = %s
-                ORDER BY m.created_at DESC
-                LIMIT %s
-            """, (whatsapp_number, limit))
+            cur.execute(queries.SELECT_CHAT_HISTORY, (whatsapp_number, limit))
             rows = cur.fetchall()
             # Invertir para que sea cronológico
             for row in reversed(rows):
@@ -524,10 +389,7 @@ def get_chat_history(whatsapp_number: str, limit: int = 10):
 def get_visitor_fbclid(external_id):
     with get_cursor() as cur:
         if cur:
-            cur.execute(
-                "SELECT fbclid FROM visitors WHERE external_id = %s AND fbclid IS NOT NULL ORDER BY timestamp DESC LIMIT 1",
-                (external_id,)
-            )
+            cur.execute(queries.SELECT_FBCLID_BY_EXTERNAL_ID, (external_id,))
             row = cur.fetchone()
             return row[0] if row else None
     return None
@@ -544,10 +406,7 @@ def get_all_visitors(limit: int = 50) -> List[Dict[str, Any]]:
     try:
         with get_cursor() as cur:
             if cur:
-                cur.execute(
-                    "SELECT id, external_id, source, timestamp, ip_address FROM visitors ORDER BY timestamp DESC LIMIT %s",
-                    (limit,)
-                )
+                cur.execute(queries.SELECT_RECENT_VISITORS, (limit,))
                 rows = cur.fetchall()
                 for row in rows:
                     visitors.append({
@@ -566,10 +425,7 @@ def get_visitor_by_id(visitor_id: int) -> Optional[Dict[str, Any]]:
     try:
         with get_cursor() as cur:
             if cur:
-                cur.execute(
-                    "SELECT id, external_id, fbclid, source, timestamp FROM visitors WHERE id = %s",
-                    (visitor_id,)
-                )
+                cur.execute(queries.SELECT_VISITOR_BY_ID, (visitor_id,))
                 row = cur.fetchone()
                 if row:
                     return {
@@ -583,8 +439,6 @@ def get_visitor_by_id(visitor_id: int) -> Optional[Dict[str, Any]]:
         logger.error(f"❌ Error buscando visitor {visitor_id}: {e}")
     return None
 
-
-
 # =================================================================
 # W-003 TRACKING OPERATIONS (Tracking Rescue)
 # =================================================================
@@ -594,10 +448,7 @@ def mark_lead_sent(whatsapp_number: str) -> bool:
     try:
         with get_cursor() as cur:
             if not cur: return False
-            cur.execute(
-                "UPDATE contacts SET conversion_sent_to_meta = TRUE WHERE whatsapp_number = %s",
-                (whatsapp_number,)
-            )
+            cur.execute(queries.UPDATE_LEAD_SENT_FLAG, (whatsapp_number,))
             return True
     except Exception as e:
         logger.error(f"❌ Error marcando lead enviado: {e}")
@@ -608,12 +459,7 @@ def get_user_message_count(whatsapp_number: str) -> int:
     try:
         with get_cursor() as cur:
             if not cur: return 0
-            # Solo contamos mensajes con role 'user'
-            cur.execute("""
-                SELECT COUNT(*) FROM messages m
-                JOIN contacts c ON m.contact_id = c.id
-                WHERE c.whatsapp_number = %s AND m.role = 'user'
-            """, (whatsapp_number,))
+            cur.execute(queries.COUNT_USER_MESSAGES, (whatsapp_number,))
             row = cur.fetchone()
             return row[0] if row else 0
     except Exception as e:
@@ -625,10 +471,7 @@ def check_if_lead_sent(whatsapp_number: str) -> bool:
     try:
         with get_cursor() as cur:
             if not cur: return False
-            cur.execute(
-                "SELECT conversion_sent_to_meta FROM contacts WHERE whatsapp_number = %s",
-                (whatsapp_number,)
-            )
+            cur.execute(queries.CHECK_LEAD_SENT_FLAG, (whatsapp_number,))
             row = cur.fetchone()
             return row[0] if row else False
     except Exception as e:
@@ -640,13 +483,7 @@ def get_meta_data_by_ref(ref_tag: str) -> Optional[Dict[str, Any]]:
     try:
         with get_cursor() as cur:
             if not cur: return None
-            # Buscamos en visitantes el external_id que empiece con el tag (8 chars)
-            cur.execute("""
-                SELECT fbclid, user_agent, ip_address, utm_source, utm_medium, utm_campaign
-                FROM visitors 
-                WHERE external_id LIKE %s 
-                ORDER BY timestamp DESC LIMIT 1
-            """, (f"{ref_tag}%",))
+            cur.execute(queries.SELECT_META_DATA_BY_REF, (f"{ref_tag}%",))
             row = cur.fetchone()
             if row:
                 return {
@@ -675,23 +512,14 @@ def get_or_create_lead(whatsapp_phone: str, meta_data: Optional[dict] = None) ->
             if not cur: return None
 
             # 1. Buscar Lead existente
-            cur.execute("SELECT id FROM leads WHERE whatsapp_phone = %s", (whatsapp_phone,))
+            cur.execute(queries.SELECT_LEAD_ID_BY_PHONE, (whatsapp_phone,))
             row = cur.fetchone()
 
             if row:
                 lead_id = row[0]
                 # Update si hay nuevos datos de Meta
                 if meta_data:
-                    sql_update = """
-                        UPDATE leads SET 
-                            meta_lead_id = COALESCE(%s, meta_lead_id),
-                            click_id = COALESCE(%s, click_id),
-                            email = COALESCE(%s, email),
-                            name = COALESCE(%s, name),
-                            last_interaction = CURRENT_TIMESTAMP
-                        WHERE id = %s
-                    """
-                    cur.execute(sql_update, (
+                    cur.execute(queries.UPDATE_LEAD_METADATA, (
                         meta_data.get('meta_lead_id'),
                         meta_data.get('click_id'),
                         meta_data.get('email'),
@@ -703,12 +531,7 @@ def get_or_create_lead(whatsapp_phone: str, meta_data: Optional[dict] = None) ->
             # 2. Crear Nuevo Lead
             logger.info(f"✨ Creando Nuevo Lead: {whatsapp_phone}")
             if BACKEND == "postgres":
-                sql_insert = """
-                    INSERT INTO leads (whatsapp_phone, meta_lead_id, click_id, email, name)
-                    VALUES (%s, %s, %s, %s, %s)
-                    RETURNING id
-                """
-                cur.execute(sql_insert, (
+                cur.execute(queries.INSERT_LEAD_RETURNING_ID, (
                     whatsapp_phone,
                     meta_data.get('meta_lead_id'),
                     meta_data.get('click_id'),
@@ -719,13 +542,8 @@ def get_or_create_lead(whatsapp_phone: str, meta_data: Optional[dict] = None) ->
                 return str(lead_id)
             else:
                 # SQLite Logic
-                import uuid
                 new_id = str(uuid.uuid4())
-                sql_insert = """
-                    INSERT INTO leads (id, whatsapp_phone, meta_lead_id, click_id, email, name)
-                    VALUES (%s, %s, %s, %s, %s, %s)
-                """
-                cur.execute(sql_insert, (
+                cur.execute(queries.INSERT_LEAD_SQLITE, (
                     new_id,
                     whatsapp_phone,
                     meta_data.get('meta_lead_id'),
@@ -744,19 +562,24 @@ def log_interaction(lead_id: str, role: str, content: str) -> bool:
     try:
         with get_cursor() as cur:
             if not cur: return False
-            
-            if BACKEND == "postgres":
-                 # Postgres casteo automático si definimos UUID en tabla
-                sql = "INSERT INTO interactions (lead_id, role, content) VALUES (%s, %s, %s)"
-            else:
-                sql = "INSERT INTO interactions (lead_id, role, content) VALUES (%s, %s, %s)"
-
-            cur.execute(sql, (lead_id, role, content))
+            cur.execute(queries.INSERT_INTERACTION, (lead_id, role, content))
             return True
     except Exception as e:
         logger.error(f"❌ Error en log_interaction: {e}")
         return False
 
+
+
+def check_connection() -> bool:
+    """Verifica si la base de datos está accesible"""
+    try:
+        with get_cursor() as cur:
+            if cur:
+                cur.execute("SELECT 1")
+                return True
+    except Exception as e:
+        logger.error(f"❌ Health Check Failed: {e}")
+    return False
 
 # =================================================================
 # NATALIA KNOWLEDGE BASE
@@ -769,22 +592,10 @@ def save_knowledge_fact(slug: str, category: str, content: str):
             if not cur: return False
             
             if BACKEND == "postgres":
-                sql = """
-                    INSERT INTO business_knowledge (slug, category, content, updated_at)
-                    VALUES (%s, %s, %s, NOW())
-                    ON CONFLICT (slug) DO UPDATE SET
-                        content = EXCLUDED.content,
-                        category = EXCLUDED.category,
-                        updated_at = NOW();
-                """
+                sql = queries.UPSERT_KNOWLEDGE_POSTGRES
             else:
-                sql = """
-                    INSERT INTO business_knowledge (slug, category, content)
-                    VALUES (%s, %s, %s)
-                    ON CONFLICT (slug) DO UPDATE SET
-                        content = EXCLUDED.content,
-                        category = EXCLUDED.category;
-                """
+                sql = queries.UPSERT_KNOWLEDGE_SQLITE
+                
             cur.execute(sql, (slug, category, content))
             logger.info(f"🧠 Natalia Learned: {slug} ({category})")
             return True
@@ -799,41 +610,20 @@ def get_knowledge_base(category: Optional[str] = None) -> List[Dict[str, Any]]:
         with get_cursor() as cur:
             if not cur: return []
             
+            sql = "SELECT slug, category, content FROM business_knowledge"
+            params = []
             if category:
-                sql = "SELECT slug, category, content FROM business_knowledge WHERE category = %s"
-                params = (category,)
-            else:
-                sql = "SELECT slug, category, content FROM business_knowledge"
-                params = None
+                sql += " WHERE category = %s"
+                params.append(category)
                 
-            cur.execute(sql, params)
+            cur.execute(sql, tuple(params))
             rows = cur.fetchall()
             for row in rows:
-                facts.append({"slug": row[0], "category": row[1], "content": row[2]})
+                facts.append({
+                    "slug": row[0],
+                    "category": row[1],
+                    "content": row[2]
+                })
     except Exception as e:
-        logger.error(f"❌ Error obteniendo conocimiento: {e}")
+        logger.error(f"❌ Error obteniendo knowledge base: {e}")
     return facts
-
-def get_knowledge_value(slug: str) -> Optional[str]:
-    """Obtiene un valor específico del conocimiento"""
-    try:
-        with get_cursor() as cur:
-            if not cur: return None
-            cur.execute("SELECT content FROM business_knowledge WHERE slug = %s", (slug,))
-            row = cur.fetchone()
-            return row[0] if row else None
-    except Exception as e:
-        logger.error(f"❌ Error obteniendo valor de conocimiento: {e}")
-    return None
-
-def check_connection() -> bool:
-    """Verifica si hay conexión a BD"""
-    try:
-        with get_cursor() as cur:
-            if cur:
-                cur.execute("SELECT 1")
-                return True
-    except Exception:
-        pass
-    return False
-
