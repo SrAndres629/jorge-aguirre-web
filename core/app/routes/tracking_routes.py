@@ -38,7 +38,19 @@ async def track_event(event: TrackingEvent, request: Request, background_tasks: 
     return await process_tracking_event(event, request, background_tasks)
 
 async def process_tracking_event(event: TrackingEvent, request: Request, background_tasks: BackgroundTasks):
-    client_ip = request.client.host
+    # 🛡️ ROAS PROTECTION: Real IP Extraction (Cloudflare/Proxy Support)
+    # If we send "127.0.0.1", Meta drops the event match quality to 0/10.
+    forwarded = request.headers.get("x-forwarded-for")
+    cf_ip = request.headers.get("cf-connecting-ip")
+    
+    if cf_ip:
+        client_ip = cf_ip
+    elif forwarded:
+        client_ip = forwarded.split(",")[0].strip()
+    else:
+        client_ip = request.client.host
+        
+    logger.info(f"🔍 [IP AUDIT] Source: {client_ip} (CF: {cf_ip} | XFF: {forwarded})")
     user_agent = request.headers.get("user-agent", "unknown")
     
     # Extract Data

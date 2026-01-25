@@ -19,10 +19,17 @@ class NataliaBrain:
         self.emoji_map = {"pricing": "💰", "location": "📍", "policy": "📋", "greeting": "✨"}
         # 💰 Estrategia VBO: Mapeo de valores estimados por servicio
         self.value_map = {
+            "curso": 500.0, # High Ticket Education
+            "masterclass": 500.0,
             "microblading": 300.0,
+            "pelo a pelo": 300.0,
             "cejas": 250.0,
+            "shading": 250.0,
             "labios": 200.0,
+            "aquarelle": 200.0,
             "ojos": 150.0,
+            "delineado": 150.0,
+            "remocion": 100.0,
             "general": 50.0
         }
         # 🛑 Pillar 4: Filtro Anti-Basura
@@ -104,35 +111,60 @@ class NataliaBrain:
 
     def _rule_based_response(self, text: str, history: Optional[list] = None) -> str:
         """
-        Versión Senior: Simulación de Neuro-Ventas basada en protocolos .ai
+        Conversion Strategist Implementation: 
+        1. Frame: Diagnostic Surgeon (High Status)
+        2. Technique: Price Anchoring
+        3. Closer: Scarcity / Micro-Agreement
         """
         from app.database import get_knowledge_base
         
         text = text.lower()
         knowledge = get_knowledge_base()
         
-        # 0. Context Awareness (Short Memory)
-        if history and len(history) > 0:
-            # Lógica de seguimiento si ya hubo charla
-            pass
+        # 🛡️ STATUS MANAGEMENT: Frame Controller
+        is_first_message = not history or len(history) < 2
 
-        # 1. Knowledge Retrieval & Injection
-        # Buscamos en el 'business_knowledge' cargado en Supabase
+        # 1. Diagnostic Frame (Surgeon Protocol)
+        if any(kw in text for kw in ['precio', 'costo', 'cuanto', 'valor']):
+            # Price Anchoring Logic
+            for fact in knowledge:
+                service_slug = fact['slug'].split('_')[0]
+                if service_slug in text:
+                    base_price = self.value_map.get(service_slug, 300.0)
+                    anchor_price = base_price * 2
+                    return (
+                        f"Entiendo perfectamente. El valor depende del estado actual de tu piel. 🧐\n\n"
+                        f"Para que te des una idea: un procedimiento de corrección de trabajo previo (cuando vienen de otros lugares) "
+                        f"suele iniciar en {anchor_price} USD debido a la complejidad técnica.\n\n"
+                        f"Sin embargo, si tu piel está 'virgen' o lista para diseño nuevo, la inversión para {service_slug.capitalize()} es de solo {base_price} USD.\n\n"
+                        f"Dime, ¿ya tienes algún trabajo previo o sería tu primera vez?"
+                    )
+            # General fallback for price
+            return "El valor de nuestros servicios de alta gama varía según la complejidad. Para Jorge lo más importante es la seguridad de tu rostro. ¿Te gustaría que iniciemos con una breve evaluación de tu caso para darte el presupuesto exacto? ✨"
+
+        # 2. Scarcity & Social Proof (Closing Protocol)
+        if any(kw in text for kw in ['cita', 'agenda', 'reserva', 'turno', 'cuándo']):
+            return (
+                "Jorge tiene una agenda bastante solicitada por la exclusividad de su técnica. 📅\n\n"
+                "Suelo tener espacios disponibles recién para dentro de 5-7 días, pero a veces hay cambios de último minuto.\n\n"
+                "¿Prefieres horario de mañana o tarde para ver qué puedo rescatar para ti?"
+            )
+
+        # 3. Knowledge Injection (Informational)
         for fact in knowledge:
-            if fact['category'] == 'pricing' and any(kw in text for kw in ['precio', 'costo', 'valor', 'cuanto']):
-                if fact['slug'].split('_')[0] in text: # Ej: 'microblading'
-                    return f"{self.emoji_map['greeting']} ¡Claro! {fact['content']}\n\nEs una inversión en tu rostro que dura meses. ¿Te gustaría agendar una evaluación gratuita para ver cómo quedaría en ti? 💖"
+            if any(kw in text for kw in ['donde', 'ubicacion', 'direccion']):
+                if fact['category'] == 'location':
+                    return f"{self.emoji_map['location']} Estamos en la zona más exclusiva de Equipetrol. {fact['content']} ¿Desde qué zona nos escribes tú? ✨"
 
-        # 2. Category Fallbacks (Tone: Professional & Warm)
-        if any(kw in text for kw in ['donde', 'ubicacion', 'direccion']):
-            loc = next((f['content'] for f in knowledge if f['category'] == 'location'), "Equipetrol.")
-            return f"{self.emoji_map['location']} Estamos ubicados en {loc} ¿En qué zona te encuentras tú?"
+        # 4. Default Greeting (Frame: Diagnostic Expert)
+        if is_first_message:
+            return (
+                "¡Hola! Soy Natalia, especialista en diseño de mirada de Jorge Aguirre. ✨\n\n"
+                "He recibido tu interés. Para asesorarte con el estándar de calidad que manejamos, "
+                "¿podrías decirme qué zona de tu rostro te gustaría potenciar hoy?"
+            )
 
-        if any(kw in text for kw in ['cita', 'agenda', 'reserva', 'turno']):
-            return "¡Me encantaría ayudarte a agendar! 📅 ¿Qué día de la semana te queda mejor para una evaluación gratuita con Jorge?"
-
-        # 3. Default Greeting (Neuro-Sales Hook)
-        return "¡Hola! Soy Natalia, asistente experta de Jorge Aguirre. ✨ ¿Estás lista para resaltar tu belleza natural hoy? ¿En qué servicio puedo asesorarte?"
+        return "Entiendo. Cuéntame un poco más sobre lo que buscas proyectar con tu diseño. ¿Buscas algo muy natural o un efecto más definido? 👁️"
 
 # Singleton
 natalia = NataliaBrain()

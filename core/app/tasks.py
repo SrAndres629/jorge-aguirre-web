@@ -210,3 +210,29 @@ def track_booking_confirmed_task(self, phone, service_name, value):
     except Exception as e:
         logger.error(f"❌ Gold Loop Error: {e}")
         raise self.retry(exc=e)
+@celery_app.task(bind=True, name="ghost_rescue_task", default_retry_delay=300, max_retries=2)
+def ghost_rescue_task(self, phone):
+    """
+    CONVERSION STRATEGIST: Ghost Protocol
+    Triggers a soft diagnostic follow-up if a lead hasn't responded in 24h.
+    """
+    from app.database import get_chat_history
+    from app.evolution import evolution_service
+    
+    history = get_chat_history(phone, limit=1)
+    if not history or history[0]['role'] == 'user':
+        return # They responded, no rescue needed
+        
+    # Soft Diagnostic Hook (Expert Frame)
+    rescue_text = (
+        "Hola, soy Natalia de nuevo. Estaba revisando tu caso con Jorge y nos quedó una duda: "
+        "¿buscas corregir un diseño previo o es para un rostro virgen?\n\n"
+        "Pregunto porque la técnica que usaríamos cambia completamente según tu respuesta. ✨"
+    )
+    
+    try:
+        evolution_service.send_text(phone, rescue_text)
+        logger.info(f"👻 [GHOST PROTOCOL] Rescue signal sent to {phone}")
+    except Exception as e:
+        logger.error(f"❌ Ghost Rescue failed: {e}")
+        raise self.retry(exc=e)
