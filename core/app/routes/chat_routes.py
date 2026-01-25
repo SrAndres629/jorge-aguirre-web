@@ -61,9 +61,9 @@ async def handle_incoming_chat(msg: IncomingMessage, background_tasks: Backgroun
 async def send_whatsapp_legacy(phone: str, text: str):
     """
     Envía mensaje usando la Evolution API.
-    Nota: Usamos 'JorgeMain' como instancia hardcodeada por ahora.
+    Nota: Usamos la instancia configurada en settings.
     """
-    url = f"{settings.EVOLUTION_API_URL}/message/sendText/JorgeMain"
+    url = f"{settings.EVOLUTION_API_URL}/message/sendText/{settings.EVOLUTION_INSTANCE}"
     headers = {"apikey": settings.EVOLUTION_API_KEY}
     payload = {
         "number": phone,

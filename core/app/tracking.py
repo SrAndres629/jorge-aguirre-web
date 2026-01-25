@@ -82,6 +82,11 @@ def send_event(
     Returns:
         bool: True si el evento se envió correctamente
     """
+    # 🛡️ SANDBOX MODE CHECK
+    if settings.META_SANDBOX_MODE:
+        logger.info(f"🛡️ [SANDBOX MODE] Event intercepted: {event_name} (Not sent to Meta)")
+        return True
+
     # Construir user_data
     user_data = {
         "client_ip_address": client_ip,

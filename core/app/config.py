@@ -29,6 +29,7 @@ class Settings(BaseSettings):
     META_ACCESS_TOKEN: Optional[str] = None
     META_API_VERSION: str = "v21.0"
     TEST_EVENT_CODE: Optional[str] = None
+    META_SANDBOX_MODE: bool = False # 🛡️ True = No enviar eventos reales a Meta
     
     # Security: CORS Origins
     BACKEND_CORS_ORIGINS: List[str] = [
@@ -67,6 +68,7 @@ class Settings(BaseSettings):
     WHATSAPP_NUMBER: str = "59164714751"
     EVOLUTION_API_KEY: Optional[str] = None
     EVOLUTION_API_URL: str = "http://evolution_api:8080"
+    EVOLUTION_INSTANCE: str = "JorgeMain"
 
     # n8n Integration
     N8N_WEBHOOK_URL: str = "http://n8n:5678/webhook/website-events"
