@@ -90,6 +90,7 @@ async def process_tracking_event(event: TrackingEvent, request: Request, backgro
         user_agent=user_agent,
         event_id=event.event_id,
         fbclid=fbclid,
+        fbp=custom_data.get('fbp'), # Pass FBP
         external_id=external_id,
         custom_data=event.custom_data
     )

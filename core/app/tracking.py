@@ -60,6 +60,7 @@ def send_event(
     user_agent: str,
     event_id: str,
     fbclid: Optional[str] = None,
+    fbp: Optional[str] = None,
     external_id: Optional[str] = None,
     custom_data: Optional[Dict[str, Any]] = None
 ) -> bool:
@@ -90,6 +91,9 @@ def send_event(
     
     if fbclid:
         user_data["fbc"] = generate_fbc(fbclid)
+
+    if fbp:
+        user_data["fbp"] = fbp
     
     # Construir evento
     event_data = {

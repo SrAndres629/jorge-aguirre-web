@@ -589,6 +589,35 @@ def get_visitor_by_id(visitor_id: int) -> Optional[Dict[str, Any]]:
 # W-003 TRACKING OPERATIONS (Tracking Rescue)
 # =================================================================
 
+def mark_conversion_sent(whatsapp_number: str) -> bool:
+    """Marca a un usuario como ya enviado a Meta para evitar duplicados"""
+    try:
+        with get_cursor() as cur:
+            if not cur: return False
+            cur.execute(
+                "UPDATE contacts SET conversion_sent_to_meta = TRUE WHERE whatsapp_number = %s",
+                (whatsapp_number,)
+            )
+            return True
+    except Exception as e:
+        logger.error(f"❌ Error marcando conversión: {e}")
+        return False
+
+def check_conversion_sent(whatsapp_number: str) -> bool:
+    """Verifica si ya avisamos a Meta sobre este Lead"""
+    try:
+        with get_cursor() as cur:
+            if not cur: return False
+            cur.execute(
+                "SELECT conversion_sent_to_meta FROM contacts WHERE whatsapp_number = %s",
+                (whatsapp_number,)
+            )
+            row = cur.fetchone()
+            return row[0] if row else False
+    except Exception as e:
+        logger.error(f"❌ Error verificando conversión: {e}")
+        return False
+
 def get_or_create_lead(whatsapp_phone: str, meta_data: Optional[dict] = None) -> Optional[str]:
     """
     Obtiene o crea un Lead basado en el teléfono.
