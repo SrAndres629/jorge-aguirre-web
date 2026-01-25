@@ -56,15 +56,15 @@ def save_message_task(self, phone, role, content):
 
 @celery_app.task(bind=True, name="send_meta_event_task", default_retry_delay=5, max_retries=3)
 def send_meta_event_task(self, event_name, event_source_url, client_ip, user_agent, event_id, fbclid, fbp, external_id, custom_data):
-    """Send event to Facebook Conversions API with Deduplication Shield"""
-    from app.database import check_conversion_sent, mark_conversion_sent
+    """Send event to Facebook Conversions API with Executive Deduplication Shield"""
+    from app.database import check_if_lead_sent, mark_lead_sent
     
-    # 🛡️ Conversion Shield: Solo enviamos 'Lead' una vez por teléfono
+    # 🛡️ Executive Shield: Bloqueo de duplicados para optimizar presupuesto
     phone = None
     if event_name == "Lead":
         phone = custom_data.get('phone') if custom_data else None
-        if phone and check_conversion_sent(phone):
-            logger.info(f"🛡️ [CAPI SHIELD] Deduplicated: Lead already sent for {phone}")
+        if phone and check_if_lead_sent(phone):
+            logger.info(f"🛡️ [ABORT MISSION] Lead already paid for {phone}. Skipping CAPI call to save budget.")
             return True
 
     try:
@@ -82,9 +82,9 @@ def send_meta_event_task(self, event_name, event_source_url, client_ip, user_age
         if not success:
             raise Exception("Meta API returned failure")
             
-        # 🛡️ Si fue exitoso y es un Lead, lo marcamos para no repetir
+        # 🛡️ Registro de conversión exitosa
         if event_name == "Lead" and phone:
-            mark_conversion_sent(phone)
+            mark_lead_sent(phone)
             
         logger.info(f"✅ Meta Event sent: {event_name}")
     except Exception as e:

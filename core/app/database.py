@@ -589,8 +589,8 @@ def get_visitor_by_id(visitor_id: int) -> Optional[Dict[str, Any]]:
 # W-003 TRACKING OPERATIONS (Tracking Rescue)
 # =================================================================
 
-def mark_conversion_sent(whatsapp_number: str) -> bool:
-    """Marca a un usuario como ya enviado a Meta para evitar duplicados"""
+def mark_lead_sent(whatsapp_number: str) -> bool:
+    """Marca a un usuario como ya enviado a Meta para evitar duplicados (Senior Guard)"""
     try:
         with get_cursor() as cur:
             if not cur: return False
@@ -600,11 +600,11 @@ def mark_conversion_sent(whatsapp_number: str) -> bool:
             )
             return True
     except Exception as e:
-        logger.error(f"❌ Error marcando conversión: {e}")
+        logger.error(f"❌ Error marcando lead enviado: {e}")
         return False
 
-def check_conversion_sent(whatsapp_number: str) -> bool:
-    """Verifica si ya avisamos a Meta sobre este Lead"""
+def check_if_lead_sent(whatsapp_number: str) -> bool:
+    """Verifica si ya pagamos a Meta por este Lead (Financial Shield)"""
     try:
         with get_cursor() as cur:
             if not cur: return False
@@ -615,7 +615,7 @@ def check_conversion_sent(whatsapp_number: str) -> bool:
             row = cur.fetchone()
             return row[0] if row else False
     except Exception as e:
-        logger.error(f"❌ Error verificando conversión: {e}")
+        logger.error(f"❌ Error verificando lead enviado: {e}")
         return False
 
 def get_or_create_lead(whatsapp_phone: str, meta_data: Optional[dict] = None) -> Optional[str]:
