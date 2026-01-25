@@ -16,6 +16,14 @@ class NataliaBrain:
         self.name = "Natalia"
         self.role = "Beauty Sales Consultant"
         self.emoji_map = {"pricing": "💰", "location": "📍", "policy": "📋", "greeting": "✨"}
+        # 💰 Estrategia VBO: Mapeo de valores estimados por servicio
+        self.value_map = {
+            "microblading": 300.0,
+            "cejas": 250.0,
+            "labios": 200.0,
+            "ojos": 150.0,
+            "general": 50.0
+        }
 
     def process_message(self, phone: str, text: str, meta_data: Optional[dict] = None) -> Dict[str, Any]:
         """

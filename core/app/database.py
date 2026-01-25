@@ -603,6 +603,23 @@ def mark_lead_sent(whatsapp_number: str) -> bool:
         logger.error(f"❌ Error marcando lead enviado: {e}")
         return False
 
+def get_user_message_count(whatsapp_number: str) -> int:
+    """Cuenta cuántos mensajes ha enviado el USUARIO para el filtro de calidad"""
+    try:
+        with get_cursor() as cur:
+            if not cur: return 0
+            # Solo contamos mensajes con role 'user'
+            cur.execute("""
+                SELECT COUNT(*) FROM messages m
+                JOIN contacts c ON m.contact_id = c.id
+                WHERE c.whatsapp_number = %s AND m.role = 'user'
+            """, (whatsapp_number,))
+            row = cur.fetchone()
+            return row[0] if row else 0
+    except Exception as e:
+        logger.error(f"❌ Error contando mensajes: {e}")
+        return 0
+
 def check_if_lead_sent(whatsapp_number: str) -> bool:
     """Verifica si ya pagamos a Meta por este Lead (Financial Shield)"""
     try:

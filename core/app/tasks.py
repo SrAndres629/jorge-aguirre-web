@@ -62,7 +62,20 @@ def save_message_task(self, phone, role, content):
             logger.info(f"🛡️ [CAPI SHIELD] Lead already sent for {phone}. Skipping.")
             return True
 
-        # 4. Enriquecimiento de Datos via [Ref Tag]
+        # 🛡️ Pillar 3: Natalia's Smart Filter
+        # Solo enviamos el Lead a Meta si el usuario ha enviado al menos 2 mensajes (Interés certificado)
+        from app.database import get_user_message_count
+        msg_count = get_user_message_count(phone)
+        if msg_count < 2:
+            logger.info(f"⏳ [SMART FILTER] Message count for {phone} is {msg_count}. Waiting for more interaction to fire Lead.")
+            return True
+
+        # 4. Enriquecimiento de Datos via [Ref Tag] y Natalia's Brain
+        from app.natalia import natalia
+        # Volvemos a procesar ligeramente para obtener metadatos de valor (VBO)
+        brain_result = natalia.process_message(phone, content) 
+        meta_vbo = brain_result.get("metadata", {})
+
         ref_match = re.search(r"\[Ref: ([a-zA-Z0-9]+)\]", content)
         meta_data = None
         if ref_match:
@@ -71,11 +84,10 @@ def save_message_task(self, phone, role, content):
             if meta_data:
                 logger.info(f"🧬 [DATA ENRICHMENT] Found meta data for ref {ref_tag}")
 
-        # 5. Disparo de Conversión 'Lead' (Backend Authority)
-        # Extraemos cookies si se encontraron, si no, disparamos solo con el teléfono (6/10 vs 10/10)
+        # 5. Disparo de Conversión 'Lead' (Backend Authority + VBO)
         from app.tasks import send_meta_event_task
         
-        event_id = f"lead_be_{phone}_{int(time.time())}"
+        event_id = f"lead_be_v2_{phone}"
         send_meta_event_task.delay(
             event_name="Lead",
             event_source_url="https://jorgeaguirreflores.com/whatsapp_conversion",
@@ -83,17 +95,19 @@ def save_message_task(self, phone, role, content):
             user_agent=meta_data.get('user_agent', 'Evolution API') if meta_data else 'Evolution API',
             event_id=event_id,
             fbclid=meta_data.get('fbclid') if meta_data else None,
-            fbp=None, # Implementación de recuperación de fbp pendiente si no está en visitor
+            fbp=None,
             external_id=None,
-            phone=phone, # 🚀 PRIMARY KEY PARA MATCHING
+            phone=phone,
             custom_data={
-                "lead_source": "whatsapp_confirmed",
-                "content_category": "confirmed_lead",
+                "lead_source": "whatsapp_qualified",
+                "content_category": meta_vbo.get("intent", "general"),
+                "value": meta_vbo.get("value", 50.0), # 💰 VBO Pillar 1
+                "currency": meta_vbo.get("currency", "USD"),
                 "phone": phone
             }
         )
         
-        logger.info(f"🚀 [TRUE LEAD] Backend conversion triggered for {phone}")
+        logger.info(f"🚀 [TRUE LEAD v2.0] Qualified conversion sent for {phone} - Value: {meta_vbo.get('value')}")
         return True
 
     except Exception as e:
