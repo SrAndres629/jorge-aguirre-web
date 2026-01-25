@@ -3,9 +3,10 @@
 # Jorge Aguirre Flores Web
 # =================================================================
 import os
-from typing import Optional, List, Union
+from typing import Optional, List, Union, Any
 from pydantic import field_validator
 import logging
+import json
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Configurar logging
@@ -42,12 +43,19 @@ class Settings(BaseSettings):
 
     @field_validator("BACKEND_CORS_ORIGINS", mode="before")
     @classmethod
-    def assemble_cors_origins(cls, v: Union[str, List[str]]) -> Union[List[str], str]:
-        if isinstance(v, str) and not v.startswith("["):
+    def assemble_cors_origins(cls, v: Any) -> Union[List[str], str]:
+        if isinstance(v, str):
+            if not v:
+                return []
+            if v.startswith("[") and v.endswith("]"):
+                try:
+                    return json.loads(v)
+                except:
+                    pass
             return [i.strip() for i in v.split(",")]
-        elif isinstance(v, (list, str)):
+        elif isinstance(v, list):
             return v
-        raise ValueError(v)
+        return v
     
     # Database (Supabase PostgreSQL)
     DATABASE_URL: Optional[str] = None
