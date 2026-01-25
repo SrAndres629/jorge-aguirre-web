@@ -32,18 +32,13 @@ class Settings(BaseSettings):
     TEST_EVENT_CODE: Optional[str] = None
     META_SANDBOX_MODE: bool = False # 🛡️ True = No enviar eventos reales a Meta
     
-    # Security: CORS Origins
-    BACKEND_CORS_ORIGINS: Any = [
-        "https://jorgeaguirreflores.com",
-        "https://www.jorgeaguirreflores.com",
-        "https://jorge-aguirre-web.onrender.com",
-        "http://localhost:8000",
-        "http://localhost:5678"
-    ]
+    # Security: CORS Origins (Type Any to prevent pydantic-settings auto-decoding as JSON)
+    BACKEND_CORS_ORIGINS: Any = "https://jorgeaguirreflores.com, https://www.jorgeaguirreflores.com, https://jorge-aguirre-web.onrender.com, http://localhost:8000, http://localhost:5678"
 
     @field_validator("BACKEND_CORS_ORIGINS", mode="before")
     @classmethod
-    def assemble_cors_origins(cls, v: Any) -> Union[List[str], str]:
+    def assemble_cors_origins(cls, v: Any) -> List[str]:
+        """Convierte string de env var en lista limpia para FastAPI"""
         if isinstance(v, str):
             if not v:
                 return []
@@ -52,10 +47,10 @@ class Settings(BaseSettings):
                     return json.loads(v)
                 except:
                     pass
-            return [i.strip() for i in v.split(",")]
+            return [i.strip() for i in v.split(",") if i.strip()]
         elif isinstance(v, list):
             return v
-        return v
+        return []
     
     # Database (Supabase PostgreSQL)
     DATABASE_URL: Optional[str] = None
