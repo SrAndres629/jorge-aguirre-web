@@ -3,7 +3,8 @@
 # Jorge Aguirre Flores Web
 # =================================================================
 import os
-from typing import Optional
+from typing import Optional, List, Union
+from pydantic import field_validator
 import logging
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -28,6 +29,24 @@ class Settings(BaseSettings):
     META_ACCESS_TOKEN: Optional[str] = None
     META_API_VERSION: str = "v21.0"
     TEST_EVENT_CODE: Optional[str] = None
+    
+    # Security: CORS Origins
+    BACKEND_CORS_ORIGINS: List[str] = [
+        "https://jorgeaguirreflores.com",
+        "https://www.jorgeaguirreflores.com",
+        "https://jorge-aguirre-web.onrender.com",
+        "http://localhost:8000",
+        "http://localhost:5678"
+    ]
+
+    @field_validator("BACKEND_CORS_ORIGINS", mode="before")
+    @classmethod
+    def assemble_cors_origins(cls, v: Union[str, List[str]]) -> Union[List[str], str]:
+        if isinstance(v, str) and not v.startswith("["):
+            return [i.strip() for i in v.split(",")]
+        elif isinstance(v, (list, str)):
+            return v
+        raise ValueError(v)
     
     # Database (Supabase PostgreSQL)
     DATABASE_URL: Optional[str] = None

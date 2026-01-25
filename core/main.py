@@ -85,14 +85,7 @@ app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=["*"])
 from fastapi.middleware.cors import CORSMiddleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://jorgeaguirreflores.com", 
-        "https://www.jorgeaguirreflores.com", 
-        "https://jorge-aguirre-web.onrender.com",
-        "http://localhost:8000",
-        "http://localhost:8081",
-        "http://localhost:5678"
-    ],
+    allow_origins=[str(origin) for origin in settings.BACKEND_CORS_ORIGINS],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
