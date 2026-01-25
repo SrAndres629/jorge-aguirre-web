@@ -75,8 +75,22 @@ def save_message_task(self, phone, role, content):
         # Volvemos a procesar ligeramente para obtener metadatos de valor (VBO)
         brain_result = natalia.process_message(phone, content) 
         meta_vbo = brain_result.get("metadata", {})
-
-        ref_match = re.search(r"\[Ref: ([a-zA-Z0-9]+)\]", content)
+        
+        # 🛑 Pillar 4: Anti-Junk Signal (Negative Feedback)
+        if meta_vbo.get("is_junk"):
+            logger.info(f"🛑 [ANTI-JUNK] Sending Negative Signal for {phone}")
+            from app.tasks import send_meta_event_task
+            send_meta_event_task.delay(
+                event_name="Other", # Evento genérico para no inflar leads
+                event_source_url="https://jorgeaguirreflores.com/whatsapp_spam",
+                client_ip="127.0.0.1",
+                user_agent="Natalia Anti-Junk",
+                event_id=f"junk_{phone}",
+                phone=phone,
+                custom_data={"disqualified_reason": "negative_intent", "is_junk": True}
+            )
+            mark_lead_sent(phone) # Bloqueamos cualquier cobro futuro de este número
+            return True
         meta_data = None
         if ref_match:
             ref_tag = ref_match.group(1)

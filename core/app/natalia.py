@@ -24,6 +24,11 @@ class NataliaBrain:
             "ojos": 150.0,
             "general": 50.0
         }
+        # 🛑 Pillar 4: Filtro Anti-Basura
+        self.junk_keywords = [
+            "spam", "ofensa", "insulto", "equivocado", "no me interesa", 
+            "publicidad", "oferta", "busco trabajo", "vendedor"
+        ]
 
     def process_message(self, phone: str, text: str, meta_data: Optional[dict] = None) -> Dict[str, Any]:
         """
@@ -60,6 +65,11 @@ class NataliaBrain:
                 break
         value = self.value_map[intent]
 
+        # Pillar 4: Detect Junk Signal
+        is_junk = any(kw in text.lower() for kw in self.junk_keywords)
+        if is_junk:
+            logger.warning(f"🛑 [ANTI-JUNK] Negative intent detected for {phone}")
+
         # 6. Log Assistant Response
         log_interaction(lead_id, "assistant", response_text)
         
@@ -71,7 +81,8 @@ class NataliaBrain:
             "metadata": {
                 "intent": intent,
                 "value": value,
-                "currency": "USD"
+                "currency": "USD",
+                "is_junk": is_junk
             }
         }
 
