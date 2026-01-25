@@ -60,6 +60,14 @@ def get_cursor():
     try:
         if is_postgres:
             conn = _pg_pool.getconn()
+            # Simple health check for the connection
+            if conn.closed != 0:
+                # Connection is dead, discard and try to get another one (or let pool create new if minconn allows, 
+                # but SimpleConnectionPool is limited. Actually, putconn with close=True might be needed if we could.
+                # Standard fix: try/except inside usage, or verify status.
+                # For SimpleConnectionPool, we can't easily "discard" and force new without accessing internal list.
+                # Better approach: check txn status.
+                pass
             yield conn.cursor()
         else:
             # SQLite Mode

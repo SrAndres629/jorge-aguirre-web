@@ -35,6 +35,7 @@ class Settings(BaseSettings):
     # Celery & Redis
     CELERY_BROKER_URL: str = os.getenv("CELERY_BROKER_URL", "redis://redis_evolution:6379/1")
     CELERY_RESULT_BACKEND: str = os.getenv("CELERY_RESULT_BACKEND", "redis://redis_evolution:6379/1")
+    CELERY_TASK_ALWAYS_EAGER: bool = False # Default to False, override via env var
     
     # Admin Panel
     ADMIN_KEY: str = os.getenv("ADMIN_KEY", "Andromeda2025")

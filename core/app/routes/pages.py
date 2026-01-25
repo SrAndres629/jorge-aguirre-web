@@ -49,7 +49,11 @@ async def read_root(
     
     # Si no hay fbclid en URL, intentar recuperar de la DB
     if not fbclid:
-        fbclid = get_visitor_fbclid(external_id)
+        try:
+            fbclid = get_visitor_fbclid(external_id)
+        except Exception as e:
+            print(f"⚠️ DB Warning (Non-critical): Could not retrieve visitor fbclid: {e}")
+            fbclid = None
     
     # Si hay fbclid, guardar cookie y persistir en DB
     if fbclid:
@@ -62,26 +66,34 @@ async def read_root(
             samesite="lax"
         )
         # Guardar en DB (Celery)
-        save_visitor_task.delay(
-            external_id=external_id, 
-            fbclid=fbclid, 
-            client_ip=client_ip, 
-            user_agent=user_agent, 
-            source="pageview",
-            utm_data={} # UTMs should be extracted if needed, but for now empty
-        )
+        try:
+            save_visitor_task.delay(
+                external_id=external_id, 
+                fbclid=fbclid or "", 
+                client_ip=client_ip, 
+                user_agent=user_agent, 
+                source="pageview",
+                utm_data={}
+            )
+        except Exception as e:
+            # Fallback silencioso (no romper la página por logs)
+            print(f"⚠️ Error queuing save_visitor: {e}")
     
     # Enviar PageView a Meta CAPI (Celery)
-    send_meta_event_task.delay(
-        event_name="PageView",
-        event_source_url=current_url,
-        client_ip=client_ip,
-        user_agent=user_agent,
-        event_id=event_id,
-        fbclid=fbclid,
-        external_id=external_id,
-        custom_data={}
-    )
+    # Enviar PageView a Meta CAPI (Celery)
+    try:
+        send_meta_event_task.delay(
+            event_name="PageView",
+            event_source_url=current_url,
+            client_ip=client_ip,
+            user_agent=user_agent,
+            event_id=event_id,
+            fbclid=fbclid,
+            external_id=external_id,
+            custom_data={}
+        )
+    except Exception as e:
+        print(f"⚠️ Error queuing Meta Event: {e}")
     
     return templates.TemplateResponse("index.html", {
         "request": request, 
