@@ -1,6 +1,7 @@
 
 from fastapi import APIRouter, HTTPException, BackgroundTasks
 from pydantic import BaseModel
+from typing import Optional, Dict, Any
 import httpx
 import logging
 from app.natalia import natalia
