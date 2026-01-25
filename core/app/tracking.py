@@ -62,6 +62,8 @@ def send_event(
     fbclid: Optional[str] = None,
     fbp: Optional[str] = None,
     external_id: Optional[str] = None,
+    phone: Optional[str] = None,
+    email: Optional[str] = None,
     custom_data: Optional[Dict[str, Any]] = None
 ) -> bool:
     """
@@ -94,6 +96,14 @@ def send_event(
 
     if fbp:
         user_data["fbp"] = fbp
+
+    if phone:
+        # Normalizar teléfono (solo números, con código de país)
+        clean_phone = "".join(filter(str.isdigit, phone))
+        user_data["ph"] = hash_data(clean_phone)
+
+    if email:
+        user_data["em"] = hash_data(email)
     
     # Construir evento
     event_data = {

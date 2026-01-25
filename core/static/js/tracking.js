@@ -212,12 +212,16 @@ const TrackingEngine = {
             'Sticky Mobile CTA': { name: 'Cita VIP Móvil', id: 'mobile_sticky', intent: 'convenience' }
         };
 
-        const eventId = `lead_${Date.now()}`;
+        const eventId = `contact_${Date.now()}`;
         const data = triggerMap[source] || { name: source, id: 'unknown', intent: 'general' };
+
+        // 🛡️ [Senior optimization]
+        // 1. We fire 'Contact' instead of 'Lead' in the frontend to avoid "Click Illusion"
+        // 2. The backend will fire the real 'Lead' when the message actually is sent.
 
         // Pixel
         if (window.fbq) {
-            fbq('track', 'Lead', {
+            fbq('track', 'Contact', {
                 content_name: data.name,
                 content_category: data.intent,
                 content_ids: [data.id],
@@ -227,7 +231,7 @@ const TrackingEngine = {
         }
 
         // CAPI
-        this.sendToCAPI('Lead', {
+        this.sendToCAPI('Contact', {
             event_id: eventId,
             source: source,
             service_data: data
@@ -243,7 +247,8 @@ const TrackingEngine = {
             });
         }
 
-        // WhatsApp Redirect implementation
+        // WhatsApp Redirect implementation with [Ref Tag] for match quality
+        const refTag = window.EXTERNAL_ID ? ` [Ref: ${window.EXTERNAL_ID.substring(0, 8)}]` : "";
         let message = `Hola Jorge 👋`;
         if (source === 'Floating Button') {
             message = "Hola Jorge, estoy visitando tu web y me interesa una valoración para maquillaje permanente. ¿Podrían asesorarme?";
@@ -254,6 +259,8 @@ const TrackingEngine = {
         } else {
             message += ` Quisiera información sobre sus servicios de maquillaje permanente.`;
         }
+
+        message += refTag;
 
         const whatsappUrl = `https://wa.me/${this.config.phone}?text=${encodeURIComponent(message)}`;
 
@@ -268,7 +275,8 @@ const TrackingEngine = {
      * 5. CAPI HELPER
      */
     async sendToCAPI(eventName, customData) {
-        const fbclid = new URLSearchParams(window.location.search).get('fbclid') || this.getUTM('fbclid');
+        // Extract _fbp cookie (Meta Browser ID)
+        const fbp = document.cookie.split('; ').find(row => row.startsWith('_fbp='))?.split('=')[1] || this.getUTM('fbp');
 
         // Enriched Payload with UTMs
         const payload = {
@@ -279,12 +287,13 @@ const TrackingEngine = {
             action_source: "website",
             user_data: {
                 external_id: window.EXTERNAL_ID || '',
-                // If fbclid exists, adding it to fbc (creation time logic moved to backend or standardized here)
                 fbc: fbclid ? `fb.1.${Math.floor(Date.now() / 1000)}.${fbclid}` : null,
+                fbp: fbp
             },
             custom_data: {
                 ...customData,
                 fbclid,
+                fbp,
                 utm_source: this.getUTM('utm_source'),
                 utm_medium: this.getUTM('utm_medium'),
                 utm_campaign: this.getUTM('utm_campaign'),

@@ -42,12 +42,62 @@ def upsert_contact_task(self, contact_payload):
 
 @celery_app.task(bind=True, name="save_message_task", default_retry_delay=5, max_retries=3)
 def save_message_task(self, phone, role, content):
-    """Save message to contact history for AI context"""
+    """Save message to contact history for AI context and trigger Lead Conversion"""
+    from app.database import (
+        save_message, check_if_lead_sent, get_meta_data_by_ref, 
+        mark_lead_sent, get_cursor
+    )
+    import re
+
     try:
+        # 1. Persistencia del mensaje
         save_message(phone, role, content)
-        logger.info(f"📝 Message saved for {phone}")
+        
+        # 2. 🛡️ TRUE LEAD Protocol: Solo procesamos si el mensaje es del USUARIO (role='user')
+        if role != "user":
+            return True
+
+        # 3. 🛡️ Verificación de Escudo Financiero (Deduplicación)
+        if check_if_lead_sent(phone):
+            logger.info(f"🛡️ [CAPI SHIELD] Lead already sent for {phone}. Skipping.")
+            return True
+
+        # 4. Enriquecimiento de Datos via [Ref Tag]
+        ref_match = re.search(r"\[Ref: ([a-zA-Z0-9]+)\]", content)
+        meta_data = None
+        if ref_match:
+            ref_tag = ref_match.group(1)
+            meta_data = get_meta_data_by_ref(ref_tag)
+            if meta_data:
+                logger.info(f"🧬 [DATA ENRICHMENT] Found meta data for ref {ref_tag}")
+
+        # 5. Disparo de Conversión 'Lead' (Backend Authority)
+        # Extraemos cookies si se encontraron, si no, disparamos solo con el teléfono (6/10 vs 10/10)
+        from app.tasks import send_meta_event_task
+        
+        event_id = f"lead_be_{phone}_{int(time.time())}"
+        send_meta_event_task.delay(
+            event_name="Lead",
+            event_source_url="https://jorgeaguirreflores.com/whatsapp_conversion",
+            client_ip=meta_data.get('ip_address', '127.0.0.1') if meta_data else '127.0.0.1',
+            user_agent=meta_data.get('user_agent', 'Evolution API') if meta_data else 'Evolution API',
+            event_id=event_id,
+            fbclid=meta_data.get('fbclid') if meta_data else None,
+            fbp=None, # Implementación de recuperación de fbp pendiente si no está en visitor
+            external_id=None,
+            phone=phone, # 🚀 PRIMARY KEY PARA MATCHING
+            custom_data={
+                "lead_source": "whatsapp_confirmed",
+                "content_category": "confirmed_lead",
+                "phone": phone
+            }
+        )
+        
+        logger.info(f"🚀 [TRUE LEAD] Backend conversion triggered for {phone}")
+        return True
+
     except Exception as e:
-        logger.error(f"❌ Error saving message: {e}")
+        logger.error(f"❌ Error saving message/triggering lead: {e}")
         raise self.retry(exc=e)
 
 # =================================================================

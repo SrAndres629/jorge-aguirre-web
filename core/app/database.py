@@ -618,6 +618,32 @@ def check_if_lead_sent(whatsapp_number: str) -> bool:
         logger.error(f"❌ Error verificando lead enviado: {e}")
         return False
 
+def get_meta_data_by_ref(ref_tag: str) -> Optional[Dict[str, Any]]:
+    """Recupera cookies fbc/fbp usando el [Ref Tag] del mensaje de WA"""
+    try:
+        with get_cursor() as cur:
+            if not cur: return None
+            # Buscamos en visitantes el external_id que empiece con el tag (8 chars)
+            cur.execute("""
+                SELECT fbclid, user_agent, ip_address, utm_source, utm_medium, utm_campaign
+                FROM visitors 
+                WHERE external_id LIKE %s 
+                ORDER BY timestamp DESC LIMIT 1
+            """, (f"{ref_tag}%",))
+            row = cur.fetchone()
+            if row:
+                return {
+                    "fbclid": row[0],
+                    "user_agent": row[1],
+                    "ip_address": row[2],
+                    "utm_source": row[3],
+                    "utm_medium": row[4],
+                    "utm_campaign": row[5]
+                }
+    except Exception as e:
+        logger.error(f"❌ Error buscando meta data por ref: {e}")
+    return None
+
 def get_or_create_lead(whatsapp_phone: str, meta_data: Optional[dict] = None) -> Optional[str]:
     """
     Obtiene o crea un Lead basado en el teléfono.
