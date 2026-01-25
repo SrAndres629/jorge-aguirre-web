@@ -166,3 +166,33 @@ def send_n8n_webhook_task(self, payload):
     except Exception as e:
         logger.warning(f"⚠️ n8n send failed (retrying): {e}")
         raise self.retry(exc=e)
+
+@celery_app.task(bind=True, name="track_booking_confirmed_task", default_retry_delay=5, max_retries=3)
+def track_booking_confirmed_task(self, phone, service_name, value):
+    """Pillar 2: The Gold Feedback Loop - Sends 'Schedule' or 'Purchase' to Meta when booking is confirmed"""
+    from app.database import get_meta_data_by_ref
+    from app.tracking import send_event
+    
+    # Intentamos recuperar cookies por historial (sin Ref Tag directo aquí, usamos el teléfono)
+    # En una implementación real más compleja, buscaríamos el último visitor_id vinculado al contacto
+    try:
+        success = send_event(
+            event_name="Schedule", # O 'Purchase' según prefiera el cliente
+            event_source_url="https://jorgeaguirreflores.com/admin/booking",
+            client_ip="127.0.0.1",
+            user_agent="Server Offline Trigger",
+            event_id=f"sched_{phone}_{int(time.time())}",
+            phone=phone,
+            custom_data={
+                "content_name": service_name,
+                "value": value,
+                "currency": "USD",
+                "status": "confirmed_offline"
+            }
+        )
+        if success:
+            logger.info(f"🏆 [GOLD LOOP] Appointment tracked for {phone}")
+        return success
+    except Exception as e:
+        logger.error(f"❌ Gold Loop Error: {e}")
+        raise self.retry(exc=e)

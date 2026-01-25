@@ -52,14 +52,27 @@ class NataliaBrain:
         # TODO: Send 'history' to LLM for full contextual awareness.
         response_text = self._rule_based_response(text, history)
 
-        # 5. Log Assistant Response
+        # 5. Determine estimated value for VBO (Pillar 1)
+        intent = "general"
+        for key in self.value_map.keys():
+            if key in text.lower():
+                intent = key
+                break
+        value = self.value_map[intent]
+
+        # 6. Log Assistant Response
         log_interaction(lead_id, "assistant", response_text)
         
-        # 6. Return execution plan (Controller will send message)
+        # 7. Return execution plan (Controller will send message)
         return {
             "lead_id": lead_id,
             "reply": response_text,
-            "action": "send_whatsapp"
+            "action": "send_whatsapp",
+            "metadata": {
+                "intent": intent,
+                "value": value,
+                "currency": "USD"
+            }
         }
 
     def _rule_based_response(self, text: str, history: Optional[list] = None) -> str:

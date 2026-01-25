@@ -77,3 +77,26 @@ async def send_whatsapp_legacy(phone: str, text: str):
             logger.info(f"📤 Reply sent to {phone}")
         except Exception as e:
             logger.error(f"❌ Failed to send reply: {e}")
+
+# =================================================================
+# PILLAR 2: THE GOLD FEEDBACK LOOP
+# =================================================================
+
+class BookingConfirm(BaseModel):
+    phone: str
+    service_name: str
+    value: float = 300.0
+
+@router.post("/admin/confirm-booking")
+async def confirm_booking(data: BookingConfirm):
+    """
+    Endpoint manual para Jorge. Al confirmar una cita, 
+    se notifica a Meta para cerrar el círculo de optimización.
+    """
+    from app.tasks import track_booking_confirmed_task
+    track_booking_confirmed_task.delay(
+        phone=data.phone, 
+        service_name=data.service_name, 
+        value=data.value
+    )
+    return {"status": "success", "message": "Gold Loop conversion queued"}
