@@ -14,6 +14,8 @@ class NataliaBrain:
 
     def __init__(self):
         self.name = "Natalia"
+        self.role = "Beauty Sales Consultant"
+        self.emoji_map = {"pricing": "💰", "location": "📍", "policy": "📋", "greeting": "✨"}
 
     def process_message(self, phone: str, text: str, meta_data: Optional[dict] = None) -> Dict[str, Any]:
         """
@@ -31,34 +33,58 @@ class NataliaBrain:
         if not lead_id:
             return {"error": "Failed to identify lead"}
 
-        # 2. Log User Message
+        # 2. Context Retrieval (NEW: Maintain Context)
+        from app.database import get_chat_history
+        history = get_chat_history(phone, limit=5)
+        
+        # 3. Log User Message
         log_interaction(lead_id, "user", text)
 
-        # 3. Context & Intent (Primitive V1)
-        # TODO: Connect to LLM (Ollama/OpenAI) here.
-        # For now, rule-based logic.
-        response_text = self._rule_based_response(text)
+        # 4. Context & Intent (Evolved with History)
+        # TODO: Send 'history' to LLM for full contextual awareness.
+        response_text = self._rule_based_response(text, history)
 
-        # 4. Log Assistant Response
+        # 5. Log Assistant Response
         log_interaction(lead_id, "assistant", response_text)
         
-        # 5. Return execution plan (Controller will send message)
+        # 6. Return execution plan (Controller will send message)
         return {
             "lead_id": lead_id,
             "reply": response_text,
             "action": "send_whatsapp"
         }
 
-    def _rule_based_response(self, text: str) -> str:
+    def _rule_based_response(self, text: str, history: Optional[list] = None) -> str:
+        """
+        Versión Senior: Simulación de Neuro-Ventas basada en protocolos .ai
+        """
+        from app.database import get_knowledge_base
+        
         text = text.lower()
-        if "precio" in text or "costo" in text:
-            return "Nuestros precios varían según el servicio. Microblading desde $150. ¿Te gustaría agendar una evaluación gratuita?"
-        elif "agenda" in text or "cita" in text:
-            return "¡Claro! ¿Qué día te queda mejor?"
-        elif "ubicacion" in text or "donde" in text:
-            return "Estamos en Equipetrol, Calle Tucumán #45."
-        else:
-            return "¡Hola! Soy Natalia. ¿En qué puedo ayudarte hoy para resaltar tu belleza?"
+        knowledge = get_knowledge_base()
+        
+        # 0. Context Awareness (Short Memory)
+        if history and len(history) > 0:
+            # Lógica de seguimiento si ya hubo charla
+            pass
+
+        # 1. Knowledge Retrieval & Injection
+        # Buscamos en el 'business_knowledge' cargado en Supabase
+        for fact in knowledge:
+            if fact['category'] == 'pricing' and any(kw in text for kw in ['precio', 'costo', 'valor', 'cuanto']):
+                if fact['slug'].split('_')[0] in text: # Ej: 'microblading'
+                    return f"{self.emoji_map['greeting']} ¡Claro! {fact['content']}\n\nEs una inversión en tu rostro que dura meses. ¿Te gustaría agendar una evaluación gratuita para ver cómo quedaría en ti? 💖"
+
+        # 2. Category Fallbacks (Tone: Professional & Warm)
+        if any(kw in text for kw in ['donde', 'ubicacion', 'direccion']):
+            loc = next((f['content'] for f in knowledge if f['category'] == 'location'), "Equipetrol.")
+            return f"{self.emoji_map['location']} Estamos ubicados en {loc} ¿En qué zona te encuentras tú?"
+
+        if any(kw in text for kw in ['cita', 'agenda', 'reserva', 'turno']):
+            return "¡Me encantaría ayudarte a agendar! 📅 ¿Qué día de la semana te queda mejor para una evaluación gratuita con Jorge?"
+
+        # 3. Default Greeting (Neuro-Sales Hook)
+        return "¡Hola! Soy Natalia, asistente experta de Jorge Aguirre. ✨ ¿Estás lista para resaltar tu belleza natural hoy? ¿En qué servicio puedo asesorarte?"
 
 # Singleton
 natalia = NataliaBrain()

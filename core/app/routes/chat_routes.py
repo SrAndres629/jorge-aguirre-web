@@ -13,6 +13,10 @@ class IncomingMessage(BaseModel):
     phone: str
     text: str
     name: str = "Unknown"
+    profile_pic: Optional[str] = None
+    fbclid: Optional[str] = None
+    fbp: Optional[str] = None
+    utm_data: Optional[Dict[str, Any]] = None
     
 @router.post("/chat/incoming")
 async def handle_incoming_chat(msg: IncomingMessage, background_tasks: BackgroundTasks):
@@ -20,11 +24,21 @@ async def handle_incoming_chat(msg: IncomingMessage, background_tasks: Backgroun
     Endpoint para recibir mensajes de usuarios (via n8n o Evolution Webhook).
     """
     try:
+        # Construct dynamic metadata
+        meta = {
+            "name": msg.name,
+            "profile_pic_url": msg.profile_pic,
+            "fbclid": msg.fbclid,
+            "fbp": msg.fbp
+        }
+        if msg.utm_data:
+            meta.update(msg.utm_data)
+
         # Process Logic
         result = natalia.process_message(
             phone=msg.phone, 
             text=msg.text, 
-            meta_data={"name": msg.name}
+            meta_data=meta
         )
         
         # Execute Action (Reply)
