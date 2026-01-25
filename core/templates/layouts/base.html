@@ -13,20 +13,23 @@
             font-family: 'Playfair Display', serif;
         }
     </style>
-    
+
     <!-- SEO Core Tags via Block -->
     <title>{% block title %}Jorge Aguirre Flores | Maquillaje Permanente en Santa Cruz{% endblock %}</title>
     {% block meta_tags %}
-    <meta name="description" content="Especialista en Microblading, Delineado Permanente y Labios. 30 años de experiencia en Santa Cruz de la Sierra. Resultados naturales garantizados.">
-    <meta name="keywords" content="microblading santa cruz, maquillaje permanente bolivia, cejas permanentes, delineado de ojos permanente, labios permanentes, micropigmentacion santa cruz">
+    <meta name="description"
+        content="Especialista en Microblading, Delineado Permanente y Labios. 30 años de experiencia en Santa Cruz de la Sierra. Resultados naturales garantizados.">
+    <meta name="keywords"
+        content="microblading santa cruz, maquillaje permanente bolivia, cejas permanentes, delineado de ojos permanente, labios permanentes, micropigmentacion santa cruz">
     <meta name="author" content="Jorge Aguirre Flores">
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="https://jorgeaguirreflores.com/">
-    
+
     <!-- Open Graph -->
     <meta property="og:type" content="website">
     <meta property="og:title" content="Jorge Aguirre Flores | Maquillaje Permanente Premium">
-    <meta property="og:description" content="30 años transformando miradas en Santa Cruz. Microblading, Delineado y Labios.">
+    <meta property="og:description"
+        content="30 años transformando miradas en Santa Cruz. Microblading, Delineado y Labios.">
     <meta property="og:url" content="https://jorgeaguirreflores.com/">
     <meta property="og:image" content="https://jorgeaguirreflores.com/static/images/og-image.webp">
     <meta property="og:locale" content="es_BO">
@@ -34,7 +37,8 @@
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Jorge Aguirre Flores | Maquillaje Permanente Premium">
-    <meta name="twitter:description" content="30 años transformando miradas en Santa Cruz. Microblading, Delineado y Labios.">
+    <meta name="twitter:description"
+        content="30 años transformando miradas en Santa Cruz. Microblading, Delineado y Labios.">
     <meta name="twitter:image" content="https://jorgeaguirreflores.com/static/images/og-image.webp">
     {% endblock %}
 
@@ -56,7 +60,9 @@
     <!-- Google Fonts + Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <!-- GSAP (Core Animation Engine) -->
@@ -97,20 +103,24 @@
             }
         })();
     </script>
-    
+
     {% block schema %}{% endblock %}
 </head>
 
-<body class="bg-luxury-black text-luxury-text font-sans antialiased selection:bg-luxury-gold selection:text-black relative">
-    
+<body
+    class="bg-luxury-black text-luxury-text font-sans antialiased selection:bg-luxury-gold selection:text-black relative">
+
     <!-- Global Ambient Spotlight -->
-    <div id="mouse-spotlight" class="fixed inset-0 pointer-events-none z-0 opacity-40 mix-blend-screen transition-opacity duration-1000"></div>
-    
+    <div id="mouse-spotlight"
+        class="fixed inset-0 pointer-events-none z-0 opacity-40 mix-blend-screen transition-opacity duration-1000">
+    </div>
+
     <!-- Skip Link for Accessibility -->
     <a href="#main-content" class="skip-link">Saltar al contenido principal</a>
 
     <!-- Google Tag Manager (noscript) -->
-    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-55HC7GRT" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-55HC7GRT" height="0" width="0"
+            style="display:none;visibility:hidden"></iframe></noscript>
     <!-- End Google Tag Manager -->
 
     <!-- Navigation -->
@@ -125,7 +135,10 @@
     {% include 'components/footer.html' ignore missing %}
 
     <!-- Global Scripts -->
-    <script defer src="/static/js/main.js"></script>
+    <script defer src="/static/js/tracking.js?v=4.3"></script>
+    <script defer src="/static/js/ui.js?v=3.1"></script>
+    <script defer src="/static/js/motion.js?v=3.1"></script>
     {% block extra_scripts %}{% endblock %}
 </body>
+
 </html>
