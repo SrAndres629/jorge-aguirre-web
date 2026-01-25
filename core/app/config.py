@@ -31,8 +31,14 @@ class Settings(BaseSettings):
     TEST_EVENT_CODE: Optional[str] = None
     META_SANDBOX_MODE: bool = False # 🛡️ True = No enviar eventos reales a Meta
     
-    # Security: CORS Origins (Simple string to avoid Pydantic auto-parsing errors)
-    BACKEND_CORS_ORIGINS: str = "https://jorgeaguirreflores.com, https://www.jorgeaguirreflores.com, https://jorge-aguirre-web.onrender.com, http://localhost:8000, http://localhost:5678"
+    # Security: CORS Origins (Loaded manually to avoid Pydantic auto-parsing bugs)
+    CORS_ALLOWED_ORIGINS: List[str] = [
+        "https://jorgeaguirreflores.com",
+        "https://www.jorgeaguirreflores.com",
+        "https://jorge-aguirre-web.onrender.com",
+        "http://localhost:8000",
+        "http://localhost:5678"
+    ]
     
     # Database (Supabase PostgreSQL)
     DATABASE_URL: Optional[str] = None
@@ -82,4 +88,11 @@ class Settings(BaseSettings):
 
 # Singleton de configuración
 settings = Settings()
+
+# 🛡️ MANUAL CONFIG PATCH: Pydantic-settings tries to JSON-decode "complex" field names.
+# We bypass this by loading the env var manually into our internal field.
+_env_origins = os.getenv("BACKEND_CORS_ORIGINS")
+if _env_origins:
+    settings.CORS_ALLOWED_ORIGINS = [i.strip() for i in _env_origins.split(",") if i.strip()]
+
 settings.validate_critical()
