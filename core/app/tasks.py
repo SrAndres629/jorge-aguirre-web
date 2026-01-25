@@ -133,16 +133,17 @@ def save_message_task(self, phone, role, content):
 # =================================================================
 
 @celery_app.task(bind=True, name="send_meta_event_task", default_retry_delay=5, max_retries=3)
-def send_meta_event_task(self, event_name, event_source_url, client_ip, user_agent, event_id, fbclid, fbp, external_id, custom_data):
+def send_meta_event_task(self, event_name, event_source_url, client_ip, user_agent, event_id, fbclid=None, fbp=None, external_id=None, phone=None, email=None, custom_data=None):
     """Send event to Facebook Conversions API with Executive Deduplication Shield"""
     from app.database import check_if_lead_sent, mark_lead_sent
     
     # 🛡️ Executive Shield: Bloqueo de duplicados para optimizar presupuesto
-    phone = None
-    if event_name == "Lead":
-        phone = custom_data.get('phone') if custom_data else None
-        if phone and check_if_lead_sent(phone):
-            logger.info(f"🛡️ [ABORT MISSION] Lead already paid for {phone}. Skipping CAPI call to save budget.")
+    # Prioritize explicit phone argument, fallback to custom_data
+    effective_phone = phone or (custom_data.get('phone') if custom_data else None)
+    
+    if event_name == "Lead" and effective_phone:
+        if check_if_lead_sent(effective_phone):
+            logger.info(f"🛡️ [ABORT MISSION] Lead already paid for {effective_phone}. Skipping CAPI call to save budget.")
             return True
 
     try:
@@ -155,14 +156,16 @@ def send_meta_event_task(self, event_name, event_source_url, client_ip, user_age
             fbclid=fbclid,
             fbp=fbp,
             external_id=external_id,
+            phone=effective_phone,
+            email=email,
             custom_data=custom_data
         )
         if not success:
             raise Exception("Meta API returned failure")
             
         # 🛡️ Registro de conversión exitosa
-        if event_name == "Lead" and phone:
-            mark_lead_sent(phone)
+        if event_name == "Lead" and effective_phone:
+            mark_lead_sent(effective_phone)
             
         logger.info(f"✅ Meta Event sent: {event_name}")
     except Exception as e:
