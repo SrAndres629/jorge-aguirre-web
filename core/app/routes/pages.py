@@ -4,6 +4,7 @@
 # =================================================================
 import time
 import logging
+import os
 from fastapi import APIRouter, Request, Response, BackgroundTasks, Cookie
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
@@ -17,7 +18,11 @@ from app.services import SERVICES_CONFIG, CONTACT_CONFIG
 logger = logging.getLogger("BackgroundWorker")
 
 router = APIRouter()
-templates = Jinja2Templates(directory="templates")
+
+# Absolute path to templates (fixes Docker/Render path issues)
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+templates_dir = os.path.join(BASE_DIR, "templates")
+templates = Jinja2Templates(directory=templates_dir)
 
 
 # =================================================================

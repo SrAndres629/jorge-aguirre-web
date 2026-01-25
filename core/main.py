@@ -13,13 +13,13 @@
 # =================================================================
 
 from fastapi import FastAPI
-from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import ORJSONResponse
 from fastapi.middleware.gzip import GZipMiddleware
 import uvicorn
 import logging
 import gc
+import os
 
 # Módulos internos
 from app.config import settings
@@ -107,11 +107,16 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 # app.add_middleware(SlowAPIMiddleware)
 
 # =================================================================
-# ARCHIVOS ESTÁTICOS
+# ARCHIVOS ESTÁTICOS (ABSOLUTE PATH FIX)
 # =================================================================
 
-# Montar archivos estáticos (Standard StaticFiles - Render should handle caching/CDN)
-app.mount("/static", StaticFiles(directory="static"), name="static")
+# Get absolute path to static folder (fixes Docker/Render path issues)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+static_dir = os.path.join(BASE_DIR, "static")
+templates_dir = os.path.join(BASE_DIR, "templates")
+
+# Mount static files with absolute path
+app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 
 # =================================================================
