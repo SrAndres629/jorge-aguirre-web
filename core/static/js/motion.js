@@ -90,7 +90,7 @@ const MotionEngine = {
             );
         };
 
-        animateItems('.service-card, .process-step', "top 75%");
+        animateItems('.service-card, .process-step, .testimonial-card', "top 75%");
         animateItems('.ba-slider', "top 70%");
     },
 
@@ -204,7 +204,8 @@ const MotionEngine = {
     setupMobileTriggers() {
         if (window.innerWidth >= 768) return;
 
-        const targets = document.querySelectorAll('.service-card-skin, .ba-slider');
+        // Optimized target selection for mobile performance
+        const targets = document.querySelectorAll('.service-card-skin, .ba-slider, .testimonial-card');
         targets.forEach(target => {
             ScrollTrigger.create({
                 trigger: target,
