@@ -19,35 +19,33 @@
     <!-- Gold Dust Particles -->
     <div id="particles-js" class="absolute inset-0 z-[1] pointer-events-none opacity-20"></div>
 
-    <div
-        class="container mx-auto px-6 relative z-10 text-center md:text-left grid md:grid-cols-[1.1fr_0.9fr] gap-12 items-center">
+    <div class="container mx-auto px-6 relative z-10 text-center md:text-left grid md:grid-cols-2 gap-12 items-center">
         <div class="space-y-8 animate-fade-in-up">
             <div class="inline-block border border-luxury-gold/30 px-6 py-2 rounded-full mb-4 backdrop-blur-sm">
                 <span class="text-luxury-gold text-xs font-bold uppercase tracking-[0.4em]">Arte Facial • 30
                     Años</span>
             </div>
             <h1
-                class="font-serif text-4xl md:text-6xl lg:text-8xl leading-[1.1] text-luxury-text mb-8 tracking-tighter">
+                class="font-serif text-4xl md:text-6xl lg:text-7xl leading-[1.1] text-luxury-text mb-8 tracking-tighter">
                 Ingeniería de la <span class="italic font-light text-gradient-gold">Mirada</span><br>
                 <span class="text-xl md:text-3xl font-light tracking-[0.3em] opacity-90 uppercase">Especialista
                     en Microblading</span>
             </h1>
             <p
-                class="text-luxury-gray text-lg md:text-2xl font-light max-w-xl leading-relaxed mb-10 tracking-wide border-l border-luxury-gold/20 pl-6">
+                class="text-luxury-gray text-lg md:text-xl font-light max-w-xl leading-relaxed mb-10 tracking-wide border-l border-luxury-gold/20 pl-6 mx-auto md:mx-0">
                 Maquillaje permanente de alta precisión. <br>
                 <span class="text-luxury-text font-medium">30 años liderando el estándar de belleza natural en
                     Bolivia.</span>
             </p>
-            <div class="flex flex-col sm:flex-row gap-8 pt-12" data-aos="fade-up" data-aos-delay="300">
+            <div class="flex flex-col sm:flex-row gap-8 pt-6 justify-center md:justify-start">
                 <button onclick="handleConversion('Hero CTA')"
                     class="btn-gold-liquid group relative px-10 py-6 font-bold uppercase tracking-[0.2em] rounded-lg w-full md:w-auto shadow-2xl hover:shadow-orange-500/20">
                     <span class="flex items-center gap-3 justify-center relative z-10 text-xs">
                         <i class="fab fa-whatsapp text-lg"></i> Iniciar Diagnóstico
                     </span>
                 </button>
-                <!-- Trust Badge & Objection Handling (Simplified) -->
                 <div
-                    class="flex flex-col gap-1 mt-4 md:mt-0 justify-center text-left opacity-80 hover:opacity-100 transition-opacity">
+                    class="flex flex-col gap-1 justify-center text-left opacity-80 hover:opacity-100 transition-opacity">
                     <div class="flex items-center gap-2 text-luxury-gold text-xs">
                         <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i
                             class="fas fa-star"></i><i class="fas fa-star"></i>
@@ -59,12 +57,19 @@
             </div>
         </div>
 
-        <div class="relative animate-fade-in-up mt-12 md:mt-0" style="animation-delay: 0.2s;">
-            <img src="/static/images/jorge_hero_new.webp"
-                alt="Jorge Aguirre Flores - Especialista en Maquillaje Permanente"
-                class="rounded-lg shadow-2xl border border-white/10 relative z-10 w-full max-w-lg mx-auto"
-                style="mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent), linear-gradient(to bottom, transparent, black 15%, black 85%, transparent); mask-composite: intersect; -webkit-mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent), linear-gradient(to bottom, transparent, black 15%, black 85%, transparent); -webkit-mask-composite: source-in;"
-                width="800" height="800" loading="eager" fetchpriority="high" />
+        <div class="relative animate-fade-in-up flex justify-center" style="animation-delay: 0.2s;">
+            <div class="relative w-full max-w-lg group">
+                <!-- Subtle Glow behind image -->
+                <div
+                    class="absolute -inset-4 bg-luxury-gold/10 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-1000">
+                </div>
+
+                <img src="/static/images/jorge_hero_new.webp"
+                    alt="Jorge Aguirre Flores - Especialista en Maquillaje Permanente"
+                    class="rounded-2xl shadow-2xl border border-white/5 relative z-10 w-full object-cover"
+                    style="mask-image: linear-gradient(to bottom, black 80%, transparent); -webkit-mask-image: linear-gradient(to bottom, black 80%, transparent);"
+                    width="800" height="800" loading="eager" fetchpriority="high" />
+            </div>
         </div>
     </div>
     <!-- Removed extra closing div that was present in the original code -->
