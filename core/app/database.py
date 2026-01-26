@@ -498,18 +498,18 @@ def get_meta_data_by_ref(ref_tag: str) -> Optional[Dict[str, Any]]:
         logger.error(f"❌ Error buscando meta data por ref: {e}")
     return None
 
-def get_or_create_lead(whatsapp_phone: str, meta_data: Optional[dict] = None) -> Optional[str]:
+def get_or_create_lead(whatsapp_phone: str, meta_data: Optional[dict] = None) -> tuple[Optional[str], bool]:
     """
     Obtiene o crea un Lead basado en el teléfono.
     Vincula datos de Meta (Click ID, Lead ID) si se proveen.
-    Retorna el ID del Lead (UUID string o int string).
+    Retorna tupla: (lead_id, is_new) donde is_new=True si fue recién creado.
     """
     if meta_data is None:
         meta_data = {}
 
     try:
         with get_cursor() as cur:
-            if not cur: return None
+            if not cur: return (None, False)
 
             # 1. Buscar Lead existente
             cur.execute(queries.SELECT_LEAD_ID_BY_PHONE, (whatsapp_phone,))
@@ -526,7 +526,7 @@ def get_or_create_lead(whatsapp_phone: str, meta_data: Optional[dict] = None) ->
                         meta_data.get('name'),
                         lead_id
                     ))
-                return str(lead_id)
+                return (str(lead_id), False)  # Existing lead
 
             # 2. Crear Nuevo Lead
             logger.info(f"✨ Creando Nuevo Lead: {whatsapp_phone}")
@@ -539,7 +539,7 @@ def get_or_create_lead(whatsapp_phone: str, meta_data: Optional[dict] = None) ->
                     meta_data.get('name')
                 ))
                 lead_id = cur.fetchone()[0]
-                return str(lead_id)
+                return (str(lead_id), True)  # New lead created
             else:
                 # SQLite Logic
                 new_id = str(uuid.uuid4())
@@ -551,11 +551,11 @@ def get_or_create_lead(whatsapp_phone: str, meta_data: Optional[dict] = None) ->
                     meta_data.get('email'),
                     meta_data.get('name')
                 ))
-                return new_id
+                return (new_id, True)  # New lead created
 
     except Exception as e:
         logger.error(f"❌ Error en get_or_create_lead: {e}")
-        return None
+        return (None, False)
 
 def log_interaction(lead_id: str, role: str, content: str) -> bool:
     """Registra una interacción (mensaje) para el Lead"""

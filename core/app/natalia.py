@@ -46,13 +46,17 @@ class NataliaBrain:
         3. Determina intención.
         4. Genera respuesta.
         5. Guarda respuesta (Assistant).
+        6. Retorna is_new_lead para trigger de Meta CAPI.
         """
         logger.info(f"🧠 Natalia Processing: {phone} - '{text}'")
 
-        # 1. Lead Identification
-        lead_id = get_or_create_lead(phone, meta_data)
+        # 1. Lead Identification (now returns tuple)
+        lead_id, is_new_lead = get_or_create_lead(phone, meta_data)
         if not lead_id:
             return {"error": "Failed to identify lead"}
+        
+        if is_new_lead:
+            logger.info(f"🎯 [SIGNAL] New Lead Detected: {phone}")
 
         # 2. Context Retrieval
         from app.database import get_chat_history
@@ -85,11 +89,12 @@ class NataliaBrain:
         # 6. Log Assistant Response
         log_interaction(lead_id, "assistant", response_text)
         
-        # 7. Return execution plan (Controller will send message)
+        # 7. Return execution plan (Controller will send message + Meta event)
         return {
             "lead_id": lead_id,
             "reply": response_text,
             "action": "send_whatsapp",
+            "is_new_lead": is_new_lead,  # 🎯 Signal for Meta CAPI
             "metadata": {
                 "intent": intent,
                 "value": value,
