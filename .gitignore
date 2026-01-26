@@ -68,18 +68,23 @@ desktop.ini
 .vscode/
 .idea/
 
-# --- Diseño y Pesados ---
+# --- Diseño y Pesados (Source Files) ---
 *.psd
 *.ai
 *.fig
 *.sketch
 design_assets/
 raw_images/
+
+# --- Imágenes (Solo WebP en producción) ---
 *.png
 *.jpg
 *.jpeg
 *.gif
-! docs/images/
+
+# --- EXCEPCIÓN: WebP del sitio (único formato permitido) ---
+!core/static/images/*.webp
+!docs/images/
 
 # --- Brain (Antigravity Artifacts) ---
 brain/
