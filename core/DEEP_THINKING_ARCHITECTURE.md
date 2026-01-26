@@ -43,13 +43,17 @@ To avoid **"Context Saturation"** (where an AI attempts to juggle too many domai
 
 ## 3. The Hexagon of Competence (Specialized Roles)
 
-| Skill Name              | Role           | Core Responsibility      | Cognitive Focus                                                       |
-| :---------------------- | :------------- | :----------------------- | :-------------------------------------------------------------------- |
-| **MASTER ORCHESTRATOR** | The Brain      | Strategy & Delegation    | Context Preservation, Conflict Resolution, High-Level Architecture.   |
-| **UX/UI VISIONARY**     | The Designer   | Luxury Conversion        | Cognitive Psychology, Visual Hierarchy, Micro-interactions, Branding. |
-| **CONVERSION CLOSER**   | The Strategist | Sales & Persuasion       | Copywriting, Funnel Logic, CTAs, Behavioral Triggers (NLP).           |
-| **FULL-STACK BUILDER**  | The Engine     | High-Perf Implementation | Python/JS Performance, DB Optimization, Clean Architecture.           |
-| **ADS CONNECTOR**       | The Bridge     | External Ecosystems      | Meta Ads (Pixel, CAPI), GAds, TikTok Ads, Signal Recovery.            |
+| Skill Name              | Role             | Core Responsibility      | Cognitive Focus                                                        |
+| :---------------------- | :--------------- | :----------------------- | :--------------------------------------------------------------------- |
+| **MASTER ORCHESTRATOR** | The Brain        | Strategy & Delegation    | Context Preservation, Conflict Resolution, High-Level Architecture.    |
+| **UX/UI VISIONARY**     | The Designer     | Luxury Conversion        | Cognitive Psychology, Visual Hierarchy, Micro-interactions, Branding.  |
+| **CONVERSION CLOSER**   | The Strategist   | Sales & Persuasion       | Copywriting, Funnel Logic, CTAs, Behavioral Triggers (NLP).            |
+| **FULL-STACK BUILDER**  | The Engine       | High-Perf Implementation | Python/JS Performance, DB Optimization, Clean Architecture.            |
+| **ADS CONNECTOR**       | The Bridge       | External Ecosystems      | Meta Ads (Pixel, CAPI), GAds, TikTok Ads, Signal Recovery.             |
+| **SCIENTIFIC MARKETER** | The Scientist    | Validation & Metrics     | Hygiene Factors, A/B Testing, Statistical Significance, ROI/ROAS.      |
+| **NEURO STRATEGIST**    | The Psychologist | Subconscious Persuasion  | Cognitive Biases, Friction Audit, Trust Architecture, Price Anchoring. |
+| **SIGNAL ARCHITECT**    | The Engineer     | Tracking Infrastructure  | Pixel, CAPI, Match Quality, Cookie Persistence, Event Deduplication.   |
+| **ROAS ALCHEMIST**      | The Optimizer    | Cost Reduction           | Audience Suppression, Value-Based Lookalikes, Upstream Optimization.   |
 
 ---
 
