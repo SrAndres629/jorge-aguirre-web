@@ -57,8 +57,8 @@ async def handle_incoming_chat(msg: IncomingMessage, request: Request, backgroun
             if "," in client_ip:
                 client_ip = client_ip.split(",")[0].strip()
             
-            # Get estimated value from metadata
-            value = result.get("metadata", {}).get("value", 50.0)
+            # Get estimated value from metadata (default to 10.0 for generic leads)
+            value = result.get("metadata", {}).get("value", 10.0)
             
             background_tasks.add_task(
                 bg_send_meta_event,
@@ -71,7 +71,11 @@ async def handle_incoming_chat(msg: IncomingMessage, request: Request, backgroun
                 fbp=msg.fbp,
                 external_id=msg.phone,
                 phone=msg.phone,
-                custom_data={"currency": "USD", "value": value}
+                custom_data={
+                    "currency": "BOB", 
+                    "value": value,
+                    "content_name": "whatsapp_init"
+                }
             )
         # =================================================================
         
