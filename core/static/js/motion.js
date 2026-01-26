@@ -24,6 +24,7 @@ const MotionEngine = {
         // Sequence of initialization
         this.setupLenis();
         this.setupGSAP();
+        this.setupHeroAnimation();  // NEW: Premium hero reveal
         this.setupParallax();
         this.setupMagnetic();
         this.setupSpotlight();
@@ -32,6 +33,77 @@ const MotionEngine = {
 
         console.log('🚀 [Senior Architecture] Motion Engine Initialized at 60fps');
     },
+
+    /**
+     * 0. HERO ANIMATION - Apple-Style Cinematic Entrance
+     */
+    setupHeroAnimation() {
+        if (typeof gsap === 'undefined') return;
+
+        const heroPortrait = document.querySelector('.hero-portrait');
+        const heroGlow = document.querySelector('.hero-glow');
+        const heroBorder = document.querySelector('.hero-border');
+
+        if (!heroPortrait) return;
+
+        // Initial state - slightly scaled down and transparent
+        gsap.set(heroPortrait, {
+            opacity: 0,
+            scale: 0.92,
+            y: 30,
+            filter: 'blur(8px)'
+        });
+        gsap.set([heroGlow, heroBorder], { opacity: 0 });
+
+        // Cinematic Reveal Timeline
+        const heroTL = gsap.timeline({ delay: 0.4 });
+
+        heroTL
+            .to(heroPortrait, {
+                opacity: 1,
+                scale: 1,
+                y: 0,
+                filter: 'blur(0px)',
+                duration: 1.4,
+                ease: "power3.out"
+            })
+            .to(heroBorder, {
+                opacity: 1,
+                duration: 0.8,
+                ease: "power2.inOut"
+            }, "-=0.6")
+            .to(heroGlow, {
+                opacity: 0.6,
+                duration: 1.2,
+                ease: "power2.out"
+            }, "-=0.4");
+
+        // Scroll-based Parallax & Glow Intensity
+        gsap.to(heroPortrait, {
+            y: -40,
+            scrollTrigger: {
+                trigger: '.hero-image-container',
+                start: 'top center',
+                end: 'bottom top',
+                scrub: 1.5
+            }
+        });
+
+        // Glow intensifies on scroll
+        gsap.to(heroGlow, {
+            opacity: 1,
+            scale: 1.1,
+            scrollTrigger: {
+                trigger: '.hero-image-container',
+                start: 'top 80%',
+                end: 'center center',
+                scrub: 2
+            }
+        });
+
+        console.log('🎬 [Hero Animation] Cinematic reveal initialized');
+    },
+
 
     /**
      * 1. LENIS - Smooth Scroll (Butter Feel)

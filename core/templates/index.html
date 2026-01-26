@@ -58,16 +58,21 @@
         </div>
 
         <div class="relative animate-fade-in-up flex justify-center" style="animation-delay: 0.2s;">
-            <div class="relative w-full max-w-lg group">
-                <!-- Subtle Glow behind image -->
+            <div class="relative w-full max-w-lg group hero-image-container">
+                <!-- Subtle Glow behind image (animated on scroll) -->
                 <div
-                    class="absolute -inset-4 bg-luxury-gold/10 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-1000">
+                    class="hero-glow absolute -inset-4 bg-luxury-gold/10 blur-2xl rounded-full opacity-0 transition-opacity duration-1000">
                 </div>
 
-                <img src="/static/images/jorge_hero_final.webp"
+                <!-- Premium Reveal Border -->
+                <div
+                    class="hero-border absolute -inset-1 bg-gradient-to-br from-luxury-gold/20 via-transparent to-luxury-gold/10 rounded-2xl opacity-0">
+                </div>
+
+                <img src="/static/images/jorge_hero_premium.webp"
                     alt="Jorge Aguirre Flores - Especialista en Maquillaje Permanente (Autoridad Certificada)"
-                    class="rounded-2xl shadow-2xl border border-white/5 relative z-10 w-full object-cover"
-                    style="mask-image: linear-gradient(to bottom, black 80%, transparent); -webkit-mask-image: linear-gradient(to bottom, black 80%, transparent);"
+                    class="hero-portrait rounded-2xl shadow-2xl border border-white/5 relative z-10 w-full object-cover"
+                    style="mask-image: linear-gradient(to bottom, black 85%, transparent); -webkit-mask-image: linear-gradient(to bottom, black 85%, transparent);"
                     width="800" height="800" loading="eager" fetchpriority="high" />
             </div>
         </div>
