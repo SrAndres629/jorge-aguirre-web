@@ -7,6 +7,12 @@ from typing import Optional, List, Union, Any
 import logging
 import json
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from dotenv import load_dotenv
+
+# Force load .env from project root
+# Calculates path relative to this file (core/app/config.py -> core/app/../../.env)
+env_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), '.env')
+load_dotenv(env_path)
 
 # Configurar logging
 logging.basicConfig(
@@ -30,6 +36,9 @@ class Settings(BaseSettings):
     META_API_VERSION: str = "v21.0"
     TEST_EVENT_CODE: Optional[str] = None
     META_SANDBOX_MODE: bool = False # 🛡️ True = No enviar eventos reales a Meta
+    
+    # AI Brain (Gemini)
+    GOOGLE_API_KEY: Optional[str] = None
     
     # Security: CORS Origins (Loaded manually to avoid Pydantic auto-parsing bugs)
     CORS_ALLOWED_ORIGINS: List[str] = [

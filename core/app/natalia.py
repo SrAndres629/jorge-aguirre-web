@@ -1,164 +1,173 @@
 
 import logging
-from typing import Optional, Dict, Any
-from app.database import get_or_create_lead, log_interaction, get_cursor
-from app.evolution import evolution_service
-from app.models import LeadStatus
+import google.generativeai as genai
+from typing import Optional, Dict, Any, List
+from app.database import get_or_create_lead, log_interaction, get_cursor, get_chat_history
+from app.config import settings
 
+# Configure Logger & AI
 logger = logging.getLogger("NataliaBrain")
+
+if settings.GOOGLE_API_KEY:
+    genai.configure(api_key=settings.GOOGLE_API_KEY)
+else:
+    logger.critical("🚨 GOOGLE_API_KEY missing! Brain functionality disabled.")
 
 class NataliaBrain:
     """
-    Cerebro de la Asistente de IA (Natalia).
-    Maneja el estado de la conversación y decide la siguiente acción.
+    COGNITIVE SINGULARITY (v2.0)
+    Asistente Inteligente Probabilístico con Memoria Contextual.
+    Powered by Google Gemini 1.5 Flash.
     """
 
     def __init__(self):
-        self.name = "Natalia"
-        self.role = "Beauty Sales Consultant"
-        self.emoji_map = {"pricing": "💰", "location": "📍", "policy": "📋", "greeting": "✨"}
-        # 💰 Estrategia VBO: Mapeo de valores estimados por servicio
+        # Modelo Ganador (Confirmado por Script de Auditoría)
+        self.model_name = 'models/gemini-flash-latest'
+        self.generation_config = {
+            "temperature": 0.7,
+            "top_p": 0.95,
+            "top_k": 40,
+            "max_output_tokens": 8192,
+        }
+        
+        # 🛡️ Safety Settings (Permissive for sales, blockers for hate/harassment)
+        self.safety_settings = [
+            {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
+            {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
+            {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
+            {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
+        ]
+        
+        # 💰 VBO Estimator Map
         self.value_map = {
-            "curso": 500.0, # High Ticket Education
-            "masterclass": 500.0,
+            "curso": 500.0,
             "microblading": 300.0,
-            "pelo a pelo": 300.0,
             "cejas": 250.0,
-            "shading": 250.0,
             "labios": 200.0,
-            "aquarelle": 200.0,
             "ojos": 150.0,
-            "delineado": 150.0,
-            "remocion": 100.0,
             "general": 50.0
         }
-        # 🛑 Pillar 4: Filtro Anti-Basura
-        self.junk_keywords = [
-            "spam", "ofensa", "insulto", "equivocado", "no me interesa", 
-            "publicidad", "oferta", "busco trabajo", "vendedor"
-        ]
+        
+        self.junk_keywords = ["spam", "publicidad", "vendedor", "banco", "crédito"]
+
+    def _get_system_prompt(self) -> str:
+        """The Cognitive Core: Persona, Strategy & Knowledge Base."""
+        return """
+        Eres NATALIA, Asistente Expert y Estratega de Ventas de JORGE AGUIRRE FLORES (Maestro Internacional en Maquillaje Permanente).
+        
+        TUS SERVICIOS & PRECIOS (Referencia USD/BOB):
+        - Microblading / Cejas Pelo a Pelo: 1500 Bs / $215 USD (Dura hasta 2 años).
+        - Labios Full Color / Aquarelle: 1200 Bs / $170 USD.
+        - Delineado de Ojos: 1000 Bs / $145 USD.
+        - Correcciones de trabajos anteriores: Varía según complejidad (requiere evaluación).
+        
+        TU ESTILO:
+        - Profesional, empática, persuasiva pero honesta.
+        - Usas emojis sutiles para dar calidez (✨, 👁️, 📅).
+        - Respuestas concisas, optimizadas para lectura rápida en WhatsApp.
+        
+        REGLA DE ORO (VENTA CONSULTIVA):
+        - NUNCA des el precio crudo sin antes comunicar el VALOR o hacer una pregunta de diagnóstico.
+        - Si preguntan "¿Cuánto cuesta?", responde explicando brevemente los beneficios (duración, naturalidad, seguridad) y LUEGO da el rango de precios.
+        - INDAGA SIEMPRE: "¿Es tu primera vez o tienes algún trabajo anterior?". Esto es vital para saber si es corrección.
+        
+        TU OBJETIVO:
+        - Educar al cliente sobre la calidad Premium de Jorge Aguirre.
+        - Llevar la conversación hacia agendar una 'Valoración Gratuita' (presencial o por fotos) para dar el precio exacto.
+        - Ubicación: Equipetrol Norte, Santa Cruz (Zona Exclusiva).
+        """
 
     def process_message(self, phone: str, text: str, meta_data: Optional[dict] = None) -> Dict[str, Any]:
         """
-        Procesa un mensaje entrante de WhatsApp.
-        1. Identifica/Crea el Lead.
-        2. Guarda el mensaje (User).
-        3. Determina intención.
-        4. Genera respuesta.
-        5. Guarda respuesta (Assistant).
-        6. Retorna is_new_lead para trigger de Meta CAPI.
+        Main cognitive loop: Input -> Context Injection -> Inference -> Output
         """
-        logger.info(f"🧠 Natalia Processing: {phone} - '{text}'")
+        logger.info(f"🧠 Cognitive Cycle Start: {phone}")
 
-        # 1. Lead Identification (now returns tuple)
+        # 1. Lead Identification
         lead_id, is_new_lead = get_or_create_lead(phone, meta_data)
         if not lead_id:
             return {"error": "Failed to identify lead"}
-        
+
         if is_new_lead:
             logger.info(f"🎯 [SIGNAL] New Lead Detected: {phone}")
 
-        # 2. Context Retrieval
-        from app.database import get_chat_history
-        history = get_chat_history(phone, limit=5)
-        
-        # NOTE: Evolution API fallback removed - it was async and caused crash.
-        # Local DB should always have history since we log every interaction.
-        # TODO: Refactor to async if Evolution fallback is needed in future.
-        
-        # 3. Log User Message
+        # 2. Log User Input (Short-term memory acquisition)
         log_interaction(lead_id, "user", text)
 
-        # 4. Context & Intent (Evolved with History)
-        # TODO: Send 'history' to LLM for full contextual awareness.
-        response_text = self._rule_based_response(text, history)
+        # 3. Context Retrieval (Long-term memory recall)
+        # Fetch last 10 messages for immediate context awareness
+        history_rows = get_chat_history(phone, limit=10) 
+        
+        # 4. Neural Inference (The Thinking Process)
+        try:
+            if not settings.GOOGLE_API_KEY:
+                raise ValueError("Brain offline: API Key missing")
+                
+            response_text = self._generate_thought(text, history_rows)
+            
+        except Exception as e:
+            # 🛡️ CIRCUIT BREAKER: Fallback to safe mode
+            logger.error(f"❌ Cognitive Failure (Circuit Breaker Triggered): {e}")
+            response_text = "En este momento estoy verificando la disponibilidad de la agenda con el sistema central. ¿Podrías aguardarme unos minutos? 🙏"
 
-        # 5. Determine estimated value for VBO (Pillar 1)
+        # 5. Intent Analysis (Heuristic Support)
         intent = "general"
-        for key in self.value_map.keys():
-            if key in text.lower():
-                intent = key
-                break
-        value = self.value_map[intent]
+        val = 50.0
+        lower_text = text.lower()
+        if "cejas" in lower_text or "micro" in lower_text:
+            intent = "microblading"
+            val = 300.0
+        elif "labios" in lower_text:
+            intent = "labios"
+            val = 200.0
+        
+        is_junk = any(kw in lower_text for kw in self.junk_keywords)
 
-        # Pillar 4: Detect Junk Signal
-        is_junk = any(kw in text.lower() for kw in self.junk_keywords)
-        if is_junk:
-            logger.warning(f"🛑 [ANTI-JUNK] Negative intent detected for {phone}")
-
-        # 6. Log Assistant Response
+        # 6. Log Assistant Output
         log_interaction(lead_id, "assistant", response_text)
         
-        # 7. Return execution plan (Controller will send message + Meta event)
         return {
             "lead_id": lead_id,
             "reply": response_text,
             "action": "send_whatsapp",
-            "is_new_lead": is_new_lead,  # 🎯 Signal for Meta CAPI
+            "is_new_lead": is_new_lead,
             "metadata": {
                 "intent": intent,
-                "value": value,
+                "value": val,
                 "currency": "USD",
                 "is_junk": is_junk
             }
         }
 
-    def _rule_based_response(self, text: str, history: Optional[list] = None) -> str:
+    def _generate_thought(self, user_text: str, history_rows: List[Dict]) -> str:
         """
-        Conversion Strategist Implementation: 
-        1. Frame: Diagnostic Surgeon (High Status)
-        2. Technique: Price Anchoring
-        3. Closer: Scarcity / Micro-Agreement
+        Constructs the context vector and queries the LLM.
         """
-        from app.database import get_knowledge_base
+        model = genai.GenerativeModel(
+            model_name=self.model_name,
+            generation_config=self.generation_config,
+            safety_settings=self.safety_settings,
+            system_instruction=self._get_system_prompt()
+        )
         
-        text = text.lower()
-        knowledge = get_knowledge_base()
+        # Build Chat Session with History
+        gemini_history = []
         
-        # 🛡️ STATUS MANAGEMENT: Frame Controller
-        is_first_message = not history or len(history) < 2
+        # Transform DB history to Gemini format
+        # DB returns recent-last (chronological reverse in SQL usually, but let's trust get_chat_history implementation)
+        # get_chat_history returns: [{'role': 'user', 'content': 'hi'}]
+        # Gemini expects roles: 'user' or 'model'
+        for msg in history_rows:
+            role = "user" if msg['role'] == 'user' else "model"
+            # Filter empty content to avoid API errors
+            content = msg['content'] or "..."
+            gemini_history.append({"role": role, "parts": [content]})
+            
+        chat = model.start_chat(history=gemini_history)
+        
+        # Execute Inference
+        response = chat.send_message(user_text)
+        return response.text.strip()
 
-        # 1. Diagnostic Frame (Surgeon Protocol)
-        if any(kw in text for kw in ['precio', 'costo', 'cuanto', 'valor']):
-            # Price Anchoring Logic
-            for fact in knowledge:
-                service_slug = fact['slug'].split('_')[0]
-                if service_slug in text:
-                    base_price = self.value_map.get(service_slug, 300.0)
-                    anchor_price = base_price * 2
-                    return (
-                        f"Entiendo perfectamente. El valor depende del estado actual de tu piel. 🧐\n\n"
-                        f"Para que te des una idea: un procedimiento de corrección de trabajo previo (cuando vienen de otros lugares) "
-                        f"suele iniciar en {anchor_price} USD debido a la complejidad técnica.\n\n"
-                        f"Sin embargo, si tu piel está 'virgen' o lista para diseño nuevo, la inversión para {service_slug.capitalize()} es de solo {base_price} USD.\n\n"
-                        f"Dime, ¿ya tienes algún trabajo previo o sería tu primera vez?"
-                    )
-            # General fallback for price
-            return "El valor de nuestros servicios de alta gama varía según la complejidad. Para Jorge lo más importante es la seguridad de tu rostro. ¿Te gustaría que iniciemos con una breve evaluación de tu caso para darte el presupuesto exacto? ✨"
-
-        # 2. Scarcity & Social Proof (Closing Protocol)
-        if any(kw in text for kw in ['cita', 'agenda', 'reserva', 'turno', 'cuándo']):
-            return (
-                "Jorge tiene una agenda bastante solicitada por la exclusividad de su técnica. 📅\n\n"
-                "Suelo tener espacios disponibles recién para dentro de 5-7 días, pero a veces hay cambios de último minuto.\n\n"
-                "¿Prefieres horario de mañana o tarde para ver qué puedo rescatar para ti?"
-            )
-
-        # 3. Knowledge Injection (Informational)
-        for fact in knowledge:
-            if any(kw in text for kw in ['donde', 'ubicacion', 'direccion']):
-                if fact['category'] == 'location':
-                    return f"{self.emoji_map['location']} Estamos en la zona más exclusiva de Equipetrol. {fact['content']} ¿Desde qué zona nos escribes tú? ✨"
-
-        # 4. Default Greeting (Frame: Diagnostic Expert)
-        if is_first_message:
-            return (
-                "¡Hola! Soy Natalia, especialista en diseño de mirada de Jorge Aguirre. ✨\n\n"
-                "He recibido tu interés. Para asesorarte con el estándar de calidad que manejamos, "
-                "¿podrías decirme qué zona de tu rostro te gustaría potenciar hoy?"
-            )
-
-        return "Entiendo. Cuéntame un poco más sobre lo que buscas proyectar con tu diseño. ¿Buscas algo muy natural o un efecto más definido? 👁️"
-
-# Singleton
+# Singleton Instance
 natalia = NataliaBrain()
