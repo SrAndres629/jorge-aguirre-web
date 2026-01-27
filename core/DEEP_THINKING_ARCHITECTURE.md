@@ -54,6 +54,8 @@ To avoid **"Context Saturation"** (where an AI attempts to juggle too many domai
 | **NEURO STRATEGIST**    | The Psychologist | Subconscious Persuasion  | Cognitive Biases, Friction Audit, Trust Architecture, Price Anchoring. |
 | **SIGNAL ARCHITECT**    | The Engineer     | Tracking Infrastructure  | Pixel, CAPI, Match Quality, Cookie Persistence, Event Deduplication.   |
 | **ROAS ALCHEMIST**      | The Optimizer    | Cost Reduction           | Audience Suppression, Value-Based Lookalikes, Upstream Optimization.   |
+| **CRM MAESTRO**         | The Architect    | Retention & LTV          | RFM Modeling, Behavioral Clustering, Proactive Engagement.             |
+| **VENTAS DOCTORAL**     | The Strategist   | Revenue Operations       | Predictive Forecasting, Dynamic Pricing, Pipeline Velocity Index.      |
 
 ---
 
