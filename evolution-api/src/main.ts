@@ -164,6 +164,24 @@ async function bootstrap() {
   });
 
   onUnexpectedError();
+  // =================================================================================
+  // DUAL-CORE KEEP-ALIVE: Heartbeat for NataliaBrain
+  // =================================================================================
+  const NATALIA_URL = process.env.NATALIA_URL || "https://natalia-brain-zn13.onrender.com"; // Adjust if needed
+
+  if (configService.get<ProviderSession>('PROVIDER').ENABLED) {
+    setInterval(async () => {
+      try {
+        // Ping Natalia's health check (or root)
+        await axios.get(`${NATALIA_URL}/health`, { timeout: 5000 });
+        // logger.debug(`💓 Dual-Core Heartbeat: Pinged Natalia at ${NATALIA_URL}`); 
+      } catch (error) {
+        // Silently fail or log debug to avoid clutter, as Natalia might sleep
+        // logger.debug(`⚠️ Heartbeat missed Natalia: ${error.message}`);
+      }
+    }, 45000); // 45 seconds to beat the 50s Render limit
+    logger.info('💓 Dual-Core Keep-Alive System: ACTIVATED');
+  }
 }
 
 bootstrap();
