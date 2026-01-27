@@ -29,12 +29,21 @@ class RenderManager:
         return None
 
     def get_deploy_status(self, service_id):
-        url = f"{BASE_URL}/services/{service_id}/deployments"
-        r = requests.get(url, headers=HEADERS, params={"limit": 1})
-        if r.status_code == 200:
-            deploys = r.json()
-            return deploys[0]["deployment"]["status"] if deploys else "no_deploys"
-        return "error"
+        url = f"{BASE_URL}/services/{service_id}/deploys"
+        try:
+            r = requests.get(url, headers=HEADERS, params={"limit": 1}, timeout=10)
+            if r.status_code == 200:
+                deploys = r.json()
+                if deploys and isinstance(deploys, list):
+                    # Confirmed: First element has 'deploy' key
+                    first = deploys[0]
+                    if 'deploy' in first:
+                        return first["deploy"]["status"]
+                    return "unknown_structure"
+                return "no_deploys"
+            return f"err_{r.status_code}"
+        except Exception as e:
+            return f"conn_err: {str(e)[:20]}"
 
     def restart_service(self, service_id):
         print(f"{Fore.YELLOW}🔄 Triggering restart for service {service_id}...")
@@ -59,6 +68,8 @@ class RenderManager:
             print(f"{Fore.RED}❌ Could not connect to Render API.")
             return
 
+        critical_vars = ["GOOGLE_API_KEY", "EVOLUTION_API_URL", "DATABASE_URL"]
+
         for item in svcs:
             svc = item['service']
             sid = svc['id']
@@ -69,7 +80,24 @@ class RenderManager:
             color = Fore.GREEN if status == "live" else Fore.YELLOW
             if status in ["failed", "canceled"]: color = Fore.RED
             
-            print(f"📍 {Fore.WHITE}{name:20} | {Fore.MAGENTA}{sid} | {color}{status.upper():10} | {Fore.BLUE}{url}")
+            print(f"📍 {Fore.WHITE}{name:20} | {Fore.MAGENTA}{sid} | {color}{status.upper():10}")
+            
+            # Deep Audit: Check Env Vars for Natalia
+            if "natalia-brain" in name:
+                print(f"   🔍 Analyzing Environment Variables...")
+                ev_url = f"{BASE_URL}/services/{sid}/env-vars"
+                ev_r = requests.get(ev_url, headers=HEADERS)
+                if ev_r.status_code == 200:
+                    found_vars = [v['envVar']['key'] for v in ev_r.json()]
+                    for cv in critical_vars:
+                        if cv in found_vars:
+                            print(f"   ✅ {cv}: Present")
+                        else:
+                            print(f"   ❌ {cv}: MISSING")
+                else:
+                    print(f"   ⚠️ Could not audit env vars: {ev_r.status_code}")
+            
+            print(f"   🔗 URL: {Fore.BLUE}{url}\n")
 
     def update_env(self, service_id, key, value):
         print(f"{Fore.YELLOW}⚙️ Updating Env Var: {key} for {service_id}...")
@@ -100,7 +128,11 @@ def main():
         events = manager.get_logs(args.logs)
         print(f"--- Recent Events for {args.logs} ---")
         for e in events:
-            print(f"[{e['timestamp']}] {e['type']}: {e.get('data', {}).get('state', '')}")
+            # Render API events can be complex, let's parse safely
+            evt = e.get('event', e)
+            ts = evt.get('timestamp', 'N/A')
+            etype = evt.get('type', 'unknown')
+            print(f"[{ts}] {etype}")
     elif args.env_set:
         if manager.update_env(args.env_set[0], args.env_set[1], args.env_set[2]):
              print(f"{Fore.GREEN}✅ Env var updated.")
