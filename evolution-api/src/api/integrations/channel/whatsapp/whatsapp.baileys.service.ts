@@ -261,7 +261,7 @@ export class BaileysStartupService extends ChannelStartupService {
   public phoneNumber: string;
 
   public get connectionStatus() {
-    return this.stateConnection;
+    return this.stateConnection || { state: 'close' };
   }
 
   public async logoutInstance() {
@@ -708,7 +708,7 @@ export class BaileysStartupService extends ChannelStartupService {
     this.client = makeWASocket(socketConfig);
 
     if (this.localSettings.wavoipToken && this.localSettings.wavoipToken.length > 0) {
-      useVoiceCallsBaileys(this.localSettings.wavoipToken, this.client, this.connectionStatus.state as any, true);
+      useVoiceCallsBaileys(this.localSettings.wavoipToken, this.client, this.connectionStatus?.state as any, true);
     }
 
     this.eventHandler();

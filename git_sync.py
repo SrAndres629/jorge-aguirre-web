@@ -2,55 +2,34 @@ import subprocess
 import sys
 import os
 
-def run_command(command):
-    try:
-        result = subprocess.run(command, shell=True, check=True, capture_output=True, text=True)
-        return result.stdout.strip()
-    except subprocess.CalledProcessError as e:
-        print(f"❌ Error: {e.stderr}")
-        return None
-
-def get_smart_message():
-    """Analiza los cambios para generar un mensaje real"""
-    changed_files = run_command("git diff --name-only --cached")
-    if not changed_files:
-        return None
-    
-    files = changed_files.split('\n')
-    summary = ", ".join(files[:3])
-    if len(files) > 3:
-        summary += f" and {len(files) - 3} more"
-        
-    # Clasificación básica
-    prefix = "feat"
-    if any("test" in f for f in files): prefix = "test"
-    if any(f.endswith(".css") or f.endswith(".html") for f in files): prefix = "style"
-    if any("fix" in f or "bug" in f for f in files): prefix = "fix"
-    if any("docs" in f or f.endswith(".md") for f in files): prefix = "docs"
-    
-    return f"{prefix}: optimize and update {summary}"
+def run_command(command, cwd=None):
+    print(f"Running: {command}")
+    result = subprocess.run(command, shell=True, capture_output=True, text=True, cwd=cwd)
+    if result.returncode != 0:
+        print(f"Error: {result.stderr}")
+        return False
+    print(result.stdout)
+    return True
 
 def main():
-    print("🚀 Iniciando Git Sync Pro (Senior Level)...")
+    repo_path = r"c:\Users\acord\OneDrive\Desktop\paginas web\Jorge Aguirre Flores maquilaje definitivo\jorge_web"
     
-    # 1. Add
-    run_command("git add .")
+    print("--- SYNCING TO GITHUB ---")
     
-    # 2. Generate Message
-    msg = get_smart_message()
-    if not msg:
-        print("⚠️ No hay cambios para subir.")
+    if not run_command("git add .", cwd=repo_path):
+        return
+    
+    commit_msg = "fix: senior auto-heal persistence and defensive baileys checks"
+    if not run_command(f'git commit -m "{commit_msg}"', cwd=repo_path):
+        print("Maybe nothing to commit?")
+    
+    if not run_command("git push origin main", cwd=repo_path):
+        print("Push failed. Check your connection and credentials.")
         return
 
-    print(f"📝 Commit: {msg}")
-    
-    # 3. Commit
-    run_command(f'git commit -m "{msg}"')
-    
-    # 4. Push
-    print("📤 Subiendo a GitHub...")
-    run_command("git push")
-    print("✅ ¡Sincronización exitosa!")
+    print("\n--- DEPLOYMENT SYNCED ---")
+    print("Render should now start building the fixed version.")
+    print("Monitor the logs at: https://dashboard.render.com/web/evolution-whatsapp-zn13/logs")
 
 if __name__ == "__main__":
     main()
