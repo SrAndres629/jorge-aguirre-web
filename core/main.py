@@ -24,7 +24,7 @@ import os
 # Módulos internos
 from app.config import settings
 from app import database
-from app.routes import pages, tracking_routes, admin, health, chat_routes
+from app.routes import pages, tracking_routes, admin, health
 
 # Configurar logging
 logging.basicConfig(
@@ -135,9 +135,7 @@ app.include_router(admin.router)
 # Health checks (/health, /ping)
 app.include_router(health.router)
 
-# Chat Bot (Natalia)
-app.include_router(chat_routes.router)
-
+# Chat routes (Evolution/Natalia) moved to separate microservice
 
 
 # =================================================================
