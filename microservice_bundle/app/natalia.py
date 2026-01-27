@@ -2,7 +2,8 @@
 import logging
 import google.generativeai as genai
 from typing import Optional, Dict, Any, List
-from app.database import get_or_create_lead, log_interaction, get_cursor, get_chat_history
+import asyncio
+from app.database import get_or_create_lead, log_interaction, get_chat_history
 from app.config import settings
 
 # Configure Logger
@@ -19,7 +20,7 @@ else:
 
 class NataliaBrain:
     """
-    COGNITIVE SINGULARITY (v3.0) - AGENTIC VERSION
+    COGNITIVE SINGULARITY (v3.0) - ASYNC AGENTIC VERSION
     Multi-Protocol AI Agent with Human-in-the-loop capability.
     Handles 3 classes of chats: ROOT (Dev), CHIEF (Business), CLIENT (Leads).
     """
@@ -27,7 +28,7 @@ class NataliaBrain:
     def __init__(self):
         self.model_name = 'models/gemini-flash-latest'
         self.generation_config = {
-            "temperature": 0.4, # Lowered for consistency in agentic behavior
+            "temperature": 0.4,
             "top_p": 0.95,
             "max_output_tokens": 8192,
         }
@@ -77,13 +78,12 @@ class NataliaBrain:
         2. DIAGNÓSTICO: Pregunta siempre si tienen trabajo previo.
         3. HUMAN-IN-THE-LOOP: Si preguntan algo que NO sabes (ofertas especiales, casos médicos complejos, descuentos específicos), NO INVENTES. 
            Di: "Entiendo perfectamente tu solicitud. Como tu caso es especial, voy a consultarlo directamente con Jorge Aguirre en este momento y te avisaré apenas me responda. ¿Te parece bien?"
-        4. ACCION: Si detectas que debes consultar al Jefe, el sistema te proporcionará una herramienta interna.
+        4. ACCIÓN: Si detectas que debes consultar al Jefe, el sistema te proporcionará una herramienta interna.
         """
 
-    def process_message(self, phone: str, text: str, meta_data: Optional[dict] = None) -> Dict[str, Any]:
+    async def process_message(self, phone: str, text: str, meta_data: Optional[dict] = None) -> Dict[str, Any]:
         """Agentic processing loop with role detection."""
         
-        # Clean phone for comparison
         clean_phone = "".join(filter(str.isdigit, phone))
         
         # Determine Role
@@ -91,39 +91,57 @@ class NataliaBrain:
         if clean_phone == ADMIN_PHONE: role = "ROOT"
         elif clean_phone == CHIEF_PHONE: role = "CHIEF"
 
-        logger.info(f"🧠 Agent Logic Start | Role: {role} | Phone: {clean_phone}")
+        logger.info(f"🧠 Agent Logic Start (Async) | Role: {role} | Phone: {clean_phone}")
 
-        # 1. Lead/User Identification
-        lead_id, is_new_lead = get_or_create_lead(phone, meta_data)
-        log_interaction(lead_id, "user", text)
+        # 1. Lead Identification
+        lead_id, is_new_lead = await asyncio.to_thread(get_or_create_lead, phone, meta_data)
+        await asyncio.to_thread(log_interaction, lead_id, "user", text)
 
         # 2. Context Retrieval
-        history_rows = get_chat_history(phone, limit=15) 
+        history_rows = await asyncio.to_thread(get_chat_history, phone, limit=15)
         
         # 3. Neural Inference
         try:
-            response_text = self._generate_thought(text, history_rows, role, clean_phone)
+            response_text = await self._generate_thought(text, history_rows, role, clean_phone)
             
-            # 🛡️ PROTOCOLO DE CONSULTA (HUMAN-IN-THE-LOOP - SIMULATED FOR NOW)
-            # Detectar si el Agente decidió que debe consultar al jefe
+            # 🛡️ Human-in-the-loop Trigger
             if role == "CLIENT" and any(x in response_text.lower() for x in ["voy a consultar con jorge", "consultaré directamente"]):
-                self._trigger_chief_consultation(clean_phone, text)
+                await self._trigger_chief_consultation(clean_phone, text)
                 
         except Exception as e:
             logger.error(f"❌ Cognitive Failure: {e}")
             response_text = "Disculpa, estoy teniendo un refresh en mi sistema de agenda. Dame un momento y te atiendo con la exclusividad que mereces. ✨"
 
         # 4. Log Assistant Output
-        log_interaction(lead_id, "assistant", response_text)
+        await asyncio.to_thread(log_interaction, lead_id, "assistant", response_text)
         
+        # Determine VBO value (VBO Pillar 1)
+        intent = "general"
+        val = 50.0
+        lower_text = text.lower()
+        if "cejas" in lower_text or "micro" in lower_text:
+            intent = "microblading"
+            val = 300.0
+        elif "labios" in lower_text:
+            intent = "labios"
+            val = 200.0
+        
+        is_junk = any(kw in lower_text for kw in ["spam", "oferta", "banco", "vendedor"])
+
         return {
             "lead_id": lead_id,
             "reply": response_text,
-            "role": role,
-            "metadata": {"role": role}
+            "action": "send_whatsapp",
+            "is_new_lead": is_new_lead,
+            "metadata": {
+                "role": role,
+                "intent": intent, 
+                "value": val,
+                "is_junk": is_junk
+            }
         }
 
-    def _generate_thought(self, user_text: str, history_rows: List[Dict], role: str, phone: str) -> str:
+    async def _generate_thought(self, user_text: str, history_rows: List[Dict], role: str, phone: str) -> str:
         model = genai.GenerativeModel(
             model_name=self.model_name,
             generation_config=self.generation_config,
@@ -137,30 +155,26 @@ class NataliaBrain:
             gemini_history.append({"role": g_role, "parts": [msg['content'] or "..."]})
             
         chat = model.start_chat(history=gemini_history)
-        response = chat.send_message(user_text)
+        # Using Gemini's async method
+        response = await chat.send_message_async(user_text)
         return response.text.strip()
 
-    def _trigger_chief_consultation(self, client_phone: str, client_message: str):
+    async def _trigger_chief_consultation(self, client_phone: str, client_message: str):
         """
         Envía un mensaje automático a Jorge Aguirre (CHIEF) para resolver una duda de cliente.
         """
         logger.info(f"📢 [CONSULTATION TRIGGERED] Request from {client_phone} sent to Chief.")
         
-        # Import dynamic to avoid circular dependencies
-        try:
-            from app.evolution import evolution_service
-            consultation_msg = (
-                f"🧠 *NATALIA - CONSULTA URGENTE*\n\n"
-                f"Jorge, tengo una clienta con una duda que requiere tu criterio:\n\n"
-                f"👤 *Cliente:* {client_phone}\n"
-                f"💬 *Mensaje:* {client_message}\n\n"
-                f"¿Cómo debería proceder? Respóndeme por aquí para que yo le informe."
-            )
-            # Solo activa enviarlo si evolution_service está listo
-            if evolution_service:
-                evolution_service.send_text(CHIEF_PHONE, consultation_msg)
-        except Exception as e:
-            logger.error(f"⚠️ Failed to send consultation to Chief: {e}")
+        from app.evolution import evolution_service
+        consultation_msg = (
+            f"🧠 *NATALIA - CONSULTA URGENTE*\n\n"
+            f"Jorge, tengo una clienta con una duda que requiere tu criterio:\n\n"
+            f"👤 *Cliente:* {client_phone}\n"
+            f"💬 *Mensaje:* {client_message}\n\n"
+            f"¿Cómo debería proceder? Respóndeme por aquí para que yo le informe."
+        )
+        if evolution_service:
+            await evolution_service.send_text(CHIEF_PHONE, consultation_msg)
 
 # Singleton Instance
 natalia = NataliaBrain()
