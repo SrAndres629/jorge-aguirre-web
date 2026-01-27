@@ -67,7 +67,7 @@ class Settings(BaseSettings):
     # WhatsApp / Evolution API
     WHATSAPP_NUMBER: str = "59164714751"
     EVOLUTION_API_KEY: Optional[str] = None
-    EVOLUTION_API_URL: str = "http://evolution_api:8080"
+    EVOLUTION_API_URL: str = os.getenv("EVOLUTION_API_URL", "https://evolution-whatsapp-zn13.onrender.com")
     EVOLUTION_INSTANCE: str = "JorgeMain"
 
     # n8n Integration
