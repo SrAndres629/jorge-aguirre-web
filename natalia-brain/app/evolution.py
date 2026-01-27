@@ -43,15 +43,29 @@ class EvolutionService:
         """
         Recupera el historial de mensajes directamente desde el servidor de Evolution.
         Útil para dar contexto a Natalia cuando la DB local está vacía.
+        Endpoint: POST /chat/findMessages/{instance}
         """
-        url = f"{self.base_url}/chat/fetchMessages/{self.instance}"
+        url = f"{self.base_url}/chat/findMessages/{self.instance}"
         headers = {"apikey": self.api_key}
         clean_phone = "".join(filter(str.isdigit, phone))
-        params = {"number": clean_phone, "limit": limit}
+        
+        # Payload para Query<Message> (Prisma-like)
+        # Asumiendo que 'where' con 'key' -> 'remoteJid' filtra por chat
+        payload = {
+            "where": {
+                "key": {
+                    "remoteJid": f"{clean_phone}@s.whatsapp.net"
+                }
+            },
+            "take": limit,
+            "orderBy": [
+                {"messageTimestamp": "desc"}
+            ]
+        }
 
         async with httpx.AsyncClient(timeout=10.0) as client:
             try:
-                resp = await client.get(url, params=params, headers=headers)
+                resp = await client.post(url, json=payload, headers=headers)
                 resp.raise_for_status()
                 messages = resp.json()
                 # Evolution suele devolver una lista de mensajes en formato oficial de WA
