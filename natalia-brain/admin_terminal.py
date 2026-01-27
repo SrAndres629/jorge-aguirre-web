@@ -35,7 +35,8 @@ def create_instance():
         "instanceName": INSTANCE,
         "token": API_KEY,
         "number": "59164714751",
-        "qrcode": True
+        "qrcode": True,
+        "integration": "WHATSAPP-BAILEYS"
     }
     response = requests.post(f"{API_URL}/instance/create", headers=HEADERS, json=payload)
     print(f"Result: {response.status_code}")
