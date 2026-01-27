@@ -406,7 +406,7 @@ export class BaileysStartupService extends ChannelStartupService {
       qrcodeTerminal.generate(qr, { small: true }, (qrcode) =>
         this.logger.log(
           `\n{ instance: ${this.instance.name} pairingCode: ${this.instance.qrcode.pairingCode}, qrcodeCount: ${this.instance.qrcode.count} }\n` +
-            qrcode,
+          qrcode,
         ),
       );
 
@@ -576,6 +576,13 @@ export class BaileysStartupService extends ChannelStartupService {
   private async createClient(number?: string): Promise<WASocket> {
     this.instance.authState = await this.defineAuthState();
 
+    if (!this.instance.authState) {
+      throw new BadRequestException(
+        'Critical Error: No authentication storage provider enabled. ' +
+        'Please set DATABASE_SAVE_DATA_INSTANCE=true in your environment variables.'
+      );
+    }
+
     const session = this.configService.get<ConfigSessionPhone>('CONFIG_SESSION_PHONE');
 
     let browserOptions = {};
@@ -641,8 +648,11 @@ export class BaileysStartupService extends ChannelStartupService {
       logger: P({ level: this.logBaileys }),
       printQRInTerminal: false,
       auth: {
-        creds: this.instance.authState.state.creds,
-        keys: makeCacheableSignalKeyStore(this.instance.authState.state.keys, P({ level: 'error' }) as any),
+        creds: this.instance.authState?.state?.creds,
+        keys: makeCacheableSignalKeyStore(
+          this.instance.authState?.state?.keys || ({} as any),
+          P({ level: 'error' }) as any,
+        ),
       },
       msgRetryCounterCache: this.msgRetryCounterCache,
       generateHighQualityLinkPreview: true,
@@ -999,16 +1009,16 @@ export class BaileysStartupService extends ChannelStartupService {
 
         const messagesRepository: Set<string> = new Set(
           chatwootImport.getRepositoryMessagesCache(instance) ??
-            (
-              await this.prismaRepository.message.findMany({
-                select: { key: true },
-                where: { instanceId: this.instanceId },
-              })
-            ).map((message) => {
-              const key = message.key as { id: string };
+          (
+            await this.prismaRepository.message.findMany({
+              select: { key: true },
+              where: { instanceId: this.instanceId },
+            })
+          ).map((message) => {
+            const key = message.key as { id: string };
 
-              return key.id;
-            }),
+            return key.id;
+          }),
         );
 
         if (chatwootImport.getRepositoryMessagesCache(instance) === null) {

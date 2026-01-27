@@ -12,8 +12,16 @@ To avoid **"Context Saturation"** (where an AI attempts to juggle too many domai
 ## 2. Universal "Full Stack" Cognitive Protocol (The Thought Chain)
 *Every* skill, before outputting a single character of code or logic, must strictly process the request through this **4-step loop**:
 
-### Phase 1: Architecture & Feasibility Audit (The "Brakes")
--   **Query**: "If I build this, what breaks?"
+### Phase 0: Architecture & Topology Audit (The "GPS")
+-   **Query**: "What is the blast radius?"
+-   **Action**: Consult the `graph_it_live` graph to identify dependencies.
+-   **Checklist**:
+    -   **Dependent Identification**: Who relies on this code?
+    -   **Circular Detection**: Will this change cause a loop?
+    -   **Layer Purity**: Is the hierarchy maintained?
+
+### Phase 1: Impact & Feasibility Audit (The "Brakes")
+-   **Query**: "If I build this, what else fails?"
 -   **Checklist**:
     -   **Database Integrity**: Impact on Schema (Foreign keys, migrations, indexing).
     -   **API Harmony**: Latency, rate limits (e.g., Meta Graph API limits), and error handling.
@@ -43,19 +51,20 @@ To avoid **"Context Saturation"** (where an AI attempts to juggle too many domai
 
 ## 3. The Hexagon of Competence (Specialized Roles)
 
-| Skill Name              | Role             | Core Responsibility      | Cognitive Focus                                                        |
-| :---------------------- | :--------------- | :----------------------- | :--------------------------------------------------------------------- |
-| **MASTER ORCHESTRATOR** | The Brain        | Strategy & Delegation    | Context Preservation, Conflict Resolution, High-Level Architecture.    |
-| **UX/UI VISIONARY**     | The Designer     | Luxury Conversion        | Cognitive Psychology, Visual Hierarchy, Micro-interactions, Branding.  |
-| **CONVERSION CLOSER**   | The Strategist   | Sales & Persuasion       | Copywriting, Funnel Logic, CTAs, Behavioral Triggers (NLP).            |
-| **FULL-STACK BUILDER**  | The Engine       | High-Perf Implementation | Python/JS Performance, DB Optimization, Clean Architecture.            |
-| **ADS CONNECTOR**       | The Bridge       | External Ecosystems      | Meta Ads (Pixel, CAPI), GAds, TikTok Ads, Signal Recovery.             |
-| **SCIENTIFIC MARKETER** | The Scientist    | Validation & Metrics     | Hygiene Factors, A/B Testing, Statistical Significance, ROI/ROAS.      |
-| **NEURO STRATEGIST**    | The Psychologist | Subconscious Persuasion  | Cognitive Biases, Friction Audit, Trust Architecture, Price Anchoring. |
-| **SIGNAL ARCHITECT**    | The Engineer     | Tracking Infrastructure  | Pixel, CAPI, Match Quality, Cookie Persistence, Event Deduplication.   |
-| **ROAS ALCHEMIST**      | The Optimizer    | Cost Reduction           | Audience Suppression, Value-Based Lookalikes, Upstream Optimization.   |
-| **CRM MAESTRO**         | The Architect    | Retention & LTV          | RFM Modeling, Behavioral Clustering, Proactive Engagement.             |
-| **VENTAS DOCTORAL**     | The Strategist   | Revenue Operations       | Predictive Forecasting, Dynamic Pricing, Pipeline Velocity Index.      |
+| Skill Name                | Role             | Core Responsibility      | Cognitive Focus                                                        |
+| :------------------------ | :--------------- | :----------------------- | :--------------------------------------------------------------------- |
+| **MASTER ORCHESTRATOR**   | The Brain        | Strategy & Delegation    | Context Preservation, Conflict Resolution, High-Level Architecture.    |
+| **UX/UI VISIONARY**       | The Designer     | Luxury Conversion        | Cognitive Psychology, Visual Hierarchy, Micro-interactions, Branding.  |
+| **CONVERSION CLOSER**     | The Strategist   | Sales & Persuasion       | Copywriting, Funnel Logic, CTAs, Behavioral Triggers (NLP).            |
+| **FULL-STACK BUILDER**    | The Engine       | High-Perf Implementation | Python/JS Performance, DB Optimization, Clean Architecture.            |
+| **ADS CONNECTOR**         | The Bridge       | External Ecosystems      | Meta Ads (Pixel, CAPI), GAds, TikTok Ads, Signal Recovery.             |
+| **SCIENTIFIC MARKETER**   | The Scientist    | Validation & Metrics     | Hygiene Factors, A/B Testing, Statistical Significance, ROI/ROAS.      |
+| **NEURO STRATEGIST**      | The Psychologist | Subconscious Persuasion  | Cognitive Biases, Friction Audit, Trust Architecture, Price Anchoring. |
+| **SIGNAL ARCHITECT**      | The Engineer     | Tracking Infrastructure  | Pixel, CAPI, Match Quality, Cookie Persistence, Event Deduplication.   |
+| **ROAS ALCHEMIST**        | The Optimizer    | Cost Reduction           | Audience Suppression, Value-Based Lookalikes, Upstream Optimization.   |
+| **CRM MAESTRO**           | The Architect    | Retention & LTV          | RFM Modeling, Behavioral Clustering, Proactive Engagement.             |
+| **VENTAS DOCTORAL**       | The Strategist   | Revenue Operations       | Predictive Forecasting, Dynamic Pricing, Pipeline Velocity Index.      |
+| **ARCHITECTURAL AUDITOR** | The GPS          | Code Topology & Safety   | Dependency Graphs, Circular Analysis, Impact Mapping, Layer Integrity. |
 
 ---
 

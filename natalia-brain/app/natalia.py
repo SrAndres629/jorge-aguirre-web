@@ -3,7 +3,7 @@ import logging
 import google.generativeai as genai
 from typing import Optional, Dict, Any, List
 import asyncio
-from app.database import get_or_create_lead, log_interaction, get_chat_history
+from app.database import get_or_create_lead, log_interaction, get_chat_history, get_knowledge_base
 from app.config import settings
 
 # Configure Logger
@@ -40,12 +40,19 @@ class NataliaBrain:
             {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
         ]
 
-    def _get_system_prompt(self, role: str, phone: str) -> str:
+    async def _get_system_prompt(self, role: str, phone: str) -> str:
         """Dynamic Persona Injection based on sender role."""
         
-        base_personality = """
+        # 1. Fetch Knowledge for RAG (Retrieval-Augmented Generation)
+        knowledge = await asyncio.to_thread(get_knowledge_base)
+        knowledge_str = "\n".join([f"- {k['category'].upper()}: {k['content']}" for k in knowledge])
+
+        base_personality = f"""
         Eres NATALIA, el Agente de Inteligencia Artificial de JORGE AGUIRRE FLORES.
         No eres un simple bot, eres un Agente Autónomo con capacidad de razonamiento.
+        
+        CONOCIMIENTO ACTUALIZADO:
+        {knowledge_str}
         """
 
         if role == "ROOT":
@@ -72,7 +79,6 @@ class NataliaBrain:
         # DEFAULT: CLIENT PROTOCOL
         return base_personality + """
         ESTADO: PROTOCOLO ATENCIÓN AL CLIENTE.
-        SERVICIOS: Microblading ($215), Labios ($170), Ojos ($145).
         REGLAS:
         1. PERSUASIÓN: Nunca des precios sin valor previo.
         2. DIAGNÓSTICO: Pregunta siempre si tienen trabajo previo.
@@ -146,7 +152,7 @@ class NataliaBrain:
             model_name=self.model_name,
             generation_config=self.generation_config,
             safety_settings=self.safety_settings,
-            system_instruction=self._get_system_prompt(role, phone)
+            system_instruction=await self._get_system_prompt(role, phone)
         )
         
         gemini_history = []

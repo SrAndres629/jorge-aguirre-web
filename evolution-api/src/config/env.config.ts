@@ -487,7 +487,10 @@ export class ConfigService {
         },
         PROVIDER: process.env.DATABASE_PROVIDER || 'postgresql',
         SAVE_DATA: {
-          INSTANCE: process.env?.DATABASE_SAVE_DATA_INSTANCE === 'true',
+          // Senior Auto-Heal: If DATABASE_CONNECTION_URI is present, default INSTANCE to true unless explicitly 'false'
+          INSTANCE: process.env?.DATABASE_SAVE_DATA_INSTANCE
+            ? process.env.DATABASE_SAVE_DATA_INSTANCE === 'true'
+            : !!process.env.DATABASE_CONNECTION_URI,
           NEW_MESSAGE: process.env?.DATABASE_SAVE_DATA_NEW_MESSAGE === 'true',
           MESSAGE_UPDATE: process.env?.DATABASE_SAVE_MESSAGE_UPDATE === 'true',
           CONTACTS: process.env?.DATABASE_SAVE_DATA_CONTACTS === 'true',
