@@ -1,7 +1,7 @@
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routes.chat_routes import router as chat_router
+from app.chat_routes import router as chat_router
 from app.config import settings
 
 app = FastAPI(title="Natalia AI Core", version="2.0.0")
