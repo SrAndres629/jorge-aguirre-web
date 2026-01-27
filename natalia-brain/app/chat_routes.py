@@ -22,6 +22,82 @@ class IncomingMessage(BaseModel):
     fbp: Optional[str] = None
     utm_data: Optional[Dict[str, Any]] = None
     
+@router.post("/webhook/evolution")
+async def handle_evolution_webhook(request: Request, background_tasks: BackgroundTasks):
+    """
+    Adapter nativo para Evolution API v2.
+    Recibe el payload raw, extrae el mensaje y lo pasa al Cerebro.
+    """
+    try:
+        body = await request.json()
+        
+        # Validar tipo de evento
+        event_type = body.get("type")
+        data = body.get("data", {})
+        
+        # Solo nos interesan mensajes nuevos (UPSERT)
+        if event_type == "MESSAGES_UPSERT":
+            message_data = data
+            key = message_data.get("key", {})
+            from_me = key.get("fromMe", False)
+            
+            # Ignorar mensajes propios para evitar bucles
+            if from_me:
+                return {"status": "ignored", "reason": "from_me"}
+            
+            # Extraer Teléfono (remoteJid)
+            remote_jid = key.get("remoteJid", "")
+            phone = remote_jid.split("@")[0] if "@" in remote_jid else remote_jid
+            
+            # Extraer Texto (conversation, extendedTextMessage, etc.)
+            message_content = message_data.get("message", {})
+            text = (
+                message_content.get("conversation") or 
+                message_content.get("extendedTextMessage", {}).get("text") or
+                message_content.get("imageMessage", {}).get("caption") or
+                ""
+            )
+            
+            if not text:
+                 return {"status": "ignored", "reason": "no_text"}
+
+            # Extraer Nombre
+            push_name = message_data.get("pushName", "Unknown")
+            
+            # Procesar con Natalia (reutilizando lógica interna)
+            logger.info(f"📨 Webhook Evolution recibido de {phone}: {text[:30]}...")
+            
+            # -- Lógica idéntica a /chat/incoming --
+            # Construct dynamic metadata
+            meta = {
+                "name": push_name,
+                "source": "evolution_webhook"
+            }
+
+            # Process Logic
+            result = natalia.process_message(
+                phone=phone, 
+                text=text, 
+                meta_data=meta
+            )
+            
+            # Execute Action (Reply)
+            if result.get("action") == "send_whatsapp":
+                background_tasks.add_task(
+                    evolution_service.send_text, 
+                    phone=phone, 
+                    text=result["reply"]
+                )
+                
+            return {"status": "processed", "phone": phone}
+            
+        return {"status": "ignored", "type": event_type}
+
+    except Exception as e:
+        logger.error(f"❌ Webhook Error: {e}")
+        # Retornamos 200 para que Evolution no reintente infinitamente si es un error lógico nuestro
+        return {"status": "error", "message": str(e)}
+
 @router.post("/chat/incoming")
 async def handle_incoming_chat(msg: IncomingMessage, request: Request, background_tasks: BackgroundTasks):
     """
