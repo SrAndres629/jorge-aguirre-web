@@ -12,7 +12,7 @@ INSTANCE = "NataliaCoreV1"
 API_URL = "https://evolution-whatsapp-zn13.onrender.com"  # Tu URL de Evolution
 API_KEY = "JorgeSecureKey123"                             # Tu API Key de Evolution
 # IMPORTANTE: Usamos el endpoint '/webhook/evolution' que está diseñado para el payload de Evolution
-WEBHOOK_TARGET = "https://jorge-aguirre-web.onrender.com/webhook/evolution" 
+WEBHOOK_TARGET = "https://natalia-brain.onrender.com/webhook/evolution" 
 ADMIN_PHONE = "59178113055" 
 
 headers = {
