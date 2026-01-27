@@ -28,6 +28,6 @@ SERVICES_CONFIG = {
 CONTACT_CONFIG = {
     'phone': "59164714751",
     'whatsapp_url': "https://wa.me/59164714751",
-    'address': "Zona Equipetrol, Calle Tucumán #45, Santa Cruz de la Sierra, Bolivia",
-    'maps_url': "https://maps.app.goo.gl/gDnN71rXfbb9h5dE9"
+    'address': "Sobre el la av. 4to anillo y prolongacion av. brasil, frente al hospital guaracachi, Santa Cruz de la Sierra, Bolivia",
+    'maps_url': "https://maps.app.goo.gl/Nfqet1ArkDMMcPt76"
 }
