@@ -92,36 +92,60 @@ def send_test_message():
 
 def monitor_response():
     print(f"\n{Fore.CYAN}🕵️ MONITORING CHAT FOR AI RESPONSE (60s timeout)...")
-    url = f"{BASE_URL}/chat/fetchMessages/{INSTANCE}"
-    params = {"number": "59178113055", "limit": 5}
+    url = f"{BASE_URL}/chat/findMessages/{INSTANCE}"
+    
+    # Payload matching Prisma requirements
+    payload = {
+        "where": {
+            "key": {
+                "remoteJid": "59178113055@s.whatsapp.net"
+            }
+        },
+        "take": 5,
+        "orderBy": [
+            {"messageTimestamp": "desc"}
+        ]
+    }
     
     start_time = time.time()
-    last_count = 0
     
     while time.time() - start_time < 60:
         try:
-            resp = requests.get(url, headers=HEADERS, params=params)
+            resp = requests.post(url, json=payload, headers=HEADERS)
             if resp.status_code == 200:
-                msgs = resp.json()
-                if isinstance(msgs, list):
-                    # Filter for messages FROM the bot (fromMe=True) that are recent
-                    ai_replies = [m for m in msgs if m.get('key', {}).get('fromMe') == True]
+                data = resp.json()
+                # Handle possible response wrappers
+                messages = []
+                if isinstance(data, list):
+                    messages = data
+                elif isinstance(data, dict) and 'data' in data:
+                    messages = data['data']
+                
+                if isinstance(messages, list) and len(messages) > 0:
+                    # Filter for messages FROM the bot (fromMe=True)
+                    ai_replies = [m for m in messages if m.get('key', {}).get('fromMe') is True]
                     
-                    if len(ai_replies) > last_count and last_count > 0:
-                        # New reply detected
-                        latest = ai_replies[0] # Usually first is newest? Check verification
-                        content = latest.get('message', {}).get('conversation') or latest.get('message', {}).get('extendedTextMessage', {}).get('text')
-                        print(f"\n{Fore.MAGENTA}🤖 [NATALIA REPLY DETECTED]:\n{Style.BRIGHT}{content}{Style.RESET_ALL}")
-                        print(f"{Fore.GREEN}✅ INTEGRATION SUCCESSFUL: Full Loop Verified.")
-                        return
-                    
-                    last_count = len(ai_replies)
-            
+                    if ai_replies:
+                        latest = ai_replies[0]
+                        msg_content = latest.get('message', {})
+                        content = (
+                            msg_content.get('conversation') or 
+                            msg_content.get('extendedTextMessage', {}).get('text')
+                        )
+                        
+                        # Verify it's not our own trigger message
+                        if content and "SISTEMA INICIADO" not in content:
+                            print(f"\n{Fore.MAGENTA}🤖 [NATALIA REPLY DETECTED]:\n{Style.BRIGHT}{content}{Style.RESET_ALL}")
+                            print(f"{Fore.GREEN}✅ INTEGRATION SUCCESSFUL: Full Loop Verified.")
+                            return
+
+            import sys
             sys.stdout.write(".")
             sys.stdout.flush()
             time.sleep(3)
             
         except Exception as e:
+            # print(f"Error: {e}")
             pass
             
     print(f"\n{Fore.YELLOW}⚠️ No AI reply detected within 60s. (Might still be processing or deploying).")
