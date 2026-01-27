@@ -160,35 +160,13 @@ if (metricsConfig.ENABLED) {
   });
 }
 
-if (!serverConfig.DISABLE_MANAGER) router.use('/manager', new ViewsRouter().router);
+// Headless Optimization: Manager and Assets disabled for senior deployment
+// if (!serverConfig.DISABLE_MANAGER) router.use('/manager', new ViewsRouter().router);
+router.use('/manager', (req, res) => res.status(403).json({ error: "Headless Mode: Dashboard Disabled" }));
 
-router.get('/assets/*', (req, res) => {
-  const fileName = req.params[0];
+// router.get('/assets/*', ...); // Assets disabled below
 
-  // Security: Reject paths containing traversal patterns
-  if (!fileName || fileName.includes('..') || fileName.includes('\\') || path.isAbsolute(fileName)) {
-    return res.status(403).send('Forbidden');
-  }
-
-  const basePath = path.join(process.cwd(), 'manager', 'dist');
-  const assetsPath = path.join(basePath, 'assets');
-  const filePath = path.join(assetsPath, fileName);
-
-  // Security: Ensure the resolved path is within the assets directory
-  const resolvedPath = path.resolve(filePath);
-  const resolvedAssetsPath = path.resolve(assetsPath);
-
-  if (!resolvedPath.startsWith(resolvedAssetsPath + path.sep) && resolvedPath !== resolvedAssetsPath) {
-    return res.status(403).send('Forbidden');
-  }
-
-  if (fs.existsSync(resolvedPath)) {
-    res.set('Content-Type', mimeTypes.lookup(resolvedPath) || 'text/css');
-    res.send(fs.readFileSync(resolvedPath));
-  } else {
-    res.status(404).send('File not found');
-  }
-});
+// router.get('/assets/*', (req, res) => { ... }); // Fully commented out to save routing overhead
 
 router
   .use((req, res, next) => telemetry.collectTelemetry(req, res, next))

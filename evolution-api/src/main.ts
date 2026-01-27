@@ -64,11 +64,11 @@ async function bootstrap() {
     compression(),
   );
 
-  app.set('view engine', 'hbs');
-  app.set('views', join(ROOT_DIR, 'views'));
-  app.use(express.static(join(ROOT_DIR, 'public')));
-
-  app.use('/store', express.static(join(ROOT_DIR, 'store')));
+  // Headless Optimization: Disabling UI/Views to save memory
+  // app.set('view engine', 'hbs');
+  // app.set('views', join(ROOT_DIR, 'views'));
+  // app.use(express.static(join(ROOT_DIR, 'public')));
+  // app.use('/store', express.static(join(ROOT_DIR, 'store')));
 
   app.use('/', router);
 
