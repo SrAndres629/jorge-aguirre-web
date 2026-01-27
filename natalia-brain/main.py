@@ -48,7 +48,23 @@ async def keep_evolution_alive():
 
 @app.on_event("startup")
 async def startup_event():
+    # 1. Start Keep-Alive Heartbeat
     asyncio.create_task(keep_evolution_alive())
+    
+    # 2. Senior Protocol: Admin initialization message
+    from app.evolution import evolution_service
+    from app.natalia import ADMIN_PHONE
+    
+    logger.info(f"🚀 Natalia initializing. Sending heartbeat to Admin: {ADMIN_PHONE}")
+    
+    startup_msg = (
+        "🧠 *NATALIA CORE V3.0 ACTIVADA*\n\n"
+        "He despertado y mis sistemas neuronales están en línea. 🚀\n"
+        "Estoy monitoreando la conexión con Evolution y lista para recibir mensajes."
+    )
+    
+    # Send via background task to not block startup
+    asyncio.create_task(evolution_service.send_text(ADMIN_PHONE, startup_msg))
 
 if __name__ == "__main__":
     import uvicorn
