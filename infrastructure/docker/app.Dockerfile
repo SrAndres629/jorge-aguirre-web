@@ -1,69 +1,38 @@
-# =================================================================
-# APP DOCKERFILE (Multi-Stage)
-# Context: Project Root (.)
-# =================================================================
-
-# --- Stage 1: Builder ---
-FROM python:3.11-slim AS builder
-
-WORKDIR /build
-
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
-
-# Install build dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc \
-    && rm -rf /var/lib/apt/lists/*
-
-# Create virtual environment
-RUN python -m venv /opt/venv
-ENV PATH="/opt/venv/bin:$PATH"
-
-# Install Python dependencies
-# Install Python dependencies
-COPY natalia-brain/requirements.txt .
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
-
-# --- Stage 2: Final Runtime ---
+# Usa Python 3.11 Slim como base
 FROM python:3.11-slim
 
-WORKDIR /app
-
-# Environment Setup
+# Evita que Python escriba archivos .pyc y habilita logs en tiempo real
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
-ENV PATH="/opt/venv/bin:$PATH"
-ENV PORT=10000
-ENV MALLOC_ARENA_MAX=2
 
-# Install runtime dependencies (curl for healthcheck)
+# Instala dependencias del sistema necesarias
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy virtual environment from builder
-COPY --from=builder /opt/venv /opt/venv
+# Configura el directorio de trabajo
+WORKDIR /app
 
-# Setup Non-Root User
-RUN addgroup --system jorgeuser && adduser --system --group jorgeuser
+# --- CAPA DE DEPENDENCIAS ---
+# Copiamos primero el requirements.txt desde la nueva ubicación (natalia-brain)
+COPY natalia-brain/requirements.txt .
 
-# Copy Application Code
+# Instalamos las dependencias
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
+
+# --- CAPA DE CÓDIGO ---
+# Copiamos todo el código del cerebro
 COPY natalia-brain/ .
 
-# Ensure database directory exists and has correct permissions
-RUN mkdir -p /app/database && chown -R jorgeuser:jorgeuser /app
-
-# Switch to User
+# Creamos un usuario no-root por seguridad
+RUN addgroup --system jorgeuser && adduser --system --group jorgeuser
 USER jorgeuser
 
-# Expose Port
+# Exponemos el puerto (Render usa 10000 por defecto)
 EXPOSE 10000
 
-# Healthcheck
-HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
-    CMD curl -f http://localhost:${PORT}/health || exit 1
-
-# Default Command (Use Shell form to expand $PORT)
-CMD sh -c "uvicorn main:app --host 0.0.0.0 --port ${PORT}"
+# Comando de inicio robusto (Uvicorn)
+# Nota: Ajustado a main:app porque main.py está en la raíz de natalia-brain
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "10000"]
