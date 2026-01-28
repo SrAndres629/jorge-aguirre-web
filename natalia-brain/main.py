@@ -20,6 +20,10 @@ app.include_router(chat_router)
 def health():
     return {"status": "Natalia is online and thinking."}
 
+@app.get("/")
+def root():
+    return {"status": "alive", "service": "natalia-brain", "version": "2.0.0"}
+
 
 # ==========================================
 # DUAL-CORE KEEP-ALIVE: Heartbeat for Evolution

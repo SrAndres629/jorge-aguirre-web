@@ -6,10 +6,12 @@ import asyncio
 import time
 from app.database import get_or_create_lead, log_interaction, get_chat_history, get_knowledge_base, get_agent_prompt
 from app.config import settings
+from app.roles import Role
 
 # Import Tool Registry
 from app.tools.registry import registry
 from app.tools.definitions import * 
+import app.tools.admin_tools # Register Admin Tools 
 
 # Configure Logger
 logger = logging.getLogger("NataliaBrain")
@@ -96,9 +98,10 @@ class NataliaBrain:
             }
 
         # Determine Role
-        role = "CLIENT"
-        if clean_phone == ADMIN_PHONE: role = "ROOT"
-        elif clean_phone == CHIEF_PHONE: role = "CHIEF"
+        # TODO: Replace with DB lookup later. For now, use robust constants.
+        role = Role.SALES.value
+        if clean_phone == ADMIN_PHONE: role = Role.GOD.value
+        elif clean_phone == CHIEF_PHONE: role = Role.SUPERVISOR.value
 
         logger.info(f"🧠 Agent Logic Start (Hybrid) | Role: {role} | Phone: {clean_phone}")
 
@@ -133,9 +136,12 @@ class NataliaBrain:
             # OR typically at generation time. For 'start_chat', tools are often a property of the chat object or passed in get_response.
             # We'll attach tools to the chat session call.
             
+            tools_for_user = registry.get_tools_for_gemini(user_role=role)
+            logger.info(f"🛠️ Tools enabled for {role}: {[t['name'] for t in tools_for_user]}")
+            
             response = await chat_session.send_message_async(
                 text,
-                tools=registry.get_tools_for_gemini()
+                tools=tools_for_user
             )
 
             # PHASE 2: Tool Execution Loop (Max 3 turns)
