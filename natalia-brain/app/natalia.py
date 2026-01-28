@@ -49,7 +49,11 @@ class NataliaBrain:
             {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
         ]
         
+
         # Initialize Model
+        # CRITICAL FIX: Tools must be declared here or at generation time correctly.
+        # Ideally, we inject them dynamically, but for 'start_chat', we should be careful.
+        # We will bind tools dynamically in process_message.
         self.model = genai.GenerativeModel(
             model_name=self.model_name,
             generation_config=self.generation_config,
@@ -126,23 +130,29 @@ class NataliaBrain:
             system_instruction = await self._get_system_prompt(role, clean_phone)
             self.model._system_instruction = system_instruction # Hack: Set system prompt
 
-            chat_session = self.model.start_chat(history=gemini_history)
+
+            # Correct Tool Binding for Gemini 1.5
+            # We must reconstruct the chat session with tools IF we want them to be available.
+            # However, start_chat doesn't easily accept tools in all SDK versions. 
+            # Strategy: Instantiate a temporary model with tools for this turn OR pass tools to send_message.
             
-            # PHASE 1: User Input -> Model (with Tools)
-            logger.info(f"🧠 [THINKING] Phase 1: Reasoning with Tools...")
-            
-            # Send message with tools enabled
-            # Note: In latest genai, we pass tools at model init or chat creation, 
-            # OR typically at generation time. For 'start_chat', tools are often a property of the chat object or passed in get_response.
-            # We'll attach tools to the chat session call.
-            
+            # 1. Get Tools
             tools_for_user = registry.get_tools_for_gemini(user_role=role)
             logger.info(f"🛠️ Tools enabled for {role}: {[t['name'] for t in tools_for_user]}")
-            
-            response = await chat_session.send_message_async(
-                text,
-                tools=tools_for_user
+
+            # 2. Re-instantiate Chat with Tools (The Robust Way)
+            # Since tools are bound to the model, we can't just pass them to send_message in some versions.
+            model_with_tools = genai.GenerativeModel(
+                model_name=self.model_name,
+                generation_config=self.generation_config,
+                safety_settings=self.safety_settings,
+                tools=tools_for_user # BIND TOOLS HERE
             )
+            
+            # 3. Start Chat on the Tool-Enabled Model
+            chat_session = model_with_tools.start_chat(history=gemini_history)
+
+            response = await chat_session.send_message_async(text)
 
             # PHASE 2: Tool Execution Loop (Max 3 turns)
             MAX_TURNS = 3
