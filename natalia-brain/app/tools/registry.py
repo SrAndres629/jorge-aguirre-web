@@ -1,8 +1,8 @@
 import inspect
 import functools
 from typing import Callable, Dict, Any, List
-from pydantic import ValidateCallWrapper
 import logging
+
 
 logger = logging.getLogger("ToolRegistry")
 
