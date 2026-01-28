@@ -287,7 +287,7 @@ const TrackingEngine = {
             action_source: "website",
             user_data: {
                 external_id: window.EXTERNAL_ID || '',
-                fbc: fbclid ? `fb.1.${Math.floor(Date.now() / 1000)}.${fbclid}` : null,
+                fbc: this.getUTM('fbclid') ? `fb.1.${Math.floor(Date.now() / 1000)}.${this.getUTM('fbclid')}` : null,
                 fbp: fbp
             },
             custom_data: {
