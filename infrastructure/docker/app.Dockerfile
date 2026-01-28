@@ -1,38 +1,29 @@
-# Usa Python 3.11 Slim como base
+# ÚNICA VERSIÓN OFICIAL: PROTOCOLO SURJECTIVE SYSTEM v4.0
 FROM python:3.11-slim
 
-# Evita que Python escriba archivos .pyc y habilita logs en tiempo real
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
+# Evitar que Python genere archivos .pyc y habilitar logs instantáneos
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
 
-# Instala dependencias del sistema necesarias
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# Instalar dependencias del sistema necesarias para psycopg2 y utilitarios
+RUN apt-get update && apt-get install -y \
     gcc \
+    libpq-dev \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Configura el directorio de trabajo
 WORKDIR /app
 
-# --- CAPA DE DEPENDENCIAS ---
-# Copiamos primero el requirements.txt desde la nueva ubicación (natalia-brain)
+# Fase 1: Copia de dependencias desde la nueva ubicación oficial
 COPY natalia-brain/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Instalamos las dependencias
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
-
-# --- CAPA DE CÓDIGO ---
-# Copiamos todo el código del cerebro
+# Fase 2: Copia del código fuente (natalia-brain/ -> /app/)
 COPY natalia-brain/ .
 
-# Creamos un usuario no-root por seguridad
-RUN addgroup --system jorgeuser && adduser --system --group jorgeuser
-USER jorgeuser
+# El WORKDIR ahora contiene app/main.py, app/inbox_manager.py, etc.
+# Y también templates/ y static/ en la raíz de /app.
 
-# Exponemos el puerto (Render usa 10000 por defecto)
-EXPOSE 10000
-
-# Comando de inicio robusto (Uvicorn)
-# Nota: Ajustado a main:app porque main.py está en la raíz de natalia-brain
-CMD sh -c "uvicorn main:app --host 0.0.0.0 --port ${PORT:-10000}"
+# Puerto dinámico inyectado por Render ($PORT)
+# CMD ejecutado en shell form para expansión de variables
+CMD sh -c "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-10000}"

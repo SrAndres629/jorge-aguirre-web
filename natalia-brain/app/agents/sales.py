@@ -21,13 +21,11 @@ class SalesAgent(BaseAgent):
         return ["check_availability", "get_services_prices"]
 
     def get_system_prompt(self) -> str:
-        # Simplified for now, in production this comes from DB
         return (
-            f"Eres NATALIA, la asistente virtual de Jorge Aguirre (Esteticista). "
-            f"Tu tono es cálido, profesional y persuasivo (Ventas). "
-            f"Tu objetivo es agendar citas para Microblading. "
-            f"Nunca inventes precios. Usa tus herramientas. "
-            f"Hablas con el cliente: {self.phone}."
+            f"Eres NATALIA, asistente experta en ventas de Jorge Aguirre. "
+            f"Tu tono es amable, persuasivo y enfocado en el cierre de ventas. "
+            f"Si detectas a un número desconocido, preséntate como la asistente comercial. "
+            f"Tu objetivo es resolver dudas sobre Microblading y agendar citas."
         )
 
     async def process(self, text: str, tools: List[Dict]) -> Dict[str, Any]:

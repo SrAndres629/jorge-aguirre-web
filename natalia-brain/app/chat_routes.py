@@ -64,7 +64,8 @@ async def handle_evolution_webhook(request: Request, background_tasks: Backgroun
 
     except Exception as e:
         logger.error(f"❌ [GATEWAY] CRITICAL: {e}")
-        return {"status": "error", "message": str(e)}
+        # ALWAYS return 200 to Evolution API to prevent retry loops
+        return {"status": "error_logged", "message": "Handled"}
 
 @router.post("/chat/incoming")
 async def handle_incoming_chat(msg: IncomingMessage, request: Request, background_tasks: BackgroundTasks):

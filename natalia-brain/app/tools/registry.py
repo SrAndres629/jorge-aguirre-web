@@ -1,96 +1,81 @@
-import inspect
-import functools
-from typing import Callable, Dict, Any, List
-import logging
 
+import logging
+from typing import Callable, Dict, Any, List
 
 logger = logging.getLogger("ToolRegistry")
 
 class ToolRegistry:
     """
-    Engine for registering Python functions as LLM Tools.
-    Auto-generates Gemini-compatible JSON schemas from type hints.
+    Unified Tool Registry for polymorphic agents.
+    Manages tools and their role-based permissions.
     """
     def __init__(self):
-        self._tools: Dict[str, Callable] = {}
-        self._schemas: List[Dict[str, Any]] = []
+        self._tools: Dict[str, Dict[str, Any]] = {}
 
-    def register(self, roles: List[str] = None):
-        """
-        Decorator to register a function with optional role-based access.
-        Usage: 
-            @registry.register(roles=["GOD", "CHIEF"])
-            def my_tool(a: int): ...
-            
-            @registry.register # Public tool
-            def public_tool(): ...
-        """
-        def decorator(func: Callable):
-            # Get function metadata
-            name = func.__name__
-            doc = func.__doc__ or "No description provided."
-            
-            # Analyze signature for schema generation
-            sig = inspect.signature(func)
-            parameters = {
-                "type": "OBJECT",
-                "properties": {},
-                "required": []
-            }
-            
-            for param_name, param in sig.parameters.items():
-                if param_name == "self": continue
-                
-                # Map Python types to Gemini Schema types
-                p_type = "STRING" # Default
-                if param.annotation == int: p_type = "INTEGER"
-                elif param.annotation == float: p_type = "NUMBER"
-                elif param.annotation == bool: p_type = "BOOLEAN"
-                
-                parameters["properties"][param_name] = {
-                    "type": p_type,
-                    "description": f"Parameter {param_name}" # Ideally parse from docstring
-                }
-        self._tools = {}
-        self._definitions = []
-
-    def register(self, name: str, func: callable, roles: list, definition: dict):
+    def register(self, name: str, func: Callable, roles: List[str], definition: Dict[str, Any]):
+        """Explicitly register a tool with its allowed roles and Gemini definition."""
         self._tools[name] = {
             "func": func,
             "roles": roles,
             "definition": definition
         }
-        self._definitions.append(definition)
+        logger.info(f"🔧 Tool Registered: {name} | Roles: {roles}")
 
-    def get_tools_by_names(self, names: list) -> list:
+    def get_tools_by_names(self, names: List[str]) -> List[Dict[str, Any]]:
         """Returns Gemini-compatible definitions for a subset of tools."""
         return [self._tools[n]["definition"] for n in names if n in self._tools]
 
-    def get_tools_for_gemini(self, user_role: str = None) -> List[Dict[str, Any]]:
-        """Returns the list of function declarations filtered by role."""
-        filtered_schemas = []
-        for tool_name, tool_data in self._tools.items():
-            allowed_roles = tool_data["roles"]
-            # If no roles defined, it's public. If roles defined, user must have one.
-            if not allowed_roles or (user_role and user_role in allowed_roles):
-                # Return schema without internal metadata
-                filtered_schemas.append(tool_data["definition"])
-        
-        return filtered_schemas
-
-    def execute(self, name: str, args: dict) -> Any:
-        """Safely executes the tool by name."""
+    def execute(self, name: str, args: Dict[str, Any]) -> Any:
+        """Executes a tool by name with provided arguments."""
         if name not in self._tools:
-            raise ValueError(f"Tool {name} not found.")
+            return f"Error: Tool {name} not found."
         
         try:
-            logger.info(f"🔨 Executing Tool: {name} with {args}")
-            result = self._tools[name](**args)
-            logger.info(f"✅ Tool Result: {result}")
-            return result
+            logger.info(f"🔨 [TOOL EXEC] {name} | Args: {args}")
+            return self._tools[name]["func"](**args)
         except Exception as e:
             logger.error(f"❌ Tool Failure ({name}): {e}")
-            return f"Error executing tool {name}: {str(e)}"
+            return f"Error: {str(e)}"
 
 # Singleton Instance
 registry = ToolRegistry()
+
+# --- TOOL REGISTRY INITIALIZATION ---
+from app.tools.admin_tools import run_readonly_sql
+from app.tools.crm_tools import check_availability
+
+# 1. SQL Tool
+registry.register(
+    "run_readonly_sql",
+    run_readonly_sql,
+    roles=["GOD"],
+    definition={
+        "name": "run_readonly_sql",
+        "description": "Ejecuta una consulta SQL SELECT para auditoría del sistema. Solo modo Admin.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "query": {"type": "string", "description": "La consulta SELECT SQL."}
+            },
+            "required": ["query"]
+        }
+    }
+)
+
+# 2. Availability Tool
+registry.register(
+    "check_availability",
+    check_availability,
+    roles=["CLIENT", "SUPERVISOR", "GOD"],
+    definition={
+        "name": "check_availability",
+        "description": "Consulta disponibilidad de citas en la agenda.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "service_name": {"type": "string", "description": "Ej. 'microblading'"}
+            },
+            "required": ["service_name"]
+        }
+    }
+)
