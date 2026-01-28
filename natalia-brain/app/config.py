@@ -68,7 +68,7 @@ class Settings(BaseSettings):
     WHATSAPP_NUMBER: str = "59164714751"
     EVOLUTION_API_KEY: Optional[str] = None
     EVOLUTION_API_URL: str = os.getenv("EVOLUTION_API_URL", "https://evolution-whatsapp-zn13.onrender.com")
-    EVOLUTION_INSTANCE: str = "NataliaCoreV1"
+    EVOLUTION_INSTANCE: str = os.getenv("EVOLUTION_INSTANCE", "NataliaCoreDev")
 
     # n8n Integration
     N8N_WEBHOOK_URL: str = "http://n8n:5678/webhook/website-events"

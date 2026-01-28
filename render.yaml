@@ -26,13 +26,17 @@ services:
     branch: main
     rootDir: natalia-brain
     buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
+      - key: RENDER
+        value: "true"
       - key: EVOLUTION_API_URL
         value: https://evolution-whatsapp-zn13.onrender.com
       - key: EVOLUTION_API_KEY
         value: JorgeSecureKey123
+      - key: EVOLUTION_INSTANCE
+        value: NataliaCoreProd
       - key: ADMIN_KEY
         value: Andromeda2025
