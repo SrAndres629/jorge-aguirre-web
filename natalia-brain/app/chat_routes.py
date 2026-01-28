@@ -74,8 +74,8 @@ async def handle_evolution_webhook(request: Request, background_tasks: Backgroun
                 "source": "evolution_webhook"
             }
 
-            # Process Logic
-            result = natalia.process_message(
+            # Process Logic (MUST BE AWAITED)
+            result = await natalia.process_message(
                 phone=phone, 
                 text=text, 
                 meta_data=meta
@@ -115,8 +115,8 @@ async def handle_incoming_chat(msg: IncomingMessage, request: Request, backgroun
         if msg.utm_data:
             meta.update(msg.utm_data)
 
-        # Process Logic
-        result = natalia.process_message(
+        # Process Logic (MUST BE AWAITED)
+        result = await natalia.process_message(
             phone=msg.phone, 
             text=msg.text, 
             meta_data=meta
