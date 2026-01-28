@@ -21,7 +21,8 @@ RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
 # Install Python dependencies
-COPY core/requirements.txt .
+# Install Python dependencies
+COPY natalia-brain/requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
@@ -34,7 +35,7 @@ WORKDIR /app
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV PATH="/opt/venv/bin:$PATH"
-ENV PORT=8000
+ENV PORT=10000
 ENV MALLOC_ARENA_MAX=2
 
 # Install runtime dependencies (curl for healthcheck)
@@ -48,8 +49,8 @@ COPY --from=builder /opt/venv /opt/venv
 # Setup Non-Root User
 RUN addgroup --system jorgeuser && adduser --system --group jorgeuser
 
-# Copy Application Code (Ensure database folder is copied)
-COPY core/ .
+# Copy Application Code
+COPY natalia-brain/ .
 
 # Ensure database directory exists and has correct permissions
 RUN mkdir -p /app/database && chown -R jorgeuser:jorgeuser /app
@@ -58,11 +59,11 @@ RUN mkdir -p /app/database && chown -R jorgeuser:jorgeuser /app
 USER jorgeuser
 
 # Expose Port
-EXPOSE 8000
+EXPOSE 10000
 
 # Healthcheck
 HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
-    CMD curl -f http://localhost:8000/health || exit 1
+    CMD curl -f http://localhost:${PORT}/health || exit 1
 
-# Default Command (Production)
-CMD ["gunicorn", "-w", "1", "-k", "uvicorn.workers.UvicornWorker", "main:app", "--bind", "0.0.0.0:8000", "--timeout", "90"]
+# Default Command (Use Shell form to expand $PORT)
+CMD sh -c "uvicorn main:app --host 0.0.0.0 --port ${PORT}"
