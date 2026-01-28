@@ -1,32 +1,93 @@
 
 import logging
-from typing import Callable, Dict, Any, List
+import inspect
+from typing import Callable, Dict, Any, List, Optional
 
 logger = logging.getLogger("ToolRegistry")
 
 class ToolRegistry:
     """
-    Unified Tool Registry for polymorphic agents.
-    Manages tools and their role-based permissions.
+    Cognitive Tool Registry (v4.1)
+    Supports: 
+    1. Decorator style: @registry.register
+    2. parameterized decorator: @registry.register(roles=["GOD"])
+    3. Explicit registration: registry.register("name", func, roles, definition)
     """
     def __init__(self):
         self._tools: Dict[str, Dict[str, Any]] = {}
 
-    def register(self, name: str, func: Callable, roles: List[str], definition: Dict[str, Any]):
-        """Explicitly register a tool with its allowed roles and Gemini definition."""
-        self._tools[name] = {
-            "func": func,
-            "roles": roles,
-            "definition": definition
+    def register(self, name_or_func: Any = None, func: Optional[Callable] = None, roles: List[str] = None, definition: Dict[str, Any] = None):
+        """
+        Multimodal registration.
+        - As @registry.register
+        - As @registry.register(roles=["ADMIN"])
+        - As registry.register("name", func, roles, def)
+        """
+        
+        # 1. Handle explicit call: registry.register("name", func, roles, def)
+        if isinstance(name_or_func, str) and func is not None:
+            self._tools[name_or_func] = {
+                "func": func,
+                "roles": roles or [],
+                "definition": definition or self._auto_generate_schema(func, name_or_func)
+            }
+            logger.info(f"🔧 Tool Registered (Explicit): {name_or_func} | Roles: {roles}")
+            return func
+
+        # 2. Handle decorator factory: @registry.register(roles=["ADMIN"])
+        def decorator(f: Callable):
+            name = f.__name__
+            self._tools[name] = {
+                "func": f,
+                "roles": roles or [],
+                "definition": definition or self._auto_generate_schema(f, name)
+            }
+            logger.info(f"🔧 Tool Registered (Decorator): {name} | Roles: {roles}")
+            return f
+
+        # Case 3: @registry.register (no params)
+        if callable(name_or_func):
+            return decorator(name_or_func)
+
+        # Case 4: @registry.register(roles=[...]) -> returns decorator
+        return decorator
+
+    def _auto_generate_schema(self, func: Callable, name: str) -> Dict[str, Any]:
+        """Introspects function to create Gemini schema."""
+        doc = func.__doc__ or "No description provided."
+        sig = inspect.signature(func)
+        
+        parameters = {
+            "type": "object",
+            "properties": {},
+            "required": []
         }
-        logger.info(f"🔧 Tool Registered: {name} | Roles: {roles}")
+        
+        for p_name, p in sig.parameters.items():
+            if p_name == 'self': continue
+            
+            p_type = "string"
+            if p.annotation == int: p_type = "integer"
+            elif p.annotation == float: p_type = "number"
+            elif p.annotation == bool: p_type = "boolean"
+            
+            parameters["properties"][p_name] = {
+                "type": p_type,
+                "description": f"Parameter {p_name}"
+            }
+            if p.default == inspect.Parameter.empty:
+                parameters["required"].append(p_name)
+                
+        return {
+            "name": name,
+            "description": doc.strip(),
+            "parameters": parameters
+        }
 
     def get_tools_by_names(self, names: List[str]) -> List[Dict[str, Any]]:
-        """Returns Gemini-compatible definitions for a subset of tools."""
         return [self._tools[n]["definition"] for n in names if n in self._tools]
 
     def execute(self, name: str, args: Dict[str, Any]) -> Any:
-        """Executes a tool by name with provided arguments."""
         if name not in self._tools:
             return f"Error: Tool {name} not found."
         
@@ -40,11 +101,11 @@ class ToolRegistry:
 # Singleton Instance
 registry = ToolRegistry()
 
-# --- TOOL REGISTRY INITIALIZATION ---
+# --- SYSTEM TOOLS INITIALIZATION ---
+# These are the official tools required by Phase 4
 from app.tools.admin_tools import run_readonly_sql
 from app.tools.crm_tools import check_availability
 
-# 1. SQL Tool
 registry.register(
     "run_readonly_sql",
     run_readonly_sql,
@@ -62,7 +123,6 @@ registry.register(
     }
 )
 
-# 2. Availability Tool
 registry.register(
     "check_availability",
     check_availability,
