@@ -51,9 +51,6 @@ async def root_webhook_alias(request: Request, background_tasks: BackgroundTasks
     from app.chat_routes import handle_evolution_webhook
     return await handle_evolution_webhook(request, background_tasks)
 # -----------------------------------
-    from app.chat_routes import handle_evolution_webhook
-    return await handle_evolution_webhook(request, background_tasks)
-# -----------------------------------
 
 
 from fastapi.staticfiles import StaticFiles
