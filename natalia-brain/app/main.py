@@ -34,22 +34,26 @@ def health():
 
 @app.get("/", response_class=HTMLResponse)
 async def root(request: Request):
-    # Mock data for template compatibility (Protocol Phase 1 Stability)
-    contact = {
-        "maps_url": "#",
-        "address": "Santa Cruz de la Sierra, Bolivia"
-    }
-    services = [] # Fallback
-    
-    return templates.TemplateResponse("index.html", {
-        "request": request, 
-        "service": "Natalia Brain V2",
-        "contact": contact,
-        "services": services,
-        "pixel_id": "",
-        "pageview_event_id": "",
-        "external_id": ""
-    })
+    try:
+        # Mock data for template compatibility (Protocol Phase 1 Stability)
+        contact = {
+            "maps_url": "#",
+            "address": "Santa Cruz de la Sierra, Bolivia"
+        }
+        services = [] # Fallback
+        
+        return templates.TemplateResponse("index.html", {
+            "request": request, 
+            "service": "Natalia Brain V2",
+            "contact": contact,
+            "services": services,
+            "pixel_id": "",
+            "pageview_event_id": "",
+            "external_id": ""
+        })
+    except Exception as e:
+        import traceback
+        return HTMLResponse(content=f"<h1>500 Internal Server Error (Template Crash)</h1><pre>{traceback.format_exc()}</pre>", status_code=500)
 
 
 # ==========================================
