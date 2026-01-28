@@ -3,8 +3,13 @@ import logging
 import google.generativeai as genai
 from typing import Optional, Dict, Any, List
 import asyncio
+import time
 from app.database import get_or_create_lead, log_interaction, get_chat_history, get_knowledge_base
 from app.config import settings
+
+# Import Tool Registry
+from app.tools.registry import registry
+from app.tools.definitions import * 
 
 # Configure Logger
 logger = logging.getLogger("NataliaBrain")
@@ -20,13 +25,15 @@ else:
 
 class NataliaBrain:
     """
-    COGNITIVE SINGULARITY (v3.0) - ASYNC AGENTIC VERSION
-    Multi-Protocol AI Agent with Human-in-the-loop capability.
-    Handles 3 classes of chats: ROOT (Dev), CHIEF (Business), CLIENT (Leads).
+    COGNITIVE SINGULARITY (v4.0) - HYBRID AGENTIC VERSION
+    Multi-Protocol AI Agent with Tool Use (Function Calling) Capabilities.
     """
 
     def __init__(self):
-        self.model_name = 'models/gemini-flash-latest'
+        self.model_name = 'models/gemini-pro' # Updated for better function calling support if available, or stay with flash
+        # Note: 'gemini-pro' is often better for tools, but 'flash' is faster. Let's try flash first.
+        self.model_name = 'models/gemini-1.5-flash' 
+        
         self.generation_config = {
             "temperature": 0.4,
             "top_p": 0.95,
@@ -39,6 +46,13 @@ class NataliaBrain:
             {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
             {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
         ]
+        
+        # Initialize Model
+        self.model = genai.GenerativeModel(
+            model_name=self.model_name,
+            generation_config=self.generation_config,
+            safety_settings=self.safety_settings
+        )
 
     async def _get_system_prompt(self, role: str, phone: str) -> str:
         """Dynamic Persona Injection based on sender role."""
@@ -100,10 +114,13 @@ class NataliaBrain:
         3. 🤝 HUMAN-IN-THE-LOOP: Si preguntan algo fuera de script (casos médicos, ofertas locas), di:
            "Entiendo perfectamente. Como tu caso es especial, voy a consultarlo directamente con Jorge Aguirre y te aviso en unos minutos. ¿Te parece bien?"
         4. 🎯 CIERRE: Termina cada mensaje con una pregunta que invite a responder (Doble Opción: "¿Prefieres mañana o la próxima semana?").
+        
+        HERRAMIENTAS: 
+        Tienes acceso a herramientas para consultar fechas y precios. ÚSALAS cuando sea necesario.
         """
 
     async def process_message(self, phone: str, text: str, meta_data: Optional[dict] = None) -> Dict[str, Any]:
-        """Agentic processing loop with role detection."""
+        """Agentic processing loop with role detection and tool usage."""
         
         clean_phone = "".join(filter(str.isdigit, phone))
         
@@ -123,7 +140,7 @@ class NataliaBrain:
         if clean_phone == ADMIN_PHONE: role = "ROOT"
         elif clean_phone == CHIEF_PHONE: role = "CHIEF"
 
-        logger.info(f"🧠 Agent Logic Start (Async) | Role: {role} | Phone: {clean_phone}")
+        logger.info(f"🧠 Agent Logic Start (Hybrid) | Role: {role} | Phone: {clean_phone}")
 
         # 1. Lead Identification
         lead_id, is_new_lead = await asyncio.to_thread(get_or_create_lead, phone, meta_data)
@@ -132,64 +149,97 @@ class NataliaBrain:
         # 2. Context Retrieval
         history_rows = await asyncio.to_thread(get_chat_history, phone, limit=15)
         
-        # 3. Neural Inference
-        try:
-            response_text = await self._generate_thought(text, history_rows, role, clean_phone)
-            
-            # 🛡️ Human-in-the-loop Trigger
-            if role == "CLIENT" and any(x in response_text.lower() for x in ["voy a consultar con jorge", "consultaré directamente"]):
-                await self._trigger_chief_consultation(clean_phone, text)
-                
-        except Exception as e:
-            logger.error(f"❌ Cognitive Failure: {e}")
-            response_text = "Disculpa, estoy teniendo un refresh en mi sistema de agenda. Dame un momento y te atiendo con la exclusividad que mereces. ✨"
-
-        # 4. Log Assistant Output
-        await asyncio.to_thread(log_interaction, lead_id, "assistant", response_text)
-        
-        # Determine VBO value (VBO Pillar 1)
-        intent = "general"
-        val = 50.0
-        lower_text = text.lower()
-        if "cejas" in lower_text or "micro" in lower_text:
-            intent = "microblading"
-            val = 300.0
-        elif "labios" in lower_text:
-            intent = "labios"
-            val = 200.0
-        
-        is_junk = any(kw in lower_text for kw in ["spam", "oferta", "banco", "vendedor"])
-
-        return {
-            "lead_id": lead_id,
-            "reply": response_text,
-            "action": "send_whatsapp",
-            "is_new_lead": is_new_lead,
-            "metadata": {
-                "role": role,
-                "intent": intent, 
-                "value": val,
-                "is_junk": is_junk
-            }
-        }
-
-    async def _generate_thought(self, user_text: str, history_rows: List[Dict], role: str, phone: str) -> str:
-        model = genai.GenerativeModel(
-            model_name=self.model_name,
-            generation_config=self.generation_config,
-            safety_settings=self.safety_settings,
-            system_instruction=await self._get_system_prompt(role, phone)
-        )
-        
+        # Prepare Conversation History for Gemini
         gemini_history = []
         for msg in history_rows:
             g_role = "user" if msg['role'] == 'user' else "model"
             gemini_history.append({"role": g_role, "parts": [msg['content'] or "..."]})
+
+        # 3. Neural Inference (THE HYBRID LOOP)
+        final_reply = ""
+        
+        try:
+            # Set System Instruction
+            system_instruction = await self._get_system_prompt(role, clean_phone)
+            self.model._system_instruction = system_instruction # Hack: Set system prompt
+
+            chat_session = self.model.start_chat(history=gemini_history)
             
-        chat = model.start_chat(history=gemini_history)
-        # Using Gemini's async method
-        response = await chat.send_message_async(user_text)
-        return response.text.strip()
+            # PHASE 1: User Input -> Model (with Tools)
+            logger.info(f"🧠 [THINKING] Phase 1: Reasoning with Tools...")
+            
+            # Send message with tools enabled
+            # Note: In latest genai, we pass tools at model init or chat creation, 
+            # OR typically at generation time. For 'start_chat', tools are often a property of the chat object or passed in get_response.
+            # We'll attach tools to the chat session call.
+            
+            response = await chat_session.send_message_async(
+                text,
+                tools=registry.get_tools_for_gemini()
+            )
+
+            # PHASE 2: Tool Execution Loop (Max 3 turns)
+            MAX_TURNS = 3
+            for turn in range(MAX_TURNS):
+                # Check for Function Calls (Multiple calls possible?)
+                # Simplified: Handle first candidate's function calls
+                
+                part = response.candidates[0].content.parts[0]
+                
+                if part.function_call:
+                    func_call = part.function_call
+                    tool_name = func_call.name
+                    tool_args = dict(func_call.args)
+                    
+                    logger.info(f"🛠️ [TOOL DETECTED] {tool_name} with args: {tool_args}")
+                    
+                    # Execute Tool
+                    tool_result = registry.execute(tool_name, tool_args)
+                    
+                    logger.info(f"🧠 [THINKING] Phase {turn+2}: Analyzing Tool Output...")
+
+                    # Send result back
+                    response = await chat_session.send_message_async(
+                        genai.protos.Part(
+                            function_response=genai.protos.FunctionResponse(
+                                name=tool_name,
+                                response={"result": tool_result}
+                            )
+                        )
+                    )
+                else:
+                    # No function call -> Final Text
+                    final_reply = response.text
+                    break
+            
+            if not final_reply:
+                final_reply = response.text
+
+            # 🛡️ Human-in-the-loop Trigger
+            if role == "CLIENT" and any(x in final_reply.lower() for x in ["voy a consultar con jorge", "consultaré directamente"]):
+                await self._trigger_chief_consultation(clean_phone, text)
+                
+        except Exception as e:
+            logger.error(f"❌ Cognitive Failure: {e}")
+            final_reply = "Disculpa, estoy teniendo un refresh en mi sistema de agenda. Dame un momento y te atiendo con la exclusividad que mereces. ✨"
+
+        # 4. Log Assistant Output
+        await asyncio.to_thread(log_interaction, lead_id, "assistant", final_reply)
+        
+        # Determine Metadata (VBO)
+        intent = "general"
+        val = 50.0
+        if "cejas" in text.lower() or "micro" in text.lower():
+            intent = "microblading"
+            val = 300.0
+        
+        return {
+            "lead_id": lead_id,
+            "reply": final_reply,
+            "action": "send_whatsapp",
+            "is_new_lead": is_new_lead,
+            "metadata": {"intent": intent, "value": val}
+        }
 
     async def _trigger_chief_consultation(self, client_phone: str, client_message: str):
         """
