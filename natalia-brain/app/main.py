@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.chat_routes import router as chat_router
+from app.routes.tracking_routes import router as tracking_router
 from app.config import settings
 
 app = FastAPI(title="Natalia AI Core", version="2.0.0")
@@ -16,8 +17,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-app.include_router(chat_router)
+# Include Routers
+app.include_router(chat_router, prefix="/api", tags=["Chat"])
+app.include_router(tracking_router, tags=["Tracking"])
 
 
 from fastapi.staticfiles import StaticFiles
@@ -68,7 +70,7 @@ import os
 import logging
 
 logger = logging.getLogger("NataliaCore")
-EVOLUTION_URL = os.getenv("EVOLUTION_URL", "https://evolution-whatsapp-zn13.onrender.com")
+EVOLUTION_URL = settings.EVOLUTION_API_URL
 
 async def keep_evolution_alive():
     """Background task to ping Evolution API every 45s"""
