@@ -41,6 +41,9 @@ app.add_middleware(
 app.include_router(chat_router, prefix="/api", tags=["Chat"])
 app.include_router(tracking_router, tags=["Tracking"])
 
+from app.routes.admin_routes import router as admin_router
+app.include_router(admin_router, tags=["Admin"])
+
 # --- WEBHOOK ALIAS (Fix for 404) ---
 from fastapi import BackgroundTasks, Request
 @app.post("/webhook/evolution")
