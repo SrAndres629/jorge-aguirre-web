@@ -76,15 +76,30 @@ class NataliaBrain:
             - Responde con tono servicial, eficiente y de alta gama.
             """
 
-        # DEFAULT: CLIENT PROTOCOL
+        # DEFAULT: CLIENT PROTOCOL (Neuromarketing Level 99)
         return base_personality + """
-        ESTADO: PROTOCOLO ATENCIÓN AL CLIENTE.
-        REGLAS:
-        1. PERSUASIÓN: Nunca des precios sin valor previo.
-        2. DIAGNÓSTICO: Pregunta siempre si tienen trabajo previo.
-        3. HUMAN-IN-THE-LOOP: Si preguntan algo que NO sabes (ofertas especiales, casos médicos complejos, descuentos específicos), NO INVENTES. 
-           Di: "Entiendo perfectamente tu solicitud. Como tu caso es especial, voy a consultarlo directamente con Jorge Aguirre en este momento y te avisaré apenas me responda. ¿Te parece bien?"
-        4. ACCIÓN: Si detectas que debes consultar al Jefe, el sistema te proporcionará una herramienta interna.
+        ESTADO: PROTOCOLO VENTAS PREMIUM (NEUROMARKETING).
+        
+        OBJETIVO:
+        Convertir conversaciones en CITAS CONFIRMADAS mediante persuasión ética y alto valor percibido.
+        
+        TONO Y VOZ:
+        - Eres NATURAL, no robótica. Escribes como una asistente de élite, no como un chat de soporte.
+        - Usas emojis con elegancia (✨, 🤎, 👇), sin saturar.
+        - Tus mensajes son cortos y directos ("Chunking"). Evita párrafos gigantes.
+        - Usas NPL (Programación Neurolingüística): Palabras sensoriales (ver, sentir, lucir), anclajes positivos.
+        
+        TÉCNICAS DE NEUROMARKETING ACTIVAS:
+        1. **Escasez Real**: "Nos quedan pocos cupos para esta semana".
+        2. **Autoridad**: "El especialista Jorge Aguirre analiza cada rostro antes de..."
+        3. **Prueba Social**: Menciona sutilmente que otras clientas están felices.
+        
+        REGLAS DE ORO:
+        1. ⛔ PRECIOS: NUNCA des el precio solo. Siempre debe ir envuelto en el "Sandwich de Valor" (Beneficio -> Precio -> Pregunta de Cierre).
+        2. 🕵️ DIAGNÓSTICO: Antes de vender, pregunta. "¿Ya te has hecho micropigmentación antes o es tu primera vez?".
+        3. 🤝 HUMAN-IN-THE-LOOP: Si preguntan algo fuera de script (casos médicos, ofertas locas), di:
+           "Entiendo perfectamente. Como tu caso es especial, voy a consultarlo directamente con Jorge Aguirre y te aviso en unos minutos. ¿Te parece bien?"
+        4. 🎯 CIERRE: Termina cada mensaje con una pregunta que invite a responder (Doble Opción: "¿Prefieres mañana o la próxima semana?").
         """
 
     async def process_message(self, phone: str, text: str, meta_data: Optional[dict] = None) -> Dict[str, Any]:
@@ -92,6 +107,17 @@ class NataliaBrain:
         
         clean_phone = "".join(filter(str.isdigit, phone))
         
+        # 🔒 SECURITY SENTINEL (Anti-Prompt Injection)
+        if self._is_unsafe_prompt(text):
+            logger.warning(f"🚨 SECURITY ALERT: Prompt Injection detected form {clean_phone}: {text}")
+            return {
+                "lead_id": clean_phone,
+                "reply": "Entiendo tu mensaje, pero mi programación se enfoca exclusivamente en la estética y agenda de Jorge Aguirre. ¿En qué puedo ayudarte sobre eso? ✨",
+                "action": "send_whatsapp",
+                "is_new_lead": False,
+                "metadata": {"security_block": True}
+            }
+
         # Determine Role
         role = "CLIENT"
         if clean_phone == ADMIN_PHONE: role = "ROOT"
@@ -181,6 +207,24 @@ class NataliaBrain:
         )
         if evolution_service:
             await evolution_service.send_text(CHIEF_PHONE, consultation_msg)
+
+    def _is_unsafe_prompt(self, text: str) -> bool:
+        """
+        Detecta intentos básicos de manipulación de prompt.
+        """
+        text_lower = text.lower()
+        forbidden_patterns = [
+            "ignore previous instructions",
+            "ignora las instrucciones",
+            "you are now",
+            "ahora eres",
+            "system prompt",
+            "tu prompt de sistema",
+            "reveal your instructions",
+            "modo desarrollador",
+            "developer mode"
+        ]
+        return any(pattern in text_lower for pattern in forbidden_patterns)
 
 # Singleton Instance
 natalia = NataliaBrain()
