@@ -34,6 +34,14 @@ class EvolutionService:
                 resp = await client.post(url, json=payload, headers=headers)
                 resp.raise_for_status()
                 logger.info(f"📤 Mensaje enviado a {clean_phone} via Evolution")
+                
+                # AUDIT: Save to DB explicitly
+                try:
+                    from app.database import save_message
+                    save_message(clean_phone, "assistant", text)
+                except Exception as db_e:
+                    logger.error(f"⚠️ Error auditando mensaje saliente: {db_e}")
+                    
                 return True
             except Exception as e:
                 logger.error(f"❌ Error enviando mensaje via Evolution: {e}")
