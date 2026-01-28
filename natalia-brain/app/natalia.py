@@ -101,18 +101,24 @@ class NataliaBrain:
                 "metadata": {"security_block": True}
             }
 
-        # Determine Role & Instantiate Agent
+
+        # 1. Lead Identification & Persistence
+        lead_id, is_new_lead = await asyncio.to_thread(get_or_create_lead, phone, meta_data)
+        await asyncio.to_thread(log_interaction, lead_id, "user", text)
+
+        # 2. Context Retrieval (Memory)
+        history_rows = await asyncio.to_thread(get_chat_history, phone, limit=15)
+
+        # 3. Determine Role & Instantiate Agent
         # POLYMORPHIC ARCHITECTURE (Protocol Phase 3)
         from app.agents.router import RoleRouter
         
-        # Context for the agent (DB access, History, etc)
         context = {
             "db_lead_id": lead_id,
             "is_new_lead": is_new_lead,
             "history": history_rows
         }
         
-        # 1. Get the correct Brain Strategy
         agent = RoleRouter.get_agent(phone, context)
         logger.info(f"🧠 Agent Logic Start | Strategy: {agent.role_name} | Phone: {clean_phone}")
 
