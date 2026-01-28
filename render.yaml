@@ -26,7 +26,7 @@ services:
     branch: main
     rootDir: natalia-brain
     buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    startCommand: python run.py
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0

@@ -8,7 +8,27 @@ from app.chat_routes import router as chat_router
 from app.routes.tracking_routes import router as tracking_router
 from app.config import settings
 
-app = FastAPI(title="Natalia AI Core", version="2.0.0")
+app = FastAPI(
+    title="Natalia AI Brain",
+    description="Dual-Core Intelligence System for Jorge Aguirre Flores",
+    version="3.1.0"
+)
+
+# --- SENIOR HEALTH PROTOCOL ---
+@app.get("/")
+@app.get("/health")
+async def health_check():
+    """Endpoint for Render keep-alive and institutional monitoring"""
+    from app.config import settings
+    return {
+        "status": "online",
+        "version": "3.1.0",
+        "instance": settings.EVOLUTION_INSTANCE,
+        "engine": "Dual-Core V3"
+    }
+# ------------------------------
+
+# Configuración de CORS
 
 app.add_middleware(
     CORSMiddleware,
