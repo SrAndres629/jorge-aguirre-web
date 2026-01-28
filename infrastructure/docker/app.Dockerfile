@@ -35,4 +35,4 @@ EXPOSE 10000
 
 # Comando de inicio robusto (Uvicorn)
 # Nota: Ajustado a main:app porque main.py está en la raíz de natalia-brain
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "10000"]
+CMD sh -c "uvicorn main:app --host 0.0.0.0 --port ${PORT:-10000}"

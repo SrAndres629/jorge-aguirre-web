@@ -1,52 +1,35 @@
 
-from app.tools.registry import registry
-from app.database import get_cursor
-import json
+from typing import Dict, Any
 import logging
+from app.database import get_cursor
 
-logger = logging.getLogger("AdminTools")
+logger = logging.getLogger("SQLTool")
 
-@registry.register(roles=["GOD"])
 def run_readonly_sql(query: str) -> str:
     """
-    Executes a READ-ONLY SQL query against the database. 
-    Use this to answer questions about leads, messages, or system stats.
-    
-    Args:
-        query: Valid SQL starting with SELECT.
+    Executes a raw SQL SELECT query in the database.
+    RESTRICTED: Only for RootAgent.
     """
-    logger.info(f"🛡️ Admin invoking SQL: {query}")
-    
-    # 1. Security Check (Software Level)
-    if not query.strip().upper().startswith("SELECT"):
-        return "❌ SECURITY ERROR: Only SELECT queries are allowed."
-
-    # 2. Execution
+    if not query.strip().lower().startswith("select"):
+        return "Error: Only SELECT queries are allowed for safety."
+        
     try:
         with get_cursor() as cur:
-            # Enforce Read Only Transaction
-            cur.execute("SET TRANSACTION READ ONLY;")
-            
             cur.execute(query)
+            # Fetch column names
+            colnames = [desc[0] for desc in cur.description]
             rows = cur.fetchall()
             
-            # Format as JSON for LLM comprehension
             if not rows:
-                return "Query returned 0 results."
+                return "Query executed successfully. Result: No rows found."
                 
-            # Get column names
-            colnames = [desc[0] for desc in cur.description]
-            results = []
-            for row in rows:
-                results.append(dict(zip(colnames, row)))
-            
-            return json.dumps(results[:20], default=str) # Limit to 20 to save tokens
-            
+            # Format as a simple table string
+            result = [f"| {' | '.join(colnames)} |"]
+            result.append(f"| {' | '.join(['---'] * len(colnames))} |")
+            for row in rows[:10]: # Limit to 10 rows for context window
+                result.append(f"| {' | '.join(map(str, row))} |")
+                
+            return "\n".join(result)
     except Exception as e:
-        logger.error(f"SQL Execution Error: {e}")
-        return f"❌ Database Error: {str(e)}"
-
-@registry.register(roles=["GOD", "CHIEF"])
-def get_system_status() -> str:
-    """Returns the current health status of the brain."""
-    return "✅ Natalia Brain v2.0 is OPERATIONAL. Linked to Supabase & Render."
+        logger.error(f"❌ SQL Execution Failed: {e}")
+        return f"Error: {str(e)}"

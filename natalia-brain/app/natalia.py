@@ -101,79 +101,76 @@ class NataliaBrain:
                 "metadata": {"security_block": True}
             }
 
-        # Determine Role
-        # TODO: Replace with DB lookup later. For now, use robust constants.
-        role = Role.SALES.value
-        if clean_phone == ADMIN_PHONE: role = Role.GOD.value
-        elif clean_phone == CHIEF_PHONE: role = Role.SUPERVISOR.value
-
-        logger.info(f"🧠 Agent Logic Start (Hybrid) | Role: {role} | Phone: {clean_phone}")
-
-        # 1. Lead Identification
-        lead_id, is_new_lead = await asyncio.to_thread(get_or_create_lead, phone, meta_data)
-        await asyncio.to_thread(log_interaction, lead_id, "user", text)
-
-        # 2. Context Retrieval
-        history_rows = await asyncio.to_thread(get_chat_history, phone, limit=15)
+        # Determine Role & Instantiate Agent
+        # POLYMORPHIC ARCHITECTURE (Protocol Phase 3)
+        from app.agents.router import RoleRouter
         
-        # Prepare Conversation History for Gemini
-        gemini_history = []
-        for msg in history_rows:
-            g_role = "user" if msg['role'] == 'user' else "model"
-            gemini_history.append({"role": g_role, "parts": [msg['content'] or "..."]})
+        # Context for the agent (DB access, History, etc)
+        context = {
+            "db_lead_id": lead_id,
+            "is_new_lead": is_new_lead,
+            "history": history_rows
+        }
+        
+        # 1. Get the correct Brain Strategy
+        agent = RoleRouter.get_agent(phone, context)
+        logger.info(f"🧠 Agent Logic Start | Strategy: {agent.role_name} | Phone: {clean_phone}")
 
-        # 3. Neural Inference (THE HYBRID LOOP)
+        # 2. Tools Retrieval (Restricted by Role)
+        # We need to map agent.get_allowed_tools() to actual tool definitions for Gemini
+        allowed_tool_names = agent.get_allowed_tools()
+        tools_for_gemini = registry.get_tools_by_names(allowed_tool_names)
+        logger.info(f"🛠️ Tools enabled: {allowed_tool_names}")
+
+        # 3. Execution (The Agent knows how to think)
+        # We need to implement the 'process' method in the agents to handle the LLM loop.
+        # But wait, the BaseAgent.process was empty. 
+        # To avoid breaking logic, we will keep the LLM interaction HERE for now, 
+        # but inject the Agent's Prompt and Tools.
+        # Ideally, 'agent.process()' should hold the loop. 
+        # For this refactor step, we will use the Agent to CONFIG the session.
+        
         final_reply = ""
-        
         try:
-            # Set System Instruction
-            system_instruction = await self._get_system_prompt(role, clean_phone)
-            self.model._system_instruction = system_instruction # Hack: Set system prompt
+            # A. Dynamic System Prompt
+            system_instruction = agent.get_system_prompt()
+            self.model._system_instruction = system_instruction
 
+            # B. History Preparation
+            gemini_history = []
+            for msg in history_rows:
+                g_role = "user" if msg['role'] == 'user' else "model"
+                gemini_history.append({"role": g_role, "parts": [msg['content'] or "..."]})
 
-            # Correct Tool Binding for Gemini 1.5
-            # We must reconstruct the chat session with tools IF we want them to be available.
-            # However, start_chat doesn't easily accept tools in all SDK versions. 
-            # Strategy: Instantiate a temporary model with tools for this turn OR pass tools to send_message.
-            
-            # 1. Get Tools
-            tools_for_user = registry.get_tools_for_gemini(user_role=role)
-            logger.info(f"🛠️ Tools enabled for {role}: {[t['name'] for t in tools_for_user]}")
-
-            # 2. Re-instantiate Chat with Tools (The Robust Way)
-            # Since tools are bound to the model, we can't just pass them to send_message in some versions.
+            # C. Chat Session with Specific Tools
             model_with_tools = genai.GenerativeModel(
                 model_name=self.model_name,
                 generation_config=self.generation_config,
                 safety_settings=self.safety_settings,
-                tools=tools_for_user # BIND TOOLS HERE
+                tools=tools_for_gemini 
             )
-            
-            # 3. Start Chat on the Tool-Enabled Model
             chat_session = model_with_tools.start_chat(history=gemini_history)
 
+            # D. Send Message
             response = await chat_session.send_message_async(text)
-
-            # PHASE 2: Tool Execution Loop (Max 3 turns)
+            
+            # E. Tool Loop (Standardized)
             MAX_TURNS = 3
             for turn in range(MAX_TURNS):
-                # Check for Function Calls (Multiple calls possible?)
-                # Simplified: Handle first candidate's function calls
-                
                 part = response.candidates[0].content.parts[0]
-                
                 if part.function_call:
                     func_call = part.function_call
                     tool_name = func_call.name
                     tool_args = dict(func_call.args)
                     
-                    logger.info(f"🛠️ [TOOL DETECTED] {tool_name} with args: {tool_args}")
+                    # Security Check: Is this tool allowed for this agent?
+                    if tool_name not in allowed_tool_names:
+                        logger.warning(f"🚨 SECURITY BLOCKED: {agent.role_name} tried to use {tool_name}")
+                        tool_result = "Error: Permission Denied."
+                    else:
+                        logger.info(f"🛠️ [TOOL EXEC] {tool_name} | Args: {tool_args}")
+                        tool_result = registry.execute(tool_name, tool_args)
                     
-                    # Execute Tool
-                    tool_result = registry.execute(tool_name, tool_args)
-                    
-                    logger.info(f"🧠 [THINKING] Phase {turn+2}: Analyzing Tool Output...")
-
                     # Send result back
                     response = await chat_session.send_message_async(
                         genai.protos.Part(
@@ -184,39 +181,25 @@ class NataliaBrain:
                         )
                     )
                 else:
-                    # No function call -> Final Text
                     final_reply = response.text
                     break
             
             if not final_reply:
                 final_reply = response.text
 
-            # 🛡️ Human-in-the-loop Trigger
-            if role == "CLIENT" and any(x in final_reply.lower() for x in ["voy a consultar con jorge", "consultaré directamente"]):
-                await self._trigger_chief_consultation(clean_phone, text)
-                
-
         except Exception as e:
-            # 🛡️ COGNITIVE SHIELD ACTIVATION
             from app.utils.error_handler import CognitiveShield
-            final_reply = await CognitiveShield.handle_error(e, clean_phone, role)
+            final_reply = await CognitiveShield.handle_error(e, clean_phone, agent.role_name)
 
-        # 4. Log Assistant Output
+        # 4. Log Output
         await asyncio.to_thread(log_interaction, lead_id, "assistant", final_reply)
-        
-        # Determine Metadata (VBO)
-        intent = "general"
-        val = 50.0
-        if "cejas" in text.lower() or "micro" in text.lower():
-            intent = "microblading"
-            val = 300.0
-        
+
         return {
             "lead_id": lead_id,
             "reply": final_reply,
             "action": "send_whatsapp",
             "is_new_lead": is_new_lead,
-            "metadata": {"intent": intent, "value": val}
+            "metadata": {"agent": agent.role_name}
         }
 
     async def _trigger_chief_consultation(self, client_phone: str, client_message: str):

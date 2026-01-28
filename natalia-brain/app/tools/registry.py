@@ -51,40 +51,34 @@ class ToolRegistry:
                     "type": p_type,
                     "description": f"Parameter {param_name}" # Ideally parse from docstring
                 }
-                
-                if param.default == inspect.Parameter.empty:
-                    parameters["required"].append(param_name)
+        self._tools = {}
+        self._definitions = []
 
-            # Create Gemini Tool Definition
-            tool_def = {
-                "name": name,
-                "description": doc.strip(),
-                "parameters": parameters
-            }
+    def register(self, name: str, func: callable, roles: list, definition: dict):
+        self._tools[name] = {
+            "func": func,
+            "roles": roles,
+            "definition": definition
+        }
+        self._definitions.append(definition)
 
-            self._tools[name] = func
-            # Store roles metadata
-            tool_def["_roles"] = roles
-            self._schemas.append(tool_def)
-            
-            logger.info(f"🔧 Tool Registered: {name} | Roles: {roles or 'ALL'}")
-            return func
-        return decorator
+    def get_tools_by_names(self, names: list) -> list:
+        """Returns Gemini-compatible definitions for a subset of tools."""
+        return [self._tools[n]["definition"] for n in names if n in self._tools]
 
     def get_tools_for_gemini(self, user_role: str = None) -> List[Dict[str, Any]]:
         """Returns the list of function declarations filtered by role."""
         filtered_schemas = []
-        for schema in self._schemas:
-            allowed_roles = schema.get("_roles")
+        for tool_name, tool_data in self._tools.items():
+            allowed_roles = tool_data["roles"]
             # If no roles defined, it's public. If roles defined, user must have one.
             if not allowed_roles or (user_role and user_role in allowed_roles):
                 # Return schema without internal metadata
-                clean_schema = {k:v for k,v in schema.items() if k != "_roles"}
-                filtered_schemas.append(clean_schema)
+                filtered_schemas.append(tool_data["definition"])
         
         return filtered_schemas
 
-    def execute(self, name: str, args: Dict[str, Any]):
+    def execute(self, name: str, args: dict) -> Any:
         """Safely executes the tool by name."""
         if name not in self._tools:
             raise ValueError(f"Tool {name} not found.")
