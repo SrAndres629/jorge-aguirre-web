@@ -185,9 +185,11 @@ class NataliaBrain:
             if role == "CLIENT" and any(x in final_reply.lower() for x in ["voy a consultar con jorge", "consultaré directamente"]):
                 await self._trigger_chief_consultation(clean_phone, text)
                 
+
         except Exception as e:
-            logger.error(f"❌ Cognitive Failure: {e}")
-            final_reply = "Disculpa, estoy teniendo un refresh en mi sistema de agenda. Dame un momento y te atiendo con la exclusividad que mereces. ✨"
+            # 🛡️ COGNITIVE SHIELD ACTIVATION
+            from app.utils.error_handler import CognitiveShield
+            final_reply = await CognitiveShield.handle_error(e, clean_phone, role)
 
         # 4. Log Assistant Output
         await asyncio.to_thread(log_interaction, lead_id, "assistant", final_reply)
