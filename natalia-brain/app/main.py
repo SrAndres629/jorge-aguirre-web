@@ -41,6 +41,20 @@ app.add_middleware(
 app.include_router(chat_router, prefix="/api", tags=["Chat"])
 app.include_router(tracking_router, tags=["Tracking"])
 
+# --- WEBHOOK ALIAS (Fix for 404) ---
+from fastapi import BackgroundTasks, Request
+@app.post("/webhook/evolution")
+async def root_webhook_alias(request: Request, background_tasks: BackgroundTasks):
+    """
+    Alias for /api/webhook/evolution to support legacy Evolution config.
+    """
+    from app.chat_routes import handle_evolution_webhook
+    return await handle_evolution_webhook(request, background_tasks)
+# -----------------------------------
+    from app.chat_routes import handle_evolution_webhook
+    return await handle_evolution_webhook(request, background_tasks)
+# -----------------------------------
+
 
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
