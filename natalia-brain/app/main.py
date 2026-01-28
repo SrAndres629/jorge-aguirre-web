@@ -15,7 +15,6 @@ app = FastAPI(
 )
 
 # --- SENIOR HEALTH PROTOCOL ---
-@app.get("/")
 @app.get("/health")
 async def health_check():
     """Endpoint for Render keep-alive and institutional monitoring"""
