@@ -23,74 +23,47 @@ class IncomingMessage(BaseModel):
     fbp: Optional[str] = None
     utm_data: Optional[Dict[str, Any]] = None
     
+
 @router.post("/webhook/evolution")
 async def handle_evolution_webhook(request: Request, background_tasks: BackgroundTasks):
     """
     Adapter nativo para Evolution API v2.
-    Recibe el payload raw, extrae el mensaje y lo pasa al Cerebro.
+    Implementa Protocolo Surjectivo f: W -> G
     """
     try:
         body = await request.json()
         
-        # Validar tipo de evento
-        event_type = body.get("type")
-        data = body.get("data", {})
+        # 1. Normalize (Safe Ingestion)
+        # Avoids logic errors by delegating parsing to pure function
+        from app.utils.normalizer import normalize_evolution_payload
         
-        # Solo nos interesan mensajes nuevos (UPSERT)
-        if event_type == "MESSAGES_UPSERT":
-            message_data = data
-            key = message_data.get("key", {})
-            from_me = key.get("fromMe", False)
+        msg = normalize_evolution_payload(body)
+        
+        if not msg:
+            # Valid ignored message (echo or non-text)
+            return {"status": "ignored"}
             
-            # Ignorar mensajes propios para evitar bucles
-            if from_me:
-                return {"status": "ignored", "reason": "from_me"}
-            
-            # Extraer Teléfono (remoteJid)
-            remote_jid = key.get("remoteJid", "")
-            phone = remote_jid.split("@")[0] if "@" in remote_jid else remote_jid
-            
-            # Extraer Texto (conversation, extendedTextMessage, etc.)
-            message_content = message_data.get("message", {})
-            text = (
-                message_content.get("conversation") or 
-                message_content.get("extendedTextMessage", {}).get("text") or
-                message_content.get("imageMessage", {}).get("caption") or
-                ""
-            )
-            
-            if not text:
-                 return {"status": "ignored", "reason": "no_text"}
+        # 2. Structured Logging (Trazabilidad)
+        logger.info(f"📨 [GATEWAY] INGEST: {msg.id} | PHONE: {msg.phone} | NAME: {msg.name}")
 
-            # Extraer Nombre
-            push_name = message_data.get("pushName", "Unknown")
-            
-            # Procesar con Natalia (reutilizando lógica interna)
-            logger.info(f"📨 Webhook Evolution recibido de {phone}: {text[:30]}...")
-            
-            # -- Lógica idéntica a /chat/incoming --
-            # Construct dynamic metadata
-            meta = {
-                "name": push_name,
-                "source": "evolution_webhook"
-            }
-
-            # Process Logic (Buffered via InboxManager)
-            # We don't await the result here because it's processed asynchronously
-            await inbox_manager.add_message(
-                phone=phone, 
-                text=text, 
-                meta_data=meta
-            )
-            
-            # We return "queued" instead of "processed"
-            return {"status": "queued", "phone": phone}
-            
-        return {"status": "ignored", "type": event_type}
+        # 3. Buffer Logic (Inject into Brain)
+        meta = {
+            "name": msg.name,
+            "source": msg.source,
+            "timestamp": msg.timestamp
+        }
+        
+        # Pass to Inbox Manager (asynchronous processing)
+        await inbox_manager.add_message(
+            phone=msg.phone, 
+            text=msg.text, 
+            meta_data=meta
+        )
+        
+        return {"status": "queued", "phone": msg.phone}
 
     except Exception as e:
-        logger.error(f"❌ Webhook Error: {e}")
-        # Retornamos 200 para que Evolution no reintente infinitamente si es un error lógico nuestro
+        logger.error(f"❌ [GATEWAY] CRITICAL: {e}")
         return {"status": "error", "message": str(e)}
 
 @router.post("/chat/incoming")
