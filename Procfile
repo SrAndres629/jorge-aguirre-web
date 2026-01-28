@@ -1,1 +1,1 @@
-web: cd core && gunicorn -w 4 -k uvicorn.workers.UvicornWorker main:app --bind 0.0.0.0:$PORT
+web: cd natalia-brain && uvicorn main:app --host 0.0.0.0 --port $PORT
