@@ -121,10 +121,15 @@ async def keep_evolution_alive():
 
 @app.on_event("startup")
 async def startup_event():
-    # 1. Start Keep-Alive Heartbeat
-    asyncio.create_task(keep_evolution_alive())
+    # 1. Start Triple-Node Heartbeat (Keep-Alive)
+    from app.heartbeat import start_heartbeat_hub
+    asyncio.create_task(start_heartbeat_hub())
+
+    # 2. Start Auto-Healing Watchdog (Antigravity SRE)
+    from app.watchdog import start_watchdog
+    asyncio.create_task(start_watchdog())
     
-    # 2. Senior Protocol: Admin initialization message (SILENCED to avoid restart spam)
+    # 3. Senior Protocol: Admin initialization message (SILENCED to avoid restart spam)
     # from app.evolution import evolution_service
     # from app.natalia import ADMIN_PHONE
     
