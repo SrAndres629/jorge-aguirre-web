@@ -34,10 +34,15 @@ def init_pool() -> bool:
     # 1. Intentar PostgreSQL (Producción)
     if settings.DATABASE_URL and HAS_POSTGRES:
         try:
+            # Ensure SSL Mode for Supabase/Cloud
+            dsn = settings.DATABASE_URL
+            if "sslmode=" not in dsn:
+                dsn += ("&" if "?" in dsn else "?") + "sslmode=require"
+
             _pg_pool = psycopg2.pool.SimpleConnectionPool(
                 minconn=1,
                 maxconn=10,
-                dsn=settings.DATABASE_URL,
+                dsn=dsn,
                 # Senior Hardening: TCP Keepalives to prevent silent drops
                 keepalives=1,
                 keepalives_idle=30,
