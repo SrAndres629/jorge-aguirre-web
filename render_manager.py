@@ -52,23 +52,46 @@ class RenderManager:
         return r.status_code in [200, 201, 202]
 
     def get_logs(self, service_id, limit=20):
-        # Note: Render API for logs is structured differently or requires a specific stream.
-        # For this version, we provide the URL to the logs if we can't fetch them directly via API easily.
-        # However, we can fetch recent event logs which are often enough to debug.
+        """Fetch recent service events (Log equivalents for control plane)"""
         url = f"{BASE_URL}/services/{service_id}/events"
         r = requests.get(url, headers=HEADERS, params={"limit": limit})
         if r.status_code == 200:
             return r.json()
         return []
 
+    def deep_scan(self, service_id):
+        """Performs a deep diagnostic scan of a single service"""
+        print(f"{Fore.YELLOW}🔍 Deep Diagnostic Scan for: {service_id}")
+        
+        # 1. Check Env Vars
+        print(f"   --- Environment Variables ---")
+        ev_url = f"{BASE_URL}/services/{service_id}/env-vars"
+        ev_r = requests.get(ev_url, headers=HEADERS)
+        if ev_r.status_code == 200:
+            vars_list = ev_r.json()
+            critical_vars = ["GOOGLE_API_KEY", "EVOLUTION_API_URL", "DATABASE_URL"]
+            found = [v['envVar']['key'] for v in vars_list]
+            for cv in critical_vars:
+                status = f"{Fore.GREEN}✅ Found" if cv in found else f"{Fore.RED}❌ MISSING"
+                print(f"   {status} {cv}")
+        
+        # 2. Check Latest Events for Failures
+        print(f"\n   --- Recent Critical Events ---")
+        events = self.get_logs(service_id, limit=5)
+        for e in events:
+            evt = e.get('event', e)
+            ts = evt.get('timestamp', 'N/A')
+            etype = evt.get('type', 'unknown')
+            color = Fore.RED if "error" in etype.lower() or "fail" in etype.lower() else Fore.WHITE
+            print(f"   {color}[{ts}] {etype}")
+
     def audit(self):
+        """High-level system audit"""
         print(f"{Fore.CYAN}{Style.BRIGHT}--- 🛡️ INFRA GUARDIAN HEALTH AUDIT ---")
         svcs = self.get_services()
         if not svcs:
             print(f"{Fore.RED}❌ Could not connect to Render API.")
             return
-
-        critical_vars = ["GOOGLE_API_KEY", "EVOLUTION_API_URL", "DATABASE_URL"]
 
         for item in svcs:
             svc = item['service']
@@ -81,37 +104,21 @@ class RenderManager:
             if status in ["failed", "canceled"]: color = Fore.RED
             
             print(f"📍 {Fore.WHITE}{name:20} | {Fore.MAGENTA}{sid} | {color}{status.upper():10}")
-            
-            # Deep Audit: Check Env Vars for Natalia
-            if "natalia-brain" in name:
-                print(f"   🔍 Analyzing Environment Variables...")
-                ev_url = f"{BASE_URL}/services/{sid}/env-vars"
-                ev_r = requests.get(ev_url, headers=HEADERS)
-                if ev_r.status_code == 200:
-                    found_vars = [v['envVar']['key'] for v in ev_r.json()]
-                    for cv in critical_vars:
-                        if cv in found_vars:
-                            print(f"   ✅ {cv}: Present")
-                        else:
-                            print(f"   ❌ {cv}: MISSING")
-                else:
-                    print(f"   ⚠️ Could not audit env vars: {ev_r.status_code}")
-            
-            print(f"   🔗 URL: {Fore.BLUE}{url}\n")
+            print(f"   🔗 {Fore.BLUE}{url}\n")
 
     def update_env(self, service_id, key, value):
         print(f"{Fore.YELLOW}⚙️ Updating Env Var: {key} for {service_id}...")
         url = f"{BASE_URL}/services/{service_id}/env-vars"
-        # Render expectes an array of objects
         payload = [{"key": key, "value": value}]
         r = requests.put(url, headers=HEADERS, json=payload)
         return r.status_code == 200
 
 def main():
-    parser = argparse.ArgumentParser(description="Render Infrastructure Manager (SRE Tool)")
+    parser = argparse.ArgumentParser(description="Render SRE Controller (Infra Guardian)")
     parser.add_argument("--audit", action="store_true", help="Run full system audit")
+    parser.add_argument("--scan", type=str, help="Deep diagnostic scan of a service ID")
     parser.add_argument("--restart", type=str, help="Restart a specific service ID")
-    parser.add_argument("--logs", type=str, help="Get events/logs for a service ID")
+    parser.add_argument("--logs", type=str, help="Get recent events for a service ID")
     parser.add_argument("--env-set", nargs=3, metavar=('ID', 'KEY', 'VAL'), help="Update env var")
     
     args = parser.parse_args()
@@ -119,6 +126,8 @@ def main():
 
     if args.audit:
         manager.audit()
+    elif args.scan:
+        manager.deep_scan(args.scan)
     elif args.restart:
         if manager.restart_service(args.restart):
             print(f"{Fore.GREEN}✅ Restart queued.")
@@ -128,11 +137,8 @@ def main():
         events = manager.get_logs(args.logs)
         print(f"--- Recent Events for {args.logs} ---")
         for e in events:
-            # Render API events can be complex, let's parse safely
             evt = e.get('event', e)
-            ts = evt.get('timestamp', 'N/A')
-            etype = evt.get('type', 'unknown')
-            print(f"[{ts}] {etype}")
+            print(f"[{evt.get('timestamp')}] {evt.get('type')}")
     elif args.env_set:
         if manager.update_env(args.env_set[0], args.env_set[1], args.env_set[2]):
              print(f"{Fore.GREEN}✅ Env var updated.")
