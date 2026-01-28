@@ -76,9 +76,9 @@ class Settings(BaseSettings):
     def validate_critical(self):
         """Valida configuración crítica"""
         if not self.META_PIXEL_ID:
-            logger.info("ℹ️ META_PIXEL_ID (Opcional) no configurado - Seguimiento de anuncios deshabilitado")
+            logger.warning("⚠️ META_PIXEL_ID no configurado")
         if not self.META_ACCESS_TOKEN:
-            logger.info("ℹ️ META_ACCESS_TOKEN (Opcional) no configurado - Conversiones CAPI deshabilitadas")
+            logger.warning("⚠️ META_ACCESS_TOKEN no configurado")
         if not self.DATABASE_URL:
             logger.info("ℹ️ DATABASE_URL no configurado - DB deshabilitada")
         
