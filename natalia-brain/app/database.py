@@ -627,3 +627,24 @@ def get_knowledge_base(category: Optional[str] = None) -> List[Dict[str, Any]]:
     except Exception as e:
         logger.error(f"❌ Error obteniendo knowledge base: {e}")
     return facts
+
+def get_agent_prompt(role_id: str) -> Optional[str]:
+    """Recupera el System Prompt desde la BD para un rol específico"""
+    try:
+        with get_cursor() as cur:
+            if not cur: return None
+            
+            # Simple query by role_id
+            sql = "SELECT system_prompt FROM agent_prompts WHERE role_id = %s AND is_active = TRUE"
+            cur.execute(sql, (role_id,))
+            row = cur.fetchone()
+            
+            if row:
+                return row[0]
+            
+            logger.warning(f"⚠️ Prompt not found for role: {role_id}")
+            return None
+            
+    except Exception as e:
+        logger.error(f"❌ Error fetching agent prompt ({role_id}): {e}")
+        return None

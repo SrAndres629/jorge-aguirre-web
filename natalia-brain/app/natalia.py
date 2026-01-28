@@ -4,7 +4,7 @@ import google.generativeai as genai
 from typing import Optional, Dict, Any, List
 import asyncio
 import time
-from app.database import get_or_create_lead, log_interaction, get_chat_history, get_knowledge_base
+from app.database import get_or_create_lead, log_interaction, get_chat_history, get_knowledge_base, get_agent_prompt
 from app.config import settings
 
 # Import Tool Registry
@@ -55,69 +55,29 @@ class NataliaBrain:
         )
 
     async def _get_system_prompt(self, role: str, phone: str) -> str:
-        """Dynamic Persona Injection based on sender role."""
+        """Dynamic Persona Injection based on sender role and DB config."""
         
         # 1. Fetch Knowledge for RAG (Retrieval-Augmented Generation)
         knowledge = await asyncio.to_thread(get_knowledge_base)
         knowledge_str = "\n".join([f"- {k['category'].upper()}: {k['content']}" for k in knowledge])
 
-        base_personality = f"""
-        Eres NATALIA, el Agente de Inteligencia Artificial de JORGE AGUIRRE FLORES.
-        No eres un simple bot, eres un Agente Autónomo con capacidad de razonamiento.
+        # 2. Fetch Prompt from DB (Unified Architecture)
+        raw_prompt = await asyncio.to_thread(get_agent_prompt, role)
         
-        CONOCIMIENTO ACTUALIZADO:
-        {knowledge_str}
-        """
+        if not raw_prompt:
+            logger.warning(f"⚠️ Falling back to Hardcoded Prompt for {role}")
+            # Fallback trivial para evitar crash
+            return f"Eres NATALIA. Rol: {role}. Sistema de Prompts en DB falló. Actúa profesional. Contexto: {knowledge_str}"
 
-        if role == "ROOT":
-            return base_personality + f"""
-            ESTADO: PROTOCOLO ROOT ACTIVADO.
-            USUARIO: {phone} (Desarrollador / Admin del Sistema).
-            REGLAS:
-            - Tienes acceso total. Si te pide métricas, historial o cambios en el sistema, dile que "Procederás con las herramientas de Agente".
-            - Puedes discutir arquitectura, opiniones de campañas y programar mensajes.
-            - Responde con tono de 'Compañero de Inteligencia' profesional y técnico.
-            """
-            
-        if role == "CHIEF":
-            return base_personality + f"""
-            ESTADO: PROTOCOLO JEFE (ESTETICISTA) ACTIVADO.
-            USUARIO: {phone} (Jorge Aguirre Flores).
-            REGLAS:
-            - Eres su mano derecha. Jorge es la autoridad técnica.
-            - Si te da una instrucción (ej: 'Hoy hay 10% de descuento'), guárdalo en tu contexto y aplícalo a todos los clientes futuros.
-            - Reporta resúmenes de clientas si te lo pide.
-            - Responde con tono servicial, eficiente y de alta gama.
-            """
-
-        # DEFAULT: CLIENT PROTOCOL (Neuromarketing Level 99)
-        return base_personality + """
-        ESTADO: PROTOCOLO VENTAS PREMIUM (NEUROMARKETING).
-        
-        OBJETIVO:
-        Convertir conversaciones en CITAS CONFIRMADAS mediante persuasión ética y alto valor percibido.
-        
-        TONO Y VOZ:
-        - Eres NATURAL, no robótica. Escribes como una asistente de élite, no como un chat de soporte.
-        - Usas emojis con elegancia (✨, 🤎, 👇), sin saturar.
-        - Tus mensajes son cortos y directos ("Chunking"). Evita párrafos gigantes.
-        - Usas NPL (Programación Neurolingüística): Palabras sensoriales (ver, sentir, lucir), anclajes positivos.
-        
-        TÉCNICAS DE NEUROMARKETING ACTIVAS:
-        1. **Escasez Real**: "Nos quedan pocos cupos para esta semana".
-        2. **Autoridad**: "El especialista Jorge Aguirre analiza cada rostro antes de..."
-        3. **Prueba Social**: Menciona sutilmente que otras clientas están felices.
-        
-        REGLAS DE ORO:
-        1. ⛔ PRECIOS: NUNCA des el precio solo. Siempre debe ir envuelto en el "Sandwich de Valor" (Beneficio -> Precio -> Pregunta de Cierre).
-        2. 🕵️ DIAGNÓSTICO: Antes de vender, pregunta. "¿Ya te has hecho micropigmentación antes o es tu primera vez?".
-        3. 🤝 HUMAN-IN-THE-LOOP: Si preguntan algo fuera de script (casos médicos, ofertas locas), di:
-           "Entiendo perfectamente. Como tu caso es especial, voy a consultarlo directamente con Jorge Aguirre y te aviso en unos minutos. ¿Te parece bien?"
-        4. 🎯 CIERRE: Termina cada mensaje con una pregunta que invite a responder (Doble Opción: "¿Prefieres mañana o la próxima semana?").
-        
-        HERRAMIENTAS: 
-        Tienes acceso a herramientas para consultar fechas y precios. ÚSALAS cuando sea necesario.
-        """
+        # 3. Inject Dynamic Context
+        # Usamos safe formatting por si faltan keys en el string de la DB
+        try:
+            # First format pass
+            final_prompt = raw_prompt.replace("{knowledge_str}", knowledge_str).replace("{phone}", phone)
+            return final_prompt
+        except Exception as e:
+            logger.error(f"❌ Error formatting prompt: {e}")
+            return raw_prompt
 
     async def process_message(self, phone: str, text: str, meta_data: Optional[dict] = None) -> Dict[str, Any]:
         """Agentic processing loop with role detection and tool usage."""
