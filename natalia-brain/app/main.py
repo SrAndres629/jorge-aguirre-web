@@ -22,8 +22,11 @@ from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
 from fastapi import Request
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
-templates = Jinja2Templates(directory="templates")
+
+# Better template path resolution
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), name="static")
+templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
 
 @app.get("/api/health")
 def health():
@@ -31,7 +34,22 @@ def health():
 
 @app.get("/", response_class=HTMLResponse)
 async def root(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request, "service": "Natalia Brain V2"})
+    # Mock data for template compatibility (Protocol Phase 1 Stability)
+    contact = {
+        "maps_url": "#",
+        "address": "Santa Cruz de la Sierra, Bolivia"
+    }
+    services = [] # Fallback
+    
+    return templates.TemplateResponse("index.html", {
+        "request": request, 
+        "service": "Natalia Brain V2",
+        "contact": contact,
+        "services": services,
+        "pixel_id": "",
+        "pageview_event_id": "",
+        "external_id": ""
+    })
 
 
 # ==========================================
