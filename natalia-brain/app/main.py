@@ -73,33 +73,38 @@ def health():
 
 from fastapi.responses import RedirectResponse
 
-@app.get("/", response_class=Union[HTMLResponse, RedirectResponse])
+@app.get("/")
 async def root(request: Request):
     """
-    Redirección inteligente:
-    - Si vienen de la URL técnica de render.com, enviar a la web oficial.
-    - Si ya están en jorgeaguirreflores.com, servir la página normalmente.
+    Redirección Inteligente (Protocolo Antigravity):
+    - Si el servicio es 'natalia-brain', redirige al dominio oficial para proteger la API.
+    - Si el servicio es la web oficial o desarrollo local, sirve la página.
     """
+    service_name = os.getenv("RENDER_SERVICE_NAME", "").lower()
     host = request.headers.get("host", "").lower()
     
-    # Solo redirigir si detectamos explícitamente el dominio de render
-    if "onrender.com" in host:
+    # 1. Si soy explícitamente el Cerebro o estoy en la URL técnica de Render, redirijo.
+    is_brain_service = "natalia-brain" in service_name
+    is_technical_url = "onrender.com" in host
+    
+    if (is_brain_service or is_technical_url) and "jorgeaguirreflores.com" not in host:
         return RedirectResponse(url="https://jorgeaguirreflores.com", status_code=301)
     
-    # Servir la web oficial
+    # 2. En cualquier otro caso (Web oficial o Local), servimos la web.
     try:
         contact = {"maps_url": "#", "address": "Santa Cruz de la Sierra, Bolivia"}
         return templates.TemplateResponse("index.html", {
             "request": request, 
-            "service": "Natalia Brain V2",
+            "service": "Natalia AI",
             "contact": contact,
             "services": [],
-            "pixel_id": "",
+            "pixel_id": settings.META_PIXEL_ID,
             "pageview_event_id": "",
             "external_id": ""
         })
-    except Exception:
-        return HTMLResponse("Natalia Brain is Online.")
+    except Exception as e:
+        logger.error(f"Template Error: {e}")
+        return HTMLResponse("Natalia Brain is Online. (Web Template not found)")
 
 
 # ==========================================
