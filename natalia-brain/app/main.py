@@ -70,28 +70,15 @@ templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
 def health():
     return {"status": "Natalia is online and thinking."}
 
-@app.get("/", response_class=HTMLResponse)
-async def root(request: Request):
-    try:
-        # Mock data for template compatibility (Protocol Phase 1 Stability)
-        contact = {
-            "maps_url": "#",
-            "address": "Santa Cruz de la Sierra, Bolivia"
-        }
-        services = [] # Fallback
-        
-        return templates.TemplateResponse("index.html", {
-            "request": request, 
-            "service": "Natalia Brain V2",
-            "contact": contact,
-            "services": services,
-            "pixel_id": "",
-            "pageview_event_id": "",
-            "external_id": ""
-        })
-    except Exception as e:
-        import traceback
-        return HTMLResponse(content=f"<h1>500 Internal Server Error (Template Crash)</h1><pre>{traceback.format_exc()}</pre>", status_code=500)
+from fastapi.responses import RedirectResponse
+
+@app.get("/", response_class=RedirectResponse)
+async def root():
+    """
+    Redirigir tráfico humano a la web oficial. 
+    Evita contenido duplicado (SEO) y centraliza la marca.
+    """
+    return RedirectResponse(url="https://jorgeaguirreflores.com", status_code=301)
 
 
 # ==========================================

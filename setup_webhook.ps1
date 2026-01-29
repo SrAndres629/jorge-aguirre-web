@@ -1,60 +1,53 @@
-# PowerShell helper to configure webhook for Natalia Brain
+# --- CONFIGURACION ---
 $InstanceName = "NataliaBrain"
-$ApiUrl = "https://evolution-whatsapp-zn13.onrender.com"
+$EvolutionUrl = "https://evolution-whatsapp-zn13.onrender.com"
 $ApiKey = "JorgeSecureKey123"
 
-Write-Host "🔗 WEBHOOK CONFIGURATION WIZARD" -ForegroundColor Cyan
-Write-Host "We need to tell Evolution API where 'Natalia Brain' lives."
-Write-Host "--------------------------------------------------------"
+# --- ASISTENTE ---
+Write-Host '🔗 ASISTENTE DE WEBHOOK'
+$BrainBaseUrl = Read-Host 'Pega la URL de Natalia Brain (ej: https://natalia-brain.onrender.com)'
 
-$BrainUrl = Read-Host "Enter your Natalia Brain URL (e.g. https://natalia-brain-xyz.onrender.com)"
-
-if ([string]::IsNullOrWhiteSpace($BrainUrl)) {
-    Write-Error "❌ URL cannot be empty."
+if ([string]::IsNullOrWhiteSpace($BrainBaseUrl)) {
+    Write-Error '❌ URL vacia'
     exit 1
 }
 
-# Ensure URL has no trailing slash
-$BrainUrl = $BrainUrl.TrimEnd('/')
+$WebhookUrl = $BrainBaseUrl.TrimEnd('/') + '/webhook/evolution'
 
-# The exact webhook endpoint in Natalia Brain
-$TargetUrl = "$BrainUrl/webhook/evolution"
+$Headers = @{
+    'apikey'       = $ApiKey
+    'Content-Type' = 'application/json'
+}
 
-Write-Host "`n⚙️ Configuring webhook for instance: $InstanceName"
-Write-Host "🎯 Target: $TargetUrl"
-
-$Payload = @{
-    webhook = @{
-        enabled  = $true
-        url      = $TargetUrl
-        byEvents = $false
-        events   = @(
-            "MESSAGES_UPSERT",
-            "MESSAGES_UPDATE",
-            "CONNECTION_UPDATE"
-        )
+$Body = @{
+    'webhook' = @{
+        'enabled'  = $true
+        'url'      = $WebhookUrl
+        'events'   = @('MESSAGES_UPSERT', 'MESSAGES_UPDATE', 'CONNECTION_UPDATE')
+        'byEvents' = $false
     }
-} | ConvertTo-Json -Depth 4
+} | ConvertTo-Json -Depth 10
+
+Write-Host ('📡 Configurando: ' + $InstanceName)
+Write-Host ('🎯 Destino: ' + $WebhookUrl)
 
 try {
-    $Response = Invoke-RestMethod -Uri "$ApiUrl/webhook/set/$InstanceName" `
-        -Method Post `
-        -Headers @{ "apikey" = $ApiKey; "Content-Type" = "application/json" } `
-        -Body $Payload `
-        -ErrorAction Stop
-
-    Write-Host "`n✅ SUCCESS! Webhook Configured." -ForegroundColor Green
-    Write-Host "Evolution API will now send messages to Natalia Brain."
-    $JsonResp = $Response | ConvertTo-Json -Depth 2
-    Write-Host "Response: $JsonResp"
+    $Uri = $EvolutionUrl + '/webhook/set/' + $InstanceName
+    $Response = Invoke-RestMethod -Uri $Uri -Method POST -Body $Body -Headers $Headers
+    Write-Host '✅ ¡ÉXITO!'
+    $Response | ConvertTo-Json | Write-Host
 }
 catch {
-    Write-Error "❌ FAILED to configure webhook."
-    Write-Host "Error Details: $_" -ForegroundColor Red
+    Write-Host '❌ ERROR'
     if ($_.Exception.Response) {
         $Stream = $_.Exception.Response.GetResponseStream()
         $Reader = New-Object System.IO.StreamReader($Stream)
-        $BodyResponse = $Reader.ReadToEnd()
-        Write-Host "Server Response: $BodyResponse" -ForegroundColor Red
+        $BodyErr = $Reader.ReadToEnd()
+        Write-Host 'Detalle:'
+        Write-Host $BodyErr
+    }
+    else {
+        Write-Host 'Error General:'
+        Write-Host $_
     }
 }
