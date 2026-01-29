@@ -1,0 +1,60 @@
+# --- DEPENDENCIAS Y ENTORNOS ---
+**/node_modules
+**/__pycache__
+**/*.pyc
+.venv
+venv
+env
+
+# --- ARTEFACTOS DE BUILD ---
+**/dist
+**/build
+**/.next
+**/.nuxt
+*.egg-info
+**/*.tsbuildinfo
+
+# --- ASESINOS DE CONTEXTO (MEDIA) ---
+# El agente no puede ver imágenes pesadas, solo consumen tokens
+**/*.webp
+**/*.png
+**/*.jpg
+**/*.jpeg
+**/*.svg
+**/*.ico
+**/*.gif
+**/*.mp4
+core/static/images
+
+# --- ARCHIVOS DE SISTEMA Y LOGS ---
+.DS_Store
+**/*.log
+npm-debug.log
+.env.local
+.env.production
+# Mantén .env.example visible, pero oculta .env reales por seguridad
+.env
+
+# --- ARCHIVOS DE BLOQUEO (RUIDO) ---
+# El agente solo necesita package.json o requirements.txt
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+poetry.lock
+
+# --- DB ESPECÍFICO ---
+# Demasiado ruido en migraciones históricas
+evolution-api/prisma/mysql-migrations
+evolution-api/prisma/postgresql-migrations
+evolution-api/prisma/migrations
+mysql-migrations
+postgresql-migrations
+*.sqlite
+*.db
+
+# --- OTROS ---
+.git
+.github
+.vscode
+.idea
+.pytest_cache
