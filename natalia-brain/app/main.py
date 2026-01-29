@@ -2,6 +2,7 @@ import logging
 import os
 import traceback
 from contextlib import asynccontextmanager
+from typing import Optional, List, Union, Any
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.chat_routes import router as chat_router
@@ -76,16 +77,16 @@ from fastapi.responses import RedirectResponse
 async def root(request: Request):
     """
     Redirección inteligente:
-    - Si vienen de render.com u otros, enviar a la web oficial.
-    - Si ya están en la web oficial, mostrar la página (evita bucle infinito).
+    - Si vienen de la URL técnica de render.com, enviar a la web oficial.
+    - Si ya están en jorgeaguirreflores.com, servir la página normalmente.
     """
-    host = request.url.hostname or ""
-    official_domains = ["jorgeaguirreflores.com", "www.jorgeaguirreflores.com"]
+    host = request.headers.get("host", "").lower()
     
-    if host not in official_domains and not settings.META_SANDBOX_MODE:
+    # Solo redirigir si detectamos explícitamente el dominio de render
+    if "onrender.com" in host:
         return RedirectResponse(url="https://jorgeaguirreflores.com", status_code=301)
     
-    # Si ya estamos en el dominio oficial, servimos la web (o un status si prefieres)
+    # Servir la web oficial
     try:
         contact = {"maps_url": "#", "address": "Santa Cruz de la Sierra, Bolivia"}
         return templates.TemplateResponse("index.html", {
