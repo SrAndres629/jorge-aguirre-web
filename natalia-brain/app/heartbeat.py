@@ -13,7 +13,7 @@ TARGET_EVOLUTION = settings.EVOLUTION_API_URL
 # Ideally getting the public URL from env or config. 
 TARGET_BRAIN = "https://natalia-brain.onrender.com" # Hardcoded based on user context
 # 3. Third Instance (n8n or Website)
-TARGET_N8N = "https://jorge-aguirre-web.onrender.com" # Assuming this is the 'Website' or 3rd service.
+TARGET_N8N = "https://jorgeaguirreflores.com"
 # If the user meant n8n specifically:
 # TARGET_N8N = settings.N8N_WEBHOOK_URL (if it's public)
 
