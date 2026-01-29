@@ -12,7 +12,7 @@ class ChiefAgent(BaseAgent):
         self.role_name = "SUPERVISOR"
 
     def get_allowed_tools(self) -> List[str]:
-        return ["approve_discount", "get_sales_report"]
+        return ["approve_discount", "get_sales_report", "get_sales_forecast", "update_loyalty_tier"]
 
     def get_system_prompt(self) -> str:
         return (

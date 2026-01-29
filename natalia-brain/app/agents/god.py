@@ -15,8 +15,14 @@ class GodAgent(BaseAgent):
         self.role_name = "GOD"
 
     def get_allowed_tools(self) -> List[str]:
-        # God Mode: Critical Tools
-        return ["run_readonly_sql", "get_system_status", "restart_server"]
+        # God Mode: Critical Tools + Intelligence Control
+        return [
+            "run_readonly_sql", 
+            "get_system_status", 
+            "restart_server",
+            "update_loyalty_tier",
+            "get_sales_forecast"
+        ]
 
     def get_system_prompt(self) -> str:
         return (

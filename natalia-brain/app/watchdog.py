@@ -13,7 +13,7 @@ async def start_watchdog():
     Runs in background to ensure NataliaBrain stays connected.
     Cycle: Every 5 minutes.
     """
-    logger.info("🛡️ Watchdog System Active. Guarding: %s", settings.EVOLUTION_INSTANCE)
+    logger.info("🛡️ Watchdog System Active. Guarding: NataliaBrain")
     
     while True:
         try:

@@ -11,7 +11,7 @@ TARGET_EVOLUTION = settings.EVOLUTION_API_URL
 # 2. Natalia Brain (Self-Ping to keep Render awake)
 # Using the Render default URL if available, else localhost (which doesn't help sleep but keeps event loop busy)
 # Ideally getting the public URL from env or config. 
-TARGET_BRAIN = "https://natalia-brain.onrender.com" # Hardcoded based on user context
+TARGET_BRAIN = "https://natalia-brain.onrender.com" # Fixed Production Endpoint
 # 3. Third Instance (n8n or Website)
 TARGET_N8N = "https://jorgeaguirreflores.com"
 # If the user meant n8n specifically:
