@@ -104,7 +104,7 @@ registry = ToolRegistry()
 # --- SYSTEM TOOLS INITIALIZATION ---
 # These are the official tools required by Phase 4
 from app.tools.admin_tools import run_readonly_sql
-from app.tools.crm_tools import check_availability
+from app.tools.crm_tools import check_availability, update_loyalty_tier, get_sales_forecast
 
 registry.register(
     "run_readonly_sql",
@@ -136,6 +136,41 @@ registry.register(
                 "service_name": {"type": "string", "description": "Ej. 'microblading'"}
             },
             "required": ["service_name"]
+        }
+    }
+)
+
+registry.register(
+    "update_loyalty_tier",
+    update_loyalty_tier,
+    roles=["SUPERVISOR", "GOD"],
+    definition={
+        "name": "update_loyalty_tier",
+        "description": "Actualiza el nivel de lealtad (CRM) del cliente basado en su comportamiento.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "phone": {"type": "string", "description": "Número de WhatsApp del cliente."},
+                "increment": {"type": "integer", "description": "Incremento de puntos (ej. 10 para interés alto, -5 para desinterés)."}
+            },
+            "required": ["phone", "increment"]
+        }
+    }
+)
+
+registry.register(
+    "get_sales_forecast",
+    get_sales_forecast,
+    roles=["SUPERVISOR", "GOD"],
+    definition={
+        "name": "get_sales_forecast",
+        "description": "Predice el comportamiento de compra del cliente usando IA analítica.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "phone": {"type": "string", "description": "Número de WhatsApp del cliente."}
+            },
+            "required": ["phone"]
         }
     }
 )

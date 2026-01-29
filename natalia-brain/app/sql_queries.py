@@ -247,3 +247,43 @@ UPSERT_KNOWLEDGE_SQLITE = """
         content = EXCLUDED.content,
         category = EXCLUDED.category;
 """
+
+# --- CRM Master & Doctoral Sales (v4.0) ---
+
+UPDATE_LEAD_SCORE = """
+    UPDATE contacts 
+    SET lead_score = GREATEST(0, LEAST(100, lead_score + %s)),
+        status = CASE 
+            WHEN lead_score + %s >= 90 THEN 'client_loyal'::lead_status
+            WHEN lead_score + %s >= 70 THEN 'interested'::lead_status
+            ELSE status
+        END,
+        updated_at = NOW()
+    WHERE whatsapp_number = %s
+"""
+
+GET_SALES_FORECAST = """
+    SELECT 
+        full_name,
+        appointment_count,
+        service_interest,
+        CASE 
+            WHEN appointment_count > 5 THEN 'VIP'
+            WHEN appointment_count > 2 THEN 'GOLD'
+            ELSE 'LEAD'
+        END as tier,
+        last_interaction + INTERVAL '30 days' as predicted_next_booking
+    FROM contacts
+    WHERE whatsapp_number = %s
+"""
+
+UPSERT_CONTACT_DOCTORAL = """
+    INSERT INTO contacts (
+        whatsapp_number, full_name, status, lead_score, updated_at
+    ) VALUES (%s, %s, %s, %s, NOW())
+    ON CONFLICT (whatsapp_number) DO UPDATE SET
+        full_name = COALESCE(EXCLUDED.full_name, contacts.full_name),
+        status = COALESCE(EXCLUDED.status, contacts.status),
+        lead_score = COALESCE(EXCLUDED.lead_score, contacts.lead_score),
+        updated_at = NOW()
+"""

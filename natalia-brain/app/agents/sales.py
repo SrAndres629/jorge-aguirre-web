@@ -24,7 +24,13 @@ class SalesAgent(BaseAgent):
         self.role_name = "CLIENT"
 
     def get_allowed_tools(self) -> List[str]:
-        return ["check_availability", "get_services_prices", "check_loyalty_tier"]
+        return [
+            "check_availability", 
+            "get_services_prices", 
+            "check_loyalty_tier", 
+            "update_loyalty_tier", 
+            "get_sales_forecast"
+        ]
 
     def get_system_prompt(self) -> str:
         # Dynamic CRM Context Injection
@@ -43,10 +49,21 @@ class SalesAgent(BaseAgent):
     def _get_loyalty_tier(self) -> str:
         """
         Executes the Segmentation Engine from .agent/skills
-        Currently a mock/placeholder wrapper until we fully bridge the python execution env.
+        Doctoral Level: Queries the database for actual metrics.
         """
-        # TODO: Implement actual subprocess call to segmentation_engine.py
-        # For now, safe default.
+        from app.database import get_cursor
+        import app.sql_queries as queries
+        
+        try:
+            with get_cursor() as cur:
+                cur.execute(queries.GET_SALES_FORECAST, (self.phone,))
+                row = cur.fetchone()
+                if row:
+                    # row[3] is the 'tier' calculated in SQL
+                    return row[3]
+        except Exception as e:
+            logger.error(f"❌ Error fetching tier for {self.phone}: {e}")
+            
         return "STANDARD"
 
     async def process(self, text: str, tools: List[Dict]) -> Dict[str, Any]:
