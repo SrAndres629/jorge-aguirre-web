@@ -72,13 +72,33 @@ def health():
 
 from fastapi.responses import RedirectResponse
 
-@app.get("/", response_class=RedirectResponse)
-async def root():
+@app.get("/", response_class=Union[HTMLResponse, RedirectResponse])
+async def root(request: Request):
     """
-    Redirigir tráfico humano a la web oficial. 
-    Evita contenido duplicado (SEO) y centraliza la marca.
+    Redirección inteligente:
+    - Si vienen de render.com u otros, enviar a la web oficial.
+    - Si ya están en la web oficial, mostrar la página (evita bucle infinito).
     """
-    return RedirectResponse(url="https://jorgeaguirreflores.com", status_code=301)
+    host = request.url.hostname or ""
+    official_domains = ["jorgeaguirreflores.com", "www.jorgeaguirreflores.com"]
+    
+    if host not in official_domains and not settings.META_SANDBOX_MODE:
+        return RedirectResponse(url="https://jorgeaguirreflores.com", status_code=301)
+    
+    # Si ya estamos en el dominio oficial, servimos la web (o un status si prefieres)
+    try:
+        contact = {"maps_url": "#", "address": "Santa Cruz de la Sierra, Bolivia"}
+        return templates.TemplateResponse("index.html", {
+            "request": request, 
+            "service": "Natalia Brain V2",
+            "contact": contact,
+            "services": [],
+            "pixel_id": "",
+            "pageview_event_id": "",
+            "external_id": ""
+        })
+    except Exception:
+        return HTMLResponse("Natalia Brain is Online.")
 
 
 # ==========================================
