@@ -13,9 +13,13 @@ services:
         value: https://evolution-whatsapp-zn13.onrender.com
       - key: AUTHENTICATION_API_KEY
         value: JorgeSecureKey123
+      - key: DATABASE_PROVIDER
+        value: postgresql
       - key: DATABASE_SAVE_DATA_INSTANCE
         value: "true"
       - key: DATABASE_SAVE_DATA_NEW_MESSAGE
+        value: "true"
+      - key: DATABASE_SAVE_MESSAGE_UPDATE
         value: "true"
 
   # 2. Natalia Brain (The Mind)
