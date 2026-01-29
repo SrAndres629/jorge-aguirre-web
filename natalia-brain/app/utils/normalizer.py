@@ -4,19 +4,27 @@ import logging
 
 logger = logging.getLogger("GatewayParams")
 
-class StandardMessage:
-    def __init__(self, phone: str, text: str, name: str, source: str, raw_data: Dict[str, Any]):
-        self.phone = phone
+class UserMessage:
+    """
+    Standardized Message Object for the Neural Core.
+    Protocol: { sender, text, type, timestamp }
+    """
+    def __init__(self, sender: str, text: str, message_type: str, timestamp: int, name: str = "Unknown", source: str = "evolution_v2", id: str = None, raw_data: Dict = None):
+        self.sender = sender
         self.text = text
+        self.type = message_type
+        self.timestamp = timestamp
         self.name = name
         self.source = source
-        self.timestamp = raw_data.get("messageTimestamp")
-        self.id = raw_data.get("key", {}).get("id")
+        self.id = id
+        # Alias for backward compatibility with existing codebase
+        self.phone = sender 
 
-def normalize_evolution_payload(body: Dict[str, Any]) -> Optional[StandardMessage]:
+def normalize_evolution_payload(body: Dict[str, Any]) -> Optional[UserMessage]:
     """
-    Transforms Evolution API v2 payload into a Canonical StandardMessage.
+    Transforms Evolution API v2 payload into a Clean UserMessage.
     Implements f: W -> G (Injective)
+    Handles: text, extendedText, audio
     """
     try:
         # 1. Validation (Is it an Upsert?)
@@ -30,32 +38,46 @@ def normalize_evolution_payload(body: Dict[str, Any]) -> Optional[StandardMessag
         if key.get("fromMe", False):
             return None
 
-        # 3. Extraction: Phone
+        # 3. Extraction: Sender (Phone)
         remote_jid = key.get("remoteJid", "")
-        phone = remote_jid.split("@")[0] if "@" in remote_jid else remote_jid
+        sender = remote_jid.split("@")[0] if "@" in remote_jid else remote_jid
         
-        # 4. Extraction: Text (Polymorphic Content)
+        # 4. Extraction: Content Polymorphism
         message_content = data.get("message", {})
-        text = (
-            message_content.get("conversation") or 
-            message_content.get("extendedTextMessage", {}).get("text") or
-            message_content.get("imageMessage", {}).get("caption") or
-            ""
-        )
+        msg_text = ""
+        msg_type = "text"
+
+        # Handle Text
+        if "conversation" in message_content:
+            msg_text = message_content["conversation"]
+        elif "extendedTextMessage" in message_content:
+            msg_text = message_content["extendedTextMessage"].get("text", "")
+        elif "imageMessage" in message_content:
+            msg_text = message_content["imageMessage"].get("caption", "[Image]")
+            msg_type = "image"
+        # Handle Audio (Critical)
+        elif "audioMessage" in message_content:
+            msg_text = "[Audio Message]"
+            msg_type = "audio"
+            # In a real scenario, we would extract the media URL/Base64 here
         
-        if not text:
-            logger.warning(f"⚠️ [GATEWAY] Empty/Unsupported Content from {phone}")
+        if not msg_text and msg_type == "text":
+            logger.warning(f"⚠️ [GATEWAY] Empty/Unsupported Content from {sender}")
             return None
 
-        # 5. Extraction: Name
+        # 5. Extraction: Metadata
         push_name = data.get("pushName", "Unknown")
+        timestamp = data.get("messageTimestamp")
 
         # 6. Canonical Object
-        return StandardMessage(
-            phone=phone,
-            text=text,
+        return UserMessage(
+            sender=sender,
+            text=msg_text,
+            message_type=msg_type,
+            timestamp=timestamp,
             name=push_name,
             source="evolution_v2",
+            id=key.get("id"),
             raw_data=data
         )
 

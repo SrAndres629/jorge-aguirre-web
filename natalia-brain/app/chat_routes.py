@@ -33,22 +33,23 @@ class EvolutionAdapter:
             if not msg:
                 return {"status": "ignored"}
                 
-            logger.info(f"📨 [GATEWAY] INGEST: {msg.id} | PHONE: {msg.phone} | NAME: {msg.name}")
+            logger.info(f"📨 [GATEWAY] INGEST: {msg.id} | SENDER: {msg.sender} | TYPE: {msg.type}")
             
             # Idempotency / Buffer Logic
             meta = {
                 "name": msg.name,
                 "source": msg.source,
-                "timestamp": msg.timestamp
+                "timestamp": msg.timestamp,
+                "type": msg.type
             }
             
             await inbox_manager.add_message(
-                phone=msg.phone, 
+                phone=msg.sender, 
                 text=msg.text, 
                 meta_data=meta
             )
             
-            return {"status": "queued", "phone": msg.phone}
+            return {"status": "queued", "phone": msg.sender}
             
         except Exception as e:
             logger.error(f"❌ [GATEWAY] Adapter Error: {e}")
