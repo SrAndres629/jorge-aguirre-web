@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Natalia Brain - Connect WhatsApp</title>
+    <style>
+        body {
+            background: #111;
+            color: #fff;
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            color: #00ff88;
+        }
+
+        #qr-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        img {
+            width: 300px;
+            height: 300px;
+            display: block;
+        }
+
+        .status {
+            margin-top: 20px;
+            color: #aaa;
+        }
+
+        .error {
+            color: #ff5555;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>📟 Connect NataliaBrain</h1>
+    <div id="qr-container">
+        <img id="qr-image" src="" alt="Waiting for QR..." />
+    </div>
+    <div class="status" id="status-text">Connecting to Evolution API...</div>
+
+    <script>
+        const INSTANCE_NAME = 'NataliaBrain';
+        const API_URL = 'https://evolution-whatsapp-zn13.onrender.com';
+        const API_KEY = 'JorgeSecureKey123';
+
+        async function fetchQR() {
+            const statusEl = document.getElementById('status-text');
+            const imgEl = document.getElementById('qr-image');
+
+            try {
+                statusEl.textContent = 'Fetching QR Code...';
+                // Try to connect/fetch QR
+                const response = await fetch(`${API_URL}/instance/connect/${INSTANCE_NAME}`, {
+                    method: 'GET',
+                    headers: {
+                        'apikey': API_KEY,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.status === 401) {
+                    statusEl.textContent = 'Error: Unauthorized (Check API Key)';
+                    statusEl.className = 'status error';
+                    return;
+                }
+
+                const data = await response.json();
+                console.log(data);
+
+                if (data.base64) {
+                    imgEl.src = data.base64;
+                    statusEl.textContent = 'Scan this QR Code with WhatsApp!';
+                    statusEl.style.color = '#00ff88';
+                } else if (data.qrcode && data.qrcode.base64) {
+                    imgEl.src = data.qrcode.base64;
+                    statusEl.textContent = 'Scan this QR Code with WhatsApp!';
+                    statusEl.style.color = '#00ff88';
+                } else if (data.instance && data.instance.state === 'open') {
+                    imgEl.style.display = 'none';
+                    statusEl.innerHTML = '✅ CONNECTED!<br>Natalia is online.';
+                    statusEl.style.color = '#00ff88';
+                    statusEl.style.fontSize = '24px';
+                    clearInterval(interval);
+                } else {
+                    statusEl.textContent = 'Waiting for QR generation...';
+                }
+
+            } catch (err) {
+                console.error(err);
+                statusEl.textContent = 'Connection Error: ' + err.message;
+                statusEl.className = 'status error';
+            }
+        }
+
+        fetchQR();
+        const interval = setInterval(fetchQR, 5000); // Refresh every 5s
+    </script>
+</body>
+
+</html>
