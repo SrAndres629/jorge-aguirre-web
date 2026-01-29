@@ -22,11 +22,11 @@ async function cleanOrphanSessions() {
         console.log("🧹 [MAINTENANCE] Searching for orphan sessions...");
 
         // 1. Delete instances marked as 'connecting' or 'open' from previous unpredictable restarts
-        // We only want to start FRESH.
+        // We only want to start FRESH. "qrcode" does not exist in Instance table, avoiding error.
         const query = `
             UPDATE "Instance"
-            SET "status" = 'close', "qrcode" = NULL 
-            WHERE "status" IN ('open', 'connecting');
+            SET "connectionStatus" = 'close'
+            WHERE "connectionStatus" IN ('open', 'connecting');
         `;
 
         const res = await client.query(query);
