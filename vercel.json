@@ -1,0 +1,22 @@
+{
+    "version": 2,
+    "builds": [
+        {
+            "src": "_legacy_core/api/index.py",
+            "use": "@vercel/python",
+            "config": {
+                "maxLambdaSize": "50mb"
+            }
+        }
+    ],
+    "routes": [
+        {
+            "src": "/static/(.*)",
+            "dest": "_legacy_core/static/$1"
+        },
+        {
+            "src": "/(.*)",
+            "dest": "_legacy_core/api/index.py"
+        }
+    ]
+}
