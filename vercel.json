@@ -1,0 +1,20 @@
+{
+    "version": 2,
+    "builds": [
+        {
+            "src": "_archive/legacy_core_backup/api/index.py",
+            "use": "@vercel/python"
+        }
+    ],
+    "routes": [
+        {
+            "src": "/static/(.*)",
+            "dest": "_archive/legacy_core_backup/static/$1"
+        },
+        {
+            "src": "/(.*)",
+            "dest": "_archive/legacy_core_backup/api/index.py"
+        }
+    ],
+    "outputDirectory": "_archive/legacy_core_backup"
+}
