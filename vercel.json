@@ -2,6 +2,14 @@
     "version": 2,
     "builds": [
         {
+            "src": "_legacy_core/static/**/*",
+            "use": "@vercel/static"
+        },
+        {
+            "src": "_legacy_core/templates/**/*",
+            "use": "@vercel/static"
+        },
+        {
             "src": "_legacy_core/api/index.py",
             "use": "@vercel/python",
             "config": {
@@ -12,11 +20,29 @@
     "routes": [
         {
             "src": "/static/(.*)",
-            "dest": "_legacy_core/static/$1"
+            "dest": "_legacy_core/static/$1",
+            "headers": {
+                "Cache-Control": "public, max-age=31536000, immutable"
+            }
+        },
+        {
+            "src": "/favicon.ico",
+            "dest": "_legacy_core/static/favicon.ico"
         },
         {
             "src": "/(.*)",
             "dest": "_legacy_core/api/index.py"
+        }
+    ],
+    "headers": [
+        {
+            "source": "/static/(.*)",
+            "headers": [
+                {
+                    "key": "Cache-Control",
+                    "value": "public, max-age=31536000, immutable"
+                }
+            ]
         }
     ]
 }
