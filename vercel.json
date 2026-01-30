@@ -1,20 +1,43 @@
 {
     "version": 2,
+    "name": "jorge-aguirre-web",
     "builds": [
         {
-            "src": "_archive/legacy_core_backup/api/index.py",
-            "use": "@vercel/python"
+            "src": "web/api/index.py",
+            "use": "@vercel/python",
+            "config": {
+                "maxLambdaSize": "50mb"
+            }
+        },
+        {
+            "src": "web/static/**",
+            "use": "@vercel/static"
         }
     ],
     "routes": [
         {
             "src": "/static/(.*)",
-            "dest": "_archive/legacy_core_backup/static/$1"
+            "dest": "/web/static/$1",
+            "headers": {
+                "Cache-Control": "public, max-age=31536000, immutable"
+            }
+        },
+        {
+            "src": "/favicon.ico",
+            "dest": "/web/static/favicon.svg"
         },
         {
             "src": "/(.*)",
-            "dest": "_archive/legacy_core_backup/api/index.py"
+            "dest": "/web/api/index.py"
         }
     ],
-    "outputDirectory": "_archive/legacy_core_backup"
+    "env": {
+        "PYTHONPATH": "web"
+    },
+    "regions": [
+        "iad1"
+    ],
+    "github": {
+        "silent": true
+    }
 }
