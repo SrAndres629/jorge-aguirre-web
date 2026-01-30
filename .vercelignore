@@ -1,0 +1,13 @@
+natalia-brain/
+evolution-api/
+infrastructure/
+_archive/
+venv/
+.env
+.git
+.github
+*.Dockerfile
+docker-compose.yml
+render.yaml
+*.log
+__pycache__
