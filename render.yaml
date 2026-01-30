@@ -1,5 +1,11 @@
 services:
-  # 1. Evolution API (The Body)
+  # =================================================================
+  # RENDER PRODUCTION SERVICES
+  # Architecture: Evolution (Body) + Natalia (Brain)
+  # Web Frontend moved to Vercel (Free Static Hosting)
+  # =================================================================
+
+  # 1. Evolution API (The Body - WhatsApp Connection)
   - type: web
     name: evolution-whatsapp
     runtime: node
@@ -22,7 +28,7 @@ services:
       - key: DATABASE_SAVE_MESSAGE_UPDATE
         value: "true"
 
-  # 2. Natalia Brain (The Mind)
+  # 2. Natalia Brain (The Mind - AI Processing)
   - type: web
     name: natalia-brain
     runtime: python
@@ -41,6 +47,7 @@ services:
       - key: EVOLUTION_API_KEY
         value: JorgeSecureKey123
       - key: EVOLUTION_INSTANCE
-        value: NataliaCoreProd
+        value: NataliaBrain
       - key: ADMIN_KEY
         value: Andromeda2025
+
